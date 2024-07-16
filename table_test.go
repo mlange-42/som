@@ -30,7 +30,11 @@ func TestTable(t *testing.T) {
 
 	assert.Equal(t, []float64{0.0, 1.0, 2.0}, tb.GetRow(0))
 	assert.Equal(t, []float64{12.0, 13.0, 14.0}, tb.GetRow(4))
+
+	tb.Set(2, 3, 100.0)
+	assert.Equal(t, 100.0, tb.Get(2, 3))
 }
+
 func TestNewTableFromData(t *testing.T) {
 	t.Run("Valid input", func(t *testing.T) {
 		columns := []string{"x", "y", "z"}

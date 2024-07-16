@@ -57,6 +57,11 @@ func (t *Table) Get(row, col int) float64 {
 	return t.data[t.index(row, col)]
 }
 
+// Set sets the value at the given row and column in the table.
+func (t *Table) Set(row, col int, value float64) {
+	t.data[t.index(row, col)] = value
+}
+
 // GetRow returns a slice containing the values for the given row in the table.
 func (t *Table) GetRow(row int) []float64 {
 	idx := t.rowIndex(row)
