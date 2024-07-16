@@ -31,3 +31,55 @@ func TestTable(t *testing.T) {
 	assert.Equal(t, []float64{0.0, 1.0, 2.0}, tb.GetRow(0))
 	assert.Equal(t, []float64{12.0, 13.0, 14.0}, tb.GetRow(4))
 }
+func TestNewTableFromData(t *testing.T) {
+	t.Run("Valid input", func(t *testing.T) {
+		columns := []string{"x", "y", "z"}
+		data := []float64{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}
+		table, err := NewTableFromData(columns, data)
+
+		assert.NoError(t, err)
+		assert.Equal(t, columns, table.columns)
+		assert.Equal(t, 2, table.rows)
+		assert.Equal(t, data, table.data)
+	})
+
+	t.Run("Empty columns", func(t *testing.T) {
+		columns := []string{}
+		data := []float64{1.0, 2.0, 3.0}
+		_, err := NewTableFromData(columns, data)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "columns length must be greater than zero")
+	})
+
+	t.Run("Data length not multiple of columns", func(t *testing.T) {
+		columns := []string{"a", "b"}
+		data := []float64{1.0, 2.0, 3.0}
+		_, err := NewTableFromData(columns, data)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "data length 3 is not a multiple of columns length 2")
+	})
+
+	t.Run("Single column", func(t *testing.T) {
+		columns := []string{"a"}
+		data := []float64{1.0, 2.0, 3.0}
+		table, err := NewTableFromData(columns, data)
+
+		assert.NoError(t, err)
+		assert.Equal(t, columns, table.columns)
+		assert.Equal(t, 3, table.rows)
+		assert.Equal(t, data, table.data)
+	})
+
+	t.Run("Empty data", func(t *testing.T) {
+		columns := []string{"a", "b"}
+		data := []float64{}
+		table, err := NewTableFromData(columns, data)
+
+		assert.NoError(t, err)
+		assert.Equal(t, columns, table.columns)
+		assert.Equal(t, 0, table.rows)
+		assert.Equal(t, data, table.data)
+	})
+}

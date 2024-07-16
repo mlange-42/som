@@ -1,6 +1,9 @@
 package som
 
-import "slices"
+import (
+	"fmt"
+	"slices"
+)
 
 type Table struct {
 	columns []string
@@ -14,6 +17,20 @@ func NewTable(columns []string, rows int) Table {
 		rows:    rows,
 		data:    make([]float64, rows*len(columns)),
 	}
+}
+
+func NewTableFromData(columns []string, data []float64) (Table, error) {
+	if len(columns) == 0 {
+		return Table{}, fmt.Errorf("columns length must be greater than zero")
+	}
+	if len(data)%len(columns) != 0 {
+		return Table{}, fmt.Errorf("data length %d is not a multiple of columns length %d", len(data), len(columns))
+	}
+	return Table{
+		columns: columns,
+		rows:    len(data) / len(columns),
+		data:    data,
+	}, nil
 }
 
 func (t *Table) rowIndex(row int) int {
