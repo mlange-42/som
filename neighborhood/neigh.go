@@ -3,54 +3,45 @@ package neighborhood
 import "math"
 
 type Neighborhood interface {
-	Weight(x1, y1, x2, y2 int, decay float64) float64
-	Radius(decay float64) int
+	Weight(x1, y1, x2, y2 int, radius float64) float64
+	MaxRadius(radius float64) int
 }
 
-type Gaussian struct {
-	Sigma float64
-}
+type Gaussian struct{}
 
-func (g *Gaussian) Weight(x1, y1, x2, y2 int, decay float64) float64 {
+func (g *Gaussian) Weight(x1, y1, x2, y2 int, radius float64) float64 {
 	dx := float64(x1 - x2)
 	dy := float64(y1 - y2)
-	s := g.Sigma * decay
-	return math.Exp(-(dx*dx + dy*dy) / (2 * s * s))
+	return math.Exp(-(dx*dx + dy*dy) / (2 * radius * radius))
 }
 
-func (g *Gaussian) Radius(decay float64) int {
+func (g *Gaussian) MaxRadius(radius float64) int {
 	return -1
 }
 
-type CutGaussian struct {
-	Sigma float64
-}
+type CutGaussian struct{}
 
-func (g *CutGaussian) Weight(x1, y1, x2, y2 int, decay float64) float64 {
+func (g *CutGaussian) Weight(x1, y1, x2, y2 int, radius float64) float64 {
 	dx := float64(x1 - x2)
 	dy := float64(y1 - y2)
-	s := g.Sigma * decay
-	return math.Exp(-(dx*dx + dy*dy) / (2 * s * s))
+	return math.Exp(-(dx*dx + dy*dy) / (2 * radius * radius))
 }
 
-func (g *CutGaussian) Radius(decay float64) int {
-	return int(g.Sigma * decay)
+func (g *CutGaussian) MaxRadius(radius float64) int {
+	return int(radius)
 }
 
-type Box struct {
-	Size float64
-}
+type Box struct{}
 
-func (b *Box) Weight(x1, y1, x2, y2 int, decay float64) float64 {
+func (b *Box) Weight(x1, y1, x2, y2 int, radius float64) float64 {
 	dx := float64(x1 - x2)
 	dy := float64(y1 - y2)
-	r := b.Size * decay
-	if dx*dx+dy*dy <= r*r {
+	if dx*dx+dy*dy <= radius*radius {
 		return 1
 	}
 	return 0
 }
 
-func (b *Box) Radius(decay float64) int {
-	return int(b.Size * decay)
+func (b *Box) MaxRadius(radius float64) int {
+	return int(radius)
 }
