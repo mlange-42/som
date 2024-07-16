@@ -108,3 +108,7 @@ func (s *Som) getBMU(data []float64) (int, float64) {
 
 	return minIndex, minDist
 }
+
+func (s *Som) Layers() []Layer {
+	return s.layers
+}

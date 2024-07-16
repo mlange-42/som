@@ -52,6 +52,14 @@ func (t *Table) Column(col string) int {
 	return slices.Index(t.columns, col)
 }
 
+func (t *Table) Columns() []string {
+	return t.columns
+}
+
+func (t *Table) Rows() int {
+	return t.rows
+}
+
 // Get returns the value at the given row and column in the table.
 func (t *Table) Get(row, col int) float64 {
 	return t.data[t.index(row, col)]

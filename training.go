@@ -68,7 +68,7 @@ func (t *Trainer) epoch(epoch, maxEpoch int) {
 	alpha := t.params.LearningRate.Decay(epoch, maxEpoch)
 	radius := t.params.NeighborhoodRadius.Decay(epoch, maxEpoch)
 
-	fmt.Println("Epoch", epoch, "of", maxEpoch, "alpha", alpha, "radius", radius)
+	//fmt.Println("Epoch", epoch, "of", maxEpoch, "alpha", alpha, "radius", radius)
 
 	for i := range t.table.rows {
 		t.som.learn(t.table.GetRow(i), alpha, radius)

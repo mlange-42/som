@@ -51,6 +51,14 @@ func (l *Layer) Column(col string) int {
 	return slices.Index(l.columns, col)
 }
 
+func (l *Layer) Columns() []string {
+	return l.columns
+}
+
+func (l *Layer) Nodes() int {
+	return l.size.Width * l.size.Height
+}
+
 // Get returns the value at the specified column and coordinate in the Layer.
 func (l *Layer) Get(x, y, col int) float64 {
 	return l.data[l.index(x, y, col)]
