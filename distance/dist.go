@@ -1,4 +1,4 @@
-package dist
+package distance
 
 import (
 	"math"

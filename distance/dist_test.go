@@ -1,14 +1,15 @@
-package dist
+package distance_test
 
 import (
 	"math"
 	"testing"
 
+	"github.com/mlange-42/som/distance"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSumOfSquaresDistance(t *testing.T) {
-	d := &SumOfSquares{}
+	d := &distance.SumOfSquares{}
 	tests := []struct {
 		name     string
 		x        []float64
@@ -30,7 +31,7 @@ func TestSumOfSquaresDistance(t *testing.T) {
 }
 
 func TestEuclideanDistance(t *testing.T) {
-	d := &Euclidean{}
+	d := &distance.Euclidean{}
 	tests := []struct {
 		name     string
 		x        []float64
@@ -52,7 +53,7 @@ func TestEuclideanDistance(t *testing.T) {
 }
 
 func TestManhattanDistance(t *testing.T) {
-	d := &Manhattan{}
+	d := &distance.Manhattan{}
 	tests := []struct {
 		name     string
 		x        []float64
@@ -74,7 +75,7 @@ func TestManhattanDistance(t *testing.T) {
 }
 
 func TestHammingDistance(t *testing.T) {
-	d := &Hamming{}
+	d := &distance.Hamming{}
 	tests := []struct {
 		name     string
 		x        []float64
