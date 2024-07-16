@@ -1,16 +1,30 @@
 package som
 
-import "fmt"
+import (
+	"fmt"
+	"math/rand"
 
-type Trainer struct {
-	som   *Som
-	table *Table
+	"github.com/mlange-42/som/decay"
+)
+
+type TrainingParams struct {
+	LearningRate       decay.Decay
+	NeighborhoodRadius decay.Decay
 }
 
-func NewTrainer(som *Som, table *Table) (*Trainer, error) {
+type Trainer struct {
+	som    *Som
+	table  *Table
+	params *TrainingParams
+	rng    *rand.Rand
+}
+
+func NewTrainer(som *Som, table *Table, params *TrainingParams, rng *rand.Rand) (*Trainer, error) {
 	t := &Trainer{
-		som:   som,
-		table: table,
+		som:    som,
+		table:  table,
+		params: params,
+		rng:    rng,
 	}
 	if !t.checkTable() {
 		return nil, fmt.Errorf("table columns do not match SOM layer columns")
@@ -33,4 +47,30 @@ func (t *Trainer) checkTable() bool {
 		}
 	}
 	return true
+}
+
+func (t *Trainer) Train(maxEpoch int) {
+	t.randomize()
+	for epoch := 0; epoch < maxEpoch; epoch++ {
+		t.epoch(epoch, maxEpoch)
+	}
+}
+
+func (t *Trainer) randomize() {
+	for _, layer := range t.som.layers {
+		for i := range layer.data {
+			layer.data[i] = t.rng.Float64()
+		}
+	}
+}
+
+func (t *Trainer) epoch(epoch, maxEpoch int) {
+	alpha := t.params.LearningRate.Decay(epoch, maxEpoch)
+	radius := t.params.NeighborhoodRadius.Decay(epoch, maxEpoch)
+
+	fmt.Println("Epoch", epoch, "of", maxEpoch, "alpha", alpha, "radius", radius)
+
+	for i := range t.table.rows {
+		t.som.learn(t.table.GetRow(i), alpha, radius)
+	}
 }
