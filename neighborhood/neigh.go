@@ -31,6 +31,21 @@ func (g *CutGaussian) MaxRadius(radius float64) int {
 	return int(radius)
 }
 
+type Linear struct{}
+
+func (l *Linear) Weight(x1, y1, x2, y2 int, radius float64) float64 {
+	dx, dy := float64(x1-x2), float64(y1-y2)
+	distSq := dx*dx + dy*dy
+	if distSq <= radius*radius {
+		return 1 - math.Sqrt(distSq)/radius
+	}
+	return 0
+}
+
+func (g *Linear) MaxRadius(radius float64) int {
+	return int(radius)
+}
+
 type Box struct{}
 
 func (b *Box) Weight(x1, y1, x2, y2 int, radius float64) float64 {

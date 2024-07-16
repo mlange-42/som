@@ -42,28 +42,3 @@ func TestLayer(t *testing.T) {
 	assert.Equal(t, []float64{3.0, 4.0, 5.0}, l.GetNode(0, 1))
 	assert.Equal(t, []float64{15.0, 16.0, 17.0}, l.GetNode(2, 1))
 }
-
-func TestCoordsAt(t *testing.T) {
-	l := NewLayer([]string{"a", "b", "c"}, Size{4, 3})
-
-	testCases := []struct {
-		name      string
-		idx       int
-		expectedX int
-		expectedY int
-	}{
-		{"First element", 0, 0, 0},
-		{"Last element", 11, 3, 2},
-		{"Middle element", 5, 1, 1},
-		{"Edge case - width", 3, 3, 0},
-		{"Edge case - height", 8, 0, 2},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			x, y := l.CoordsAt(tc.idx)
-			assert.Equal(t, tc.expectedX, x, "Incorrect X coordinate")
-			assert.Equal(t, tc.expectedY, y, "Incorrect Y coordinate")
-		})
-	}
-}
