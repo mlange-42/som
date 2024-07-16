@@ -97,7 +97,7 @@ func TestGetBMU(t *testing.T) {
 	})
 }
 
-func TestLearn(t *testing.T) {
+func createSom() *Som {
 	params := SomParams{
 		Size: Size{3, 3},
 		Layers: []LayerDef{
@@ -115,6 +115,12 @@ func TestLearn(t *testing.T) {
 		Neighborhood: &neighborhood.Linear{},
 	}
 	som := New(&params)
+
+	return &som
+}
+
+func TestLearnBasic(t *testing.T) {
+	som := createSom()
 
 	t.Run("Basic learning", func(t *testing.T) {
 		data := []float64{1.0, 2.0, 3.0, 4.0}
@@ -162,6 +168,10 @@ func TestLearn(t *testing.T) {
 			}
 		}
 	})
+}
+
+func TestLearnRadius(t *testing.T) {
+	som := createSom()
 
 	t.Run("Very small radius", func(t *testing.T) {
 		data := []float64{1.0, 2.0, 3.0, 4.0}
