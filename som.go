@@ -25,23 +25,3 @@ func New(size Size, layers []LayerDef) Som {
 		offset: offset,
 	}
 }
-
-// CheckTable checks if the provided Table matches the structure of the Som.
-// It verifies that the total number of columns in the Table matches the
-// total number of columns defined in the Som's layers. It also checks that
-// the column names in the Table match the column names defined in the Som's
-// layers.
-func (s *Som) CheckTable(t *Table) bool {
-	if len(t.columns) != s.offset[len(s.offset)-1]+len(s.layers[len(s.layers)-1].columns) {
-		return false
-	}
-	for i := range s.layers {
-		off := s.offset[i]
-		for j, col := range s.layers[i].columns {
-			if t.columns[j+off] != col {
-				return false
-			}
-		}
-	}
-	return true
-}
