@@ -10,11 +10,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mlange-42/som"
+	"github.com/mlange-42/som/table"
 )
 
 type Reader interface {
-	ReadColumns(columns []string) (*som.Table, error)
+	ReadColumns(columns []string) (*table.Table, error)
 	ReadClasses(column string) ([]string, error)
 }
 
@@ -28,7 +28,7 @@ func NewStringReader(text string, delim rune, noData string) *StringReader {
 	return &StringReader{text, delim, noData}
 }
 
-func (s *StringReader) ReadColumns(columns []string) (*som.Table, error) {
+func (s *StringReader) ReadColumns(columns []string) (*table.Table, error) {
 	return readColumns(strings.NewReader(s.text), columns, s.delim, s.noData)
 }
 
@@ -51,7 +51,7 @@ func NewFileReader(path string, delim rune, noData string) (*FileReader, error) 
 	return &FileReader{path, string(text), delim, noData}, nil
 }
 
-func (f *FileReader) ReadColumns(columns []string) (*som.Table, error) {
+func (f *FileReader) ReadColumns(columns []string) (*table.Table, error) {
 	return readColumns(strings.NewReader(f.text), columns, f.delim, f.noData)
 }
 
@@ -59,7 +59,7 @@ func (f *FileReader) ReadClasses(column string) ([]string, error) {
 	return readClasses(strings.NewReader(f.text), column, f.delim)
 }
 
-func readColumns(reader io.Reader, columns []string, delim rune, noData string) (*som.Table, error) {
+func readColumns(reader io.Reader, columns []string, delim rune, noData string) (*table.Table, error) {
 	r := csv.NewReader(reader)
 	r.ReuseRecord = true
 	r.Comma = delim
@@ -101,7 +101,7 @@ func readColumns(reader io.Reader, columns []string, delim rune, noData string) 
 		}
 	}
 
-	return som.NewTableFromData(columns, data)
+	return table.NewFromData(columns, data)
 }
 
 func readClasses(reader io.Reader, column string, delim rune) ([]string, error) {
