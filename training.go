@@ -14,39 +14,57 @@ type TrainingConfig struct {
 
 type Trainer struct {
 	som    *Som
-	table  *Table
+	tables []*Table
 	params *TrainingConfig
 	rng    *rand.Rand
 }
 
-func NewTrainer(som *Som, table *Table, params *TrainingConfig, rng *rand.Rand) (*Trainer, error) {
+func NewTrainer(som *Som, tables []*Table, params *TrainingConfig, rng *rand.Rand) (*Trainer, error) {
 	t := &Trainer{
 		som:    som,
-		table:  table,
+		tables: tables,
 		params: params,
 		rng:    rng,
 	}
-	if !t.checkTable() {
-		return nil, fmt.Errorf("table columns do not match SOM layer columns")
+	if err := t.checkTable(); err != nil {
+		return nil, err
 	}
 	return t, nil
 }
 
 // checkTable checks that the table columns match the SOM layer columns.
 // It returns true if the table columns match the SOM layer columns, false otherwise.
-func (t *Trainer) checkTable() bool {
-	if len(t.table.columns) != t.som.offset[len(t.som.offset)-1]+len(t.som.layers[len(t.som.layers)-1].columns) {
-		return false
+func (t *Trainer) checkTable() error {
+	if len(t.tables) == 0 {
+		return fmt.Errorf("no tables provided")
 	}
+
+	if len(t.som.layers) != len(t.tables) {
+		return fmt.Errorf("number of tables (%d) does not match number of layers (%d)", len(t.tables), len(t.som.layers))
+	}
+
+	rows := -1
+	for _, table := range t.tables {
+		if rows == -1 {
+			rows = table.Rows()
+		} else if rows != table.Rows() {
+			return fmt.Errorf("number of rows in table (%d) does not match number of rows in table (%d)", rows, table.Rows())
+		}
+	}
+
 	for i := range t.som.layers {
-		off := t.som.offset[i]
-		for j, col := range t.som.layers[i].columns {
-			if t.table.columns[j+off] != col {
-				return false
+		table := t.tables[i]
+		cols := t.som.layers[i].columns
+		if table.Columns() != len(cols) {
+			return fmt.Errorf("number of columns in table (%d) does not match number of columns in layer (%d)", table.Columns(), len(cols))
+		}
+		for j, col := range cols {
+			if table.columns[j] != col {
+				return fmt.Errorf("column %d in table (%s) does not match column %d in layer (%s)", j, table.columns[j], j, col)
 			}
 		}
 	}
-	return true
+	return nil
 }
 
 func (t *Trainer) Train(maxEpoch int) {
@@ -70,7 +88,13 @@ func (t *Trainer) epoch(epoch, maxEpoch int) {
 
 	//fmt.Println("Epoch", epoch, "of", maxEpoch, "alpha", alpha, "radius", radius)
 
-	for i := range t.table.rows {
-		t.som.learn(t.table.GetRow(i), alpha, radius)
+	data := make([][]float64, len(t.tables))
+	rows := t.tables[0].Rows()
+
+	for i := 0; i < rows; i++ {
+		for j := 0; j < len(t.tables); j++ {
+			data[j] = t.tables[j].GetRow(i)
+		}
+		t.som.learn(data, alpha, radius)
 	}
 }

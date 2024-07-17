@@ -26,7 +26,6 @@ func TestNewSom(t *testing.T) {
 	som := New(&params)
 
 	assert.Equal(t, 2, len(som.layers))
-	assert.Equal(t, []int{0, 2}, som.offset)
 	assert.Equal(t, []float64{0.5, 1.0}, som.weight)
 	assert.Equal(t, Size{2, 3}, som.layers[0].size)
 }
@@ -50,7 +49,7 @@ func TestGetBMU(t *testing.T) {
 	som := New(&params)
 
 	t.Run("Normal case", func(t *testing.T) {
-		data := []float64{1.0, 2.0, 3.0, 4.0}
+		data := [][]float64{{1.0, 2.0}, {3.0, 4.0}}
 		index, dist := som.getBMU(data)
 		assert.GreaterOrEqual(t, index, 0)
 		assert.Less(t, index, 4)
@@ -68,7 +67,7 @@ func TestGetBMU(t *testing.T) {
 			},
 		}
 		singleLayerSom := New(&singleLayerParams)
-		data := []float64{1.0}
+		data := [][]float64{{1.0}}
 		index, dist := singleLayerSom.getBMU(data)
 		assert.Equal(t, 0, index)
 		assert.GreaterOrEqual(t, dist, 0.0)
@@ -89,7 +88,7 @@ func TestGetBMU(t *testing.T) {
 			},
 		}
 		largeSom := New(&largeParams)
-		data := []float64{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}
+		data := [][]float64{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}}
 		index, dist := largeSom.getBMU(data)
 		assert.GreaterOrEqual(t, index, 0)
 		assert.Less(t, index, 100)
@@ -123,7 +122,7 @@ func TestLearnBasic(t *testing.T) {
 	som := createSom()
 
 	t.Run("Basic learning", func(t *testing.T) {
-		data := []float64{1.0, 2.0, 3.0, 4.0}
+		data := [][]float64{{1.0, 2.0}, {3.0, 4.0}}
 		initialWeights := make([][][]float64, len(som.layers))
 		for l, layer := range som.layers {
 			initialWeights[l] = make([][]float64, som.size.Width*som.size.Height)
@@ -147,7 +146,7 @@ func TestLearnBasic(t *testing.T) {
 	})
 
 	t.Run("Zero learning rate", func(t *testing.T) {
-		data := []float64{1.0, 2.0, 3.0, 4.0}
+		data := [][]float64{{1.0, 2.0}, {3.0, 4.0}}
 		initialWeights := make([][][]float64, len(som.layers))
 		for l, layer := range som.layers {
 			initialWeights[l] = make([][]float64, som.size.Width*som.size.Height)
@@ -174,7 +173,7 @@ func TestLearnRadius(t *testing.T) {
 	som := createSom()
 
 	t.Run("Very small radius", func(t *testing.T) {
-		data := []float64{1.0, 2.0, 3.0, 4.0}
+		data := [][]float64{{1.0, 2.0}, {3.0, 4.0}}
 		initialWeights := make([][][]float64, len(som.layers))
 		for l, layer := range som.layers {
 			initialWeights[l] = make([][]float64, som.size.Width*som.size.Height)
@@ -203,15 +202,15 @@ func TestLearnRadius(t *testing.T) {
 	})
 
 	t.Run("Very large radius", func(t *testing.T) {
-		data := []float64{1.0, 2.0, 3.0, 4.0}
+		data := [][]float64{{1.0, 2.0}, {3.0, 4.0}}
 		som.learn(data, 1.0, 100.0)
 
 		for l, layer := range som.layers {
-			offset := som.offset[l]
+			lData := data[l]
 			for i := 0; i < som.size.Width*som.size.Height; i++ {
 				newWeights := layer.GetNodeAt(i)
 				for j := range newWeights {
-					assert.InDelta(t, data[j+offset], newWeights[j], 0.5, "All weights should be closer to input data with large radius")
+					assert.InDelta(t, lData[j], newWeights[j], 0.5, "All weights should be closer to input data with large radius")
 				}
 			}
 		}

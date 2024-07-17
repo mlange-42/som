@@ -30,7 +30,7 @@ func main() {
 		LearningRate:       &decay.Linear{Start: 0.5, End: 0.01},
 		NeighborhoodRadius: &decay.Linear{Start: 10, End: 0.5},
 	}
-	trainer, err := som.NewTrainer(&s, &table, &trainingParams, rng)
+	trainer, err := som.NewTrainer(&s, []*som.Table{table}, &trainingParams, rng)
 	if err != nil {
 		panic(err)
 	}

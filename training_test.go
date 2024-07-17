@@ -27,20 +27,32 @@ func TestNewTrainer(t *testing.T) {
 	som := New(&somParams)
 	rng := rand.New(rand.NewSource(1))
 
-	t1 := NewTable([]string{"x", "y", "a", "b", "c"}, 5)
-	_, err := NewTrainer(&som, &t1, &params, rng)
+	t1 := []*Table{
+		NewTable([]string{"x", "y"}, 5),
+		NewTable([]string{"a", "b", "c"}, 5),
+	}
+	_, err := NewTrainer(&som, t1, &params, rng)
 	assert.Nil(t, err)
 
-	t1 = NewTable([]string{"x", "y", "a", "b"}, 5)
-	_, err = NewTrainer(&som, &t1, &params, rng)
+	t1 = []*Table{
+		NewTable([]string{"x", "y"}, 5),
+		NewTable([]string{"a", "b"}, 5),
+	}
+	_, err = NewTrainer(&som, t1, &params, rng)
 	assert.NotNil(t, err)
 
-	t1 = NewTable([]string{"x", "y", "a", "b", "c", "d"}, 5)
-	_, err = NewTrainer(&som, &t1, &params, rng)
+	t1 = []*Table{
+		NewTable([]string{"x", "y"}, 5),
+		NewTable([]string{"a", "b", "c", "d"}, 5),
+	}
+	_, err = NewTrainer(&som, t1, &params, rng)
 	assert.NotNil(t, err)
 
-	t1 = NewTable([]string{"x", "a", "y", "b", "c"}, 5)
-	_, err = NewTrainer(&som, &t1, &params, rng)
+	t1 = []*Table{
+		NewTable([]string{"x", "y"}, 5),
+		NewTable([]string{"a", "c", "b"}, 5),
+	}
+	_, err = NewTrainer(&som, t1, &params, rng)
 	assert.NotNil(t, err)
 }
 
@@ -66,8 +78,11 @@ func TestTrainerDecay(t *testing.T) {
 	som := New(&somParams)
 	rng := rand.New(rand.NewSource(1))
 
-	t1 := NewTable([]string{"x", "y", "a", "b", "c"}, 5)
-	trainer, err := NewTrainer(&som, &t1, &params, rng)
+	t1 := []*Table{
+		NewTable([]string{"x", "y"}, 5),
+		NewTable([]string{"a", "b", "c"}, 5),
+	}
+	trainer, err := NewTrainer(&som, t1, &params, rng)
 	assert.Nil(t, err)
 
 	trainer.Train(10)
@@ -96,8 +111,11 @@ func TestTrainerTrain(t *testing.T) {
 	rng := rand.New(rand.NewSource(1))
 
 	t.Run("Train with zero epochs", func(t *testing.T) {
-		table := NewTable([]string{"x", "y", "a", "b", "c"}, 5)
-		trainer, err := NewTrainer(&som, &table, &params, rng)
+		tables := []*Table{
+			NewTable([]string{"x", "y"}, 5),
+			NewTable([]string{"a", "b", "c"}, 5),
+		}
+		trainer, err := NewTrainer(&som, tables, &params, rng)
 		assert.Nil(t, err)
 
 		trainer.Train(0)
@@ -108,16 +126,22 @@ func TestTrainerTrain(t *testing.T) {
 	})
 
 	t.Run("Train with one epoch", func(t *testing.T) {
-		table := NewTable([]string{"x", "y", "a", "b", "c"}, 5)
-		trainer, err := NewTrainer(&som, &table, &params, rng)
+		tables := []*Table{
+			NewTable([]string{"x", "y"}, 5),
+			NewTable([]string{"a", "b", "c"}, 5),
+		}
+		trainer, err := NewTrainer(&som, tables, &params, rng)
 		assert.Nil(t, err)
 
 		trainer.Train(1)
 	})
 
 	t.Run("Train with multiple epochs", func(t *testing.T) {
-		table := NewTable([]string{"x", "y", "a", "b", "c"}, 5)
-		trainer, err := NewTrainer(&som, &table, &params, rng)
+		tables := []*Table{
+			NewTable([]string{"x", "y"}, 5),
+			NewTable([]string{"a", "b", "c"}, 5),
+		}
+		trainer, err := NewTrainer(&som, tables, &params, rng)
 		assert.Nil(t, err)
 
 		trainer.Train(25)
@@ -128,8 +152,11 @@ func TestTrainerTrain(t *testing.T) {
 	})
 
 	t.Run("Train with empty table", func(t *testing.T) {
-		table := NewTable([]string{"x", "y", "a", "b", "c"}, 0)
-		trainer, err := NewTrainer(&som, &table, &params, rng)
+		tables := []*Table{
+			NewTable([]string{"x", "y"}, 5),
+			NewTable([]string{"a", "b", "c"}, 5),
+		}
+		trainer, err := NewTrainer(&som, tables, &params, rng)
 		assert.Nil(t, err)
 
 		trainer.Train(10)

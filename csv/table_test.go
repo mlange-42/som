@@ -1,0 +1,141 @@
+package csv
+
+import (
+	"io"
+	"math"
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestReadColumns(t *testing.T) {
+	t.Run("Valid input", func(t *testing.T) {
+		input := "a,b,c\n1,2,3\n4,5,6"
+		reader := strings.NewReader(input)
+		columns := []string{"a", "c"}
+		table, err := ReadColumns(reader, columns, ',', "")
+
+		assert.NoError(t, err)
+		assert.Equal(t, columns, table.ColumnNames())
+		assert.Equal(t, 2, table.Rows())
+		assert.Equal(t, []float64{1, 3, 4, 6}, table.Data())
+	})
+
+	t.Run("Missing column", func(t *testing.T) {
+		input := "a,b,c\n1,2,3"
+		reader := strings.NewReader(input)
+		columns := []string{"a", "d"}
+		_, err := ReadColumns(reader, columns, ',', "")
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "column \"d\" not found")
+	})
+
+	t.Run("No data value", func(t *testing.T) {
+		input := "a,b,c\n1,NA,3\n4,5,NA"
+		reader := strings.NewReader(input)
+		columns := []string{"a", "b", "c"}
+		table, err := ReadColumns(reader, columns, ',', "NA")
+
+		assert.NoError(t, err)
+		assert.Equal(t, 2, table.Rows())
+		assert.True(t, math.IsNaN(table.Get(0, 1)))
+		assert.True(t, math.IsNaN(table.Get(1, 2)))
+	})
+
+	t.Run("Invalid float", func(t *testing.T) {
+		input := "a,b,c\n1,2,3\n4,invalid,6"
+		reader := strings.NewReader(input)
+		columns := []string{"a", "b", "c"}
+		_, err := ReadColumns(reader, columns, ',', "")
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid syntax")
+	})
+
+	t.Run("Empty input", func(t *testing.T) {
+		reader := strings.NewReader("")
+		columns := []string{"a", "b"}
+		_, err := ReadColumns(reader, columns, ',', "")
+
+		assert.Error(t, err)
+		assert.Equal(t, io.EOF, err)
+	})
+
+	t.Run("Custom delimiter", func(t *testing.T) {
+		input := "a;b;c\n1;2;3\n4;5;6"
+		reader := strings.NewReader(input)
+		columns := []string{"b", "c"}
+		table, err := ReadColumns(reader, columns, ';', "")
+
+		assert.NoError(t, err)
+		assert.Equal(t, columns, table.ColumnNames())
+		assert.Equal(t, 2, table.Rows())
+		assert.Equal(t, []float64{2, 3, 5, 6}, table.Data())
+	})
+}
+
+func TestReadClasses(t *testing.T) {
+	t.Run("Valid input", func(t *testing.T) {
+		input := "a,b,c\nred,2,3\nblue,5,6\ngreen,8,9"
+		reader := strings.NewReader(input)
+		classes, err := ReadClasses(reader, "a", ',')
+
+		assert.NoError(t, err)
+		assert.Equal(t, []string{"red", "blue", "green"}, classes)
+	})
+
+	t.Run("Column not in first position", func(t *testing.T) {
+		input := "x,y,z\n1,cat,3\n4,dog,6\n7,fish,9"
+		reader := strings.NewReader(input)
+		classes, err := ReadClasses(reader, "y", ',')
+
+		assert.NoError(t, err)
+		assert.Equal(t, []string{"cat", "dog", "fish"}, classes)
+	})
+
+	t.Run("Empty input", func(t *testing.T) {
+		reader := strings.NewReader("")
+		_, err := ReadClasses(reader, "a", ',')
+
+		assert.Error(t, err)
+		assert.Equal(t, io.EOF, err)
+	})
+
+	t.Run("Column not found", func(t *testing.T) {
+		input := "a,b,c\n1,2,3\n4,5,6"
+		reader := strings.NewReader(input)
+		_, err := ReadClasses(reader, "d", ',')
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "column \"d\" not found")
+	})
+
+	t.Run("Custom delimiter", func(t *testing.T) {
+		input := "a;b;c\napple;2;3\nbanana;5;6\ncherry;8;9"
+		reader := strings.NewReader(input)
+		classes, err := ReadClasses(reader, "a", ';')
+
+		assert.NoError(t, err)
+		assert.Equal(t, []string{"apple", "banana", "cherry"}, classes)
+	})
+
+	t.Run("Single column input", func(t *testing.T) {
+		input := "class\nA\nB\nC"
+		reader := strings.NewReader(input)
+		classes, err := ReadClasses(reader, "class", ',')
+
+		assert.NoError(t, err)
+		assert.Equal(t, []string{"A", "B", "C"}, classes)
+	})
+
+	t.Run("Empty values in target column", func(t *testing.T) {
+		input := "a,b,c\n1,,3\n,5,6\n7,,9"
+		reader := strings.NewReader(input)
+		classes, err := ReadClasses(reader, "b", ',')
+
+		assert.NoError(t, err)
+		assert.Equal(t, []string{"", "5", ""}, classes)
+	})
+}
