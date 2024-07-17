@@ -41,7 +41,7 @@ func New(name string, columns []string, normalizers []norm.Normalizer, size Size
 		}
 	}
 	if len(normalizers) != len(columns) {
-		panic("invalid number of normalizers")
+		panic(fmt.Sprintf("invalid number of normalizers: expected %d, got %d", len(columns), len(normalizers)))
 	}
 	return Layer{
 		name:        name,
@@ -66,7 +66,7 @@ func NewWithData(name string, columns []string, normalizers []norm.Normalizer, s
 		}
 	}
 	if len(normalizers) != len(columns) {
-		panic("invalid number of normalizers")
+		panic(fmt.Sprintf("invalid number of normalizers: expected %d, got %d", len(columns), len(normalizers)))
 	}
 	return Layer{
 		name:        name,

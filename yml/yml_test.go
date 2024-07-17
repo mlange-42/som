@@ -1,7 +1,6 @@
 package yml
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/mlange-42/som"
@@ -20,7 +19,7 @@ neighborhood: gaussian
 layers:
   - name: layer1
     columns: [a, b, c]
-    norm: [gaussian, uniform, none]
+    norm: [gaussian 0 1, uniform, none]
     metric: euclidean
     weight: 1.0
   - name: layer2
@@ -46,7 +45,10 @@ layers:
 		assert.Equal(t, &distance.Manhattan{}, config.Layers[1].Metric)
 		assert.Equal(t, 0.5, config.Layers[1].Weight)
 
-		assert.Equal(t, &norm.Gaussian{}, config.Layers[0].Norm[0])
+		gauss := norm.Gaussian{}
+		gauss.SetArgs(0, 1)
+
+		assert.Equal(t, &gauss, config.Layers[0].Norm[0])
 		assert.Equal(t, &norm.Uniform{}, config.Layers[0].Norm[1])
 		assert.Equal(t, &norm.None{}, config.Layers[0].Norm[2])
 	})
@@ -136,6 +138,7 @@ layers:
   weight: 1.0
 - name: layer2
   columns: [d, e]
+  norm: [gaussian 0 1, uniform -0.01 0.01]
   metric: manhattan
   weight: 0.5
 `)
@@ -158,12 +161,12 @@ layers:
     data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   - name: layer2
     columns: [d, e]
+    norm: [gaussian 0 1, uniform -0.01 0.01]
     metric: manhattan
     weight: 0.5
     data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 neighborhood: gaussian
 `
 
-	fmt.Println(string(result))
 	assert.Equal(t, expected, string(result))
 }

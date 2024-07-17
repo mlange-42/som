@@ -59,9 +59,9 @@ func ToSomConfig(ymlData []byte) (*som.SomConfig, error) {
 		}
 		norms := make([]norm.Normalizer, len(l.Norm))
 		for i, n := range l.Norm {
-			normalizer, ok := norm.GetNormalizer(n)
-			if !ok {
-				return nil, fmt.Errorf("unknown normalizer: %s", n)
+			normalizer, err := norm.FromString(n)
+			if err != nil {
+				return nil, err
 			}
 			norms[i] = normalizer
 		}
@@ -89,7 +89,7 @@ func ToYAML(som *som.Som) ([]byte, error) {
 		norms := make([]string, len(l.Normalizers()))
 		allNone := true
 		for i, n := range l.Normalizers() {
-			norms[i] = n.Name()
+			norms[i] = norm.ToString(n)
 			if _, ok := n.(*norm.None); !ok {
 				allNone = false
 			}
