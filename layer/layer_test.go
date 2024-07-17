@@ -7,7 +7,7 @@ import (
 )
 
 func TestLayer(t *testing.T) {
-	l := NewLayer("L1", []string{"a", "b", "c"}, Size{3, 2}, false)
+	l := New("L1", []string{"a", "b", "c"}, Size{3, 2}, false)
 
 	assert.Equal(t, 18, len(l.data))
 

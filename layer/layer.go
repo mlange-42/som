@@ -26,8 +26,8 @@ type Layer struct {
 	categorical bool      // Whether the layer is categorical or continuous
 }
 
-// NewLayer creates a new Layer with the given columns and size.
-func NewLayer(name string, columns []string, size Size, categorical bool) Layer {
+// New creates a new Layer with the given columns and size.
+func New(name string, columns []string, size Size, categorical bool) Layer {
 	return Layer{
 		name:        name,
 		columns:     columns,

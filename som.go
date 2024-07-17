@@ -72,7 +72,7 @@ func New(params *SomConfig) (Som, error) {
 		if len(l.Columns) == 0 {
 			return Som{}, fmt.Errorf("layer %d has no columns", i)
 		}
-		lay[i] = layer.NewLayer(l.Name, l.Columns, params.Size, l.Categorical)
+		lay[i] = layer.New(l.Name, l.Columns, params.Size, l.Categorical)
 
 		weight[i] = l.Weight
 		if weight[i] == 0 {
