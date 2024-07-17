@@ -30,7 +30,7 @@ func (c *SomConfig) PrepareTables(reader csv.Reader) ([]*table.Table, error) {
 			if !layer.Categorical {
 				return nil, fmt.Errorf("layer %d has no columns", i)
 			}
-			classes, err := reader.ReadClasses(layer.Name)
+			classes, err := reader.ReadLabels(layer.Name)
 			if err != nil {
 				return nil, err
 			}

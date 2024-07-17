@@ -15,8 +15,7 @@ import (
 
 type Reader interface {
 	ReadColumns(columns []string) (*table.Table, error)
-	ReadClasses(column string) ([]string, error)
-	UniqueClasses(column string) ([]string, error)
+	ReadLabels(column string) ([]string, error)
 }
 
 type StringReader struct {
@@ -33,12 +32,8 @@ func (s *StringReader) ReadColumns(columns []string) (*table.Table, error) {
 	return readColumns(strings.NewReader(s.text), columns, s.delim, s.noData)
 }
 
-func (s *StringReader) ReadClasses(column string) ([]string, error) {
-	return readClasses(strings.NewReader(s.text), column, s.delim)
-}
-
-func (s *StringReader) UniqueClasses(column string) ([]string, error) {
-	return uniqueClasses(strings.NewReader(s.text), column, s.delim)
+func (s *StringReader) ReadLabels(column string) ([]string, error) {
+	return readLabels(strings.NewReader(s.text), column, s.delim)
 }
 
 type FileReader struct {
@@ -60,12 +55,8 @@ func (f *FileReader) ReadColumns(columns []string) (*table.Table, error) {
 	return readColumns(strings.NewReader(f.text), columns, f.delim, f.noData)
 }
 
-func (f *FileReader) ReadClasses(column string) ([]string, error) {
-	return readClasses(strings.NewReader(f.text), column, f.delim)
-}
-
-func (f *FileReader) UniqueClasses(column string) ([]string, error) {
-	return uniqueClasses(strings.NewReader(f.text), column, f.delim)
+func (f *FileReader) ReadLabels(column string) ([]string, error) {
+	return readLabels(strings.NewReader(f.text), column, f.delim)
 }
 
 func readColumns(reader io.Reader, columns []string, delim rune, noData string) (*table.Table, error) {
@@ -113,7 +104,7 @@ func readColumns(reader io.Reader, columns []string, delim rune, noData string) 
 	return table.NewFromData(columns, data)
 }
 
-func readClasses(reader io.Reader, column string, delim rune) ([]string, error) {
+func readLabels(reader io.Reader, column string, delim rune) ([]string, error) {
 	r := csv.NewReader(reader)
 	r.ReuseRecord = true
 	r.Comma = delim
@@ -142,39 +133,4 @@ func readClasses(reader io.Reader, column string, delim rune) ([]string, error) 
 	}
 
 	return data, nil
-}
-
-func uniqueClasses(reader io.Reader, column string, delim rune) ([]string, error) {
-	r := csv.NewReader(reader)
-	r.ReuseRecord = true
-	r.Comma = delim
-
-	header, err := r.Read()
-	if err != nil {
-		return nil, err
-	}
-
-	index := slices.Index(header, column)
-	if index == -1 {
-		return nil, fmt.Errorf("column %q not found", column)
-	}
-
-	classes := []string{}
-	classesMap := map[string]bool{}
-	for {
-		record, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return nil, err
-		}
-
-		if _, ok := classesMap[record[index]]; !ok {
-			classesMap[record[index]] = true
-			classes = append(classes, record[index])
-		}
-	}
-
-	return classes, nil
 }

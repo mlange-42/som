@@ -81,7 +81,7 @@ func TestReadClasses(t *testing.T) {
 	t.Run("Valid input", func(t *testing.T) {
 		input := "a,b,c\nred,2,3\nblue,5,6\ngreen,8,9"
 		reader := strings.NewReader(input)
-		classes, err := readClasses(reader, "a", ',')
+		classes, err := readLabels(reader, "a", ',')
 
 		assert.NoError(t, err)
 		assert.Equal(t, []string{"red", "blue", "green"}, classes)
@@ -90,7 +90,7 @@ func TestReadClasses(t *testing.T) {
 	t.Run("Column not in first position", func(t *testing.T) {
 		input := "x,y,z\n1,cat,3\n4,dog,6\n7,fish,9"
 		reader := strings.NewReader(input)
-		classes, err := readClasses(reader, "y", ',')
+		classes, err := readLabels(reader, "y", ',')
 
 		assert.NoError(t, err)
 		assert.Equal(t, []string{"cat", "dog", "fish"}, classes)
@@ -98,7 +98,7 @@ func TestReadClasses(t *testing.T) {
 
 	t.Run("Empty input", func(t *testing.T) {
 		reader := strings.NewReader("")
-		_, err := readClasses(reader, "a", ',')
+		_, err := readLabels(reader, "a", ',')
 
 		assert.Error(t, err)
 		assert.Equal(t, io.EOF, err)
@@ -107,7 +107,7 @@ func TestReadClasses(t *testing.T) {
 	t.Run("Column not found", func(t *testing.T) {
 		input := "a,b,c\n1,2,3\n4,5,6"
 		reader := strings.NewReader(input)
-		_, err := readClasses(reader, "d", ',')
+		_, err := readLabels(reader, "d", ',')
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "column \"d\" not found")
@@ -116,7 +116,7 @@ func TestReadClasses(t *testing.T) {
 	t.Run("Custom delimiter", func(t *testing.T) {
 		input := "a;b;c\napple;2;3\nbanana;5;6\ncherry;8;9"
 		reader := strings.NewReader(input)
-		classes, err := readClasses(reader, "a", ';')
+		classes, err := readLabels(reader, "a", ';')
 
 		assert.NoError(t, err)
 		assert.Equal(t, []string{"apple", "banana", "cherry"}, classes)
@@ -125,7 +125,7 @@ func TestReadClasses(t *testing.T) {
 	t.Run("Single column input", func(t *testing.T) {
 		input := "class\nA\nB\nC"
 		reader := strings.NewReader(input)
-		classes, err := readClasses(reader, "class", ',')
+		classes, err := readLabels(reader, "class", ',')
 
 		assert.NoError(t, err)
 		assert.Equal(t, []string{"A", "B", "C"}, classes)
@@ -134,7 +134,7 @@ func TestReadClasses(t *testing.T) {
 	t.Run("Empty values in target column", func(t *testing.T) {
 		input := "a,b,c\n1,,3\n,5,6\n7,,9"
 		reader := strings.NewReader(input)
-		classes, err := readClasses(reader, "b", ',')
+		classes, err := readLabels(reader, "b", ',')
 
 		assert.NoError(t, err)
 		assert.Equal(t, []string{"", "5", ""}, classes)
@@ -235,7 +235,7 @@ func TestFileReader_ReadClasses(t *testing.T) {
 		reader, err := NewFileReader(tempFile.Name(), ',', "")
 		assert.NoError(t, err)
 
-		classes, err := reader.ReadClasses("category")
+		classes, err := reader.ReadLabels("category")
 		assert.NoError(t, err)
 		assert.Equal(t, []string{"A", "B", "A"}, classes)
 	})
@@ -252,7 +252,7 @@ func TestFileReader_ReadClasses(t *testing.T) {
 		reader, err := NewFileReader(tempFile.Name(), '|', "")
 		assert.NoError(t, err)
 
-		classes, err := reader.ReadClasses("type")
+		classes, err := reader.ReadLabels("type")
 		assert.NoError(t, err)
 		assert.Equal(t, []string{"X", "Y", "Z"}, classes)
 	})
@@ -269,7 +269,7 @@ func TestFileReader_ReadClasses(t *testing.T) {
 		reader, err := NewFileReader(tempFile.Name(), ',', "")
 		assert.NoError(t, err)
 
-		_, err = reader.ReadClasses("non_existent")
+		_, err = reader.ReadLabels("non_existent")
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "column \"non_existent\" not found")
 	})
