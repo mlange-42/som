@@ -3,8 +3,8 @@ package yml
 import (
 	"testing"
 
-	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/distance"
+	"github.com/mlange-42/som/layer"
 	"github.com/mlange-42/som/neighborhood"
 	"github.com/stretchr/testify/assert"
 )
@@ -29,7 +29,7 @@ layers:
 
 		assert.NoError(t, err)
 		assert.NotNil(t, config)
-		assert.Equal(t, som.Size{Width: 10, Height: 8}, config.Size)
+		assert.Equal(t, layer.Size{Width: 10, Height: 8}, config.Size)
 		assert.IsType(t, &neighborhood.Gaussian{}, config.Neighborhood)
 		assert.Len(t, config.Layers, 2)
 		assert.Equal(t, "layer1", config.Layers[0].Name)

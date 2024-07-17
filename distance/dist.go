@@ -25,6 +25,9 @@ type SumOfSquares struct{}
 func (d *SumOfSquares) Distance(x, y []float64) float64 {
 	var sum float64
 	for i := range x {
+		if math.IsNaN(y[i]) {
+			continue
+		}
 		d := x[i] - y[i]
 		sum += d * d
 	}
@@ -36,6 +39,9 @@ type Euclidean struct{}
 func (d *Euclidean) Distance(x, y []float64) float64 {
 	var sum float64
 	for i := range x {
+		if math.IsNaN(y[i]) {
+			continue
+		}
 		d := x[i] - y[i]
 		sum += d * d
 	}
@@ -47,6 +53,9 @@ type Manhattan struct{}
 func (d *Manhattan) Distance(x, y []float64) float64 {
 	var sum float64
 	for i := range x {
+		if math.IsNaN(y[i]) {
+			continue
+		}
 		sum += math.Abs(x[i] - y[i])
 	}
 	return sum
@@ -57,6 +66,9 @@ type Hamming struct{}
 func (d *Hamming) Distance(x, y []float64) float64 {
 	var sum float64
 	for i := range x {
+		if math.IsNaN(y[i]) {
+			continue
+		}
 		if (x[i] < 0.5) != (y[i] < 0.5) {
 			sum++
 		}

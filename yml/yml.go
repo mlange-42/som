@@ -6,6 +6,7 @@ import (
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/distance"
+	"github.com/mlange-42/som/layer"
 	"github.com/mlange-42/som/neighborhood"
 	"gopkg.in/yaml.v3"
 )
@@ -41,7 +42,7 @@ func ToSomConfig(ymlData []byte) (*som.SomConfig, error) {
 	}
 
 	conf := som.SomConfig{
-		Size:         som.Size{Width: yml.Size[0], Height: yml.Size[1]},
+		Size:         layer.Size{Width: yml.Size[0], Height: yml.Size[1]},
 		Layers:       []som.LayerDef{},
 		Neighborhood: neigh,
 	}

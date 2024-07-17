@@ -1,4 +1,4 @@
-package som
+package layer
 
 import (
 	"fmt"
@@ -41,6 +41,10 @@ func (l *Layer) Name() string {
 	return l.name
 }
 
+func (l *Layer) Data() []float64 {
+	return l.data
+}
+
 func (l *Layer) nodeIndex(x, y int) int {
 	return (y + x*l.size.Height) * len(l.columns)
 }
@@ -63,8 +67,12 @@ func (l *Layer) Column(col string) int {
 	return slices.Index(l.columns, col)
 }
 
-func (l *Layer) Columns() []string {
+func (l *Layer) ColumnNames() []string {
 	return l.columns
+}
+
+func (l *Layer) Columns() int {
+	return len(l.columns)
 }
 
 func (l *Layer) Nodes() int {
@@ -120,7 +128,7 @@ func (l *Layer) ColumnMatrix(col int) [][]float64 {
 func (l *Layer) ToCSV(sep rune) string {
 	b := strings.Builder{}
 	s := string(sep)
-	cols := l.Columns()
+	cols := l.ColumnNames()
 
 	b.WriteString(fmt.Sprintf("id%scol%srow%s", s, s, s))
 	for i, col := range cols {

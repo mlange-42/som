@@ -7,12 +7,13 @@ import (
 	"github.com/mlange-42/som/conv"
 	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/distance"
+	"github.com/mlange-42/som/layer"
 	"github.com/mlange-42/som/neighborhood"
 	"github.com/mlange-42/som/table"
 )
 
 type SomConfig struct {
-	Size         Size
+	Size         layer.Size
 	Layers       []LayerDef
 	Neighborhood neighborhood.Neighborhood
 }
@@ -56,22 +57,22 @@ type LayerDef struct {
 }
 
 type Som struct {
-	size         Size
-	layers       []Layer
+	size         layer.Size
+	layers       []layer.Layer
 	weight       []float64
 	metric       []distance.Distance
 	neighborhood neighborhood.Neighborhood
 }
 
 func New(params *SomConfig) (Som, error) {
-	lay := make([]Layer, len(params.Layers))
+	lay := make([]layer.Layer, len(params.Layers))
 	weight := make([]float64, len(params.Layers))
 	metric := make([]distance.Distance, len(params.Layers))
 	for i, l := range params.Layers {
 		if len(l.Columns) == 0 {
 			return Som{}, fmt.Errorf("layer %d has no columns", i)
 		}
-		lay[i] = NewLayer(l.Name, l.Columns, params.Size, l.Categorical)
+		lay[i] = layer.NewLayer(l.Name, l.Columns, params.Size, l.Categorical)
 
 		weight[i] = l.Weight
 		if weight[i] == 0 {
@@ -103,15 +104,18 @@ func (s *Som) learn(data [][]float64, alpha, radius float64) {
 	xMin, yMin := max(xBmu-lim, 0), max(yBmu-lim, 0)
 	xMax, yMax := min(xBmu+lim, s.size.Width-1), min(yBmu+lim, s.size.Height-1)
 
-	for l, layer := range s.layers {
+	for l, lay := range s.layers {
 		lData := data[l]
-		cols := len(layer.columns)
+		cols := lay.Columns()
 
 		for x := xMin; x <= xMax; x++ {
 			for y := yMin; y <= yMax; y++ {
-				node := layer.GetNode(x, y)
+				node := lay.GetNode(x, y)
 				r := s.neighborhood.Weight(x, y, xBmu, yBmu, radius)
 				for i := 0; i < cols; i++ {
+					if math.IsNaN(lData[i]) {
+						continue
+					}
 					node[i] += alpha * r * (lData[i] - node[i])
 				}
 			}
@@ -140,6 +144,6 @@ func (s *Som) getBMU(data [][]float64) (int, float64) {
 	return minIndex, minDist
 }
 
-func (s *Som) Layers() []Layer {
+func (s *Som) Layers() []layer.Layer {
 	return s.layers
 }

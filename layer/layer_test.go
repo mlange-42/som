@@ -1,4 +1,4 @@
-package som
+package layer
 
 import (
 	"testing"

@@ -55,7 +55,7 @@ func (t *Trainer) checkTable() error {
 
 	for i := range t.som.layers {
 		table := t.tables[i]
-		cols := t.som.layers[i].columns
+		cols := t.som.layers[i].ColumnNames()
 		if table.Columns() != len(cols) {
 			return fmt.Errorf("number of columns in table (%d) does not match number of columns in layer (%d)", table.Columns(), len(cols))
 		}
@@ -76,9 +76,10 @@ func (t *Trainer) Train(maxEpoch int) {
 }
 
 func (t *Trainer) randomize() {
-	for _, layer := range t.som.layers {
-		for i := range layer.data {
-			layer.data[i] = t.rng.Float64()
+	for _, lay := range t.som.layers {
+		data := lay.Data()
+		for i := range data {
+			data[i] = t.rng.Float64()
 		}
 	}
 }
