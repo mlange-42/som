@@ -3,11 +3,12 @@ package layer
 import (
 	"testing"
 
+	"github.com/mlange-42/som/distance"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestLayer(t *testing.T) {
-	l := New("L1", []string{"a", "b", "c"}, Size{3, 2}, false)
+	l := New("L1", []string{"a", "b", "c"}, Size{3, 2}, &distance.Manhattan{}, 1.0, false)
 
 	assert.Equal(t, 18, len(l.data))
 

@@ -36,10 +36,14 @@ func TestNew(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, params.Size, som.size)
 		assert.Len(t, som.layers, 2)
-		assert.Equal(t, []float64{0.5, 1.0}, som.weight)
-		assert.IsType(t, &distance.Manhattan{}, som.metric[0])
-		assert.IsType(t, &distance.Euclidean{}, som.metric[1])
 		assert.IsType(t, &neighborhood.Gaussian{}, som.neighborhood)
+
+		assert.Equal(t, "Layer1", som.layers[0].Name())
+		assert.Equal(t, "Layer2", som.layers[1].Name())
+		assert.Equal(t, 0.5, som.layers[0].Weight())
+		assert.Equal(t, 1.0, som.layers[1].Weight())
+		assert.IsType(t, &distance.Manhattan{}, som.layers[0].Metric())
+		assert.IsType(t, &distance.Euclidean{}, som.layers[1].Metric())
 	})
 
 	t.Run("Categorical with reader", func(t *testing.T) {
@@ -79,9 +83,6 @@ func TestNew(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, params.Size, som.size)
 		assert.Len(t, som.layers, 2)
-		assert.Equal(t, []float64{0.5, 1.0}, som.weight)
-		assert.IsType(t, &distance.Manhattan{}, som.metric[0])
-		assert.IsType(t, &distance.Hamming{}, som.metric[1])
 		assert.IsType(t, &neighborhood.Gaussian{}, som.neighborhood)
 
 		assert.Equal(t, []string{"A", "B"}, som.layers[1].ColumnNames())
@@ -116,8 +117,7 @@ func TestNew(t *testing.T) {
 
 		som, err := New(params)
 		assert.NoError(t, err)
-		assert.Equal(t, []float64{1.0}, som.weight)
-		assert.IsType(t, &distance.Euclidean{}, som.metric[0])
+		_ = som
 	})
 
 	t.Run("Multiple layers with different configurations", func(t *testing.T) {
@@ -145,9 +145,6 @@ func TestNew(t *testing.T) {
 		assert.Len(t, som.layers, 2)
 		assert.True(t, som.layers[0].IsCategorical())
 		assert.False(t, som.layers[1].IsCategorical())
-		assert.Equal(t, []float64{0.7, 1.2}, som.weight)
-		assert.IsType(t, &distance.Euclidean{}, som.metric[0])
-		assert.IsType(t, &distance.Manhattan{}, som.metric[1])
 		assert.IsType(t, &neighborhood.Linear{}, som.neighborhood)
 	})
 

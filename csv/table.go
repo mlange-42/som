@@ -101,7 +101,7 @@ func readColumns(reader io.Reader, columns []string, delim rune, noData string) 
 		}
 	}
 
-	return table.NewFromData(columns, data)
+	return table.NewWithData(columns, data)
 }
 
 func readLabels(reader io.Reader, column string, delim rune) ([]string, error) {

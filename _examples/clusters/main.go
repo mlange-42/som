@@ -26,7 +26,7 @@ func main() {
 
 	rows := 250
 	data := generateData(rows, 2)
-	tab, err := table.NewFromData([]string{"x", "y"}, data)
+	tab, err := table.NewWithData([]string{"x", "y"}, data)
 	if err != nil {
 		panic(err)
 	}

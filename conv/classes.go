@@ -25,7 +25,7 @@ func ClassesToTable[T comparable](classes []T) *table.Table {
 	for i, c := range classes {
 		data[i*len(classList)+classMap[c]] = 1
 	}
-	table, err := table.NewFromData(classNames, data)
+	table, err := table.NewWithData(classNames, data)
 	if err != nil {
 		panic(err)
 	}
