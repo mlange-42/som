@@ -7,7 +7,7 @@ import (
 	"github.com/mlange-42/som/decay"
 )
 
-type TrainingParams struct {
+type TrainingConfig struct {
 	LearningRate       decay.Decay
 	NeighborhoodRadius decay.Decay
 }
@@ -15,11 +15,11 @@ type TrainingParams struct {
 type Trainer struct {
 	som    *Som
 	table  *Table
-	params *TrainingParams
+	params *TrainingConfig
 	rng    *rand.Rand
 }
 
-func NewTrainer(som *Som, table *Table, params *TrainingParams, rng *rand.Rand) (*Trainer, error) {
+func NewTrainer(som *Som, table *Table, params *TrainingConfig, rng *rand.Rand) (*Trainer, error) {
 	t := &Trainer{
 		som:    som,
 		table:  table,

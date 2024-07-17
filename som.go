@@ -7,7 +7,7 @@ import (
 	"github.com/mlange-42/som/neighborhood"
 )
 
-type SomParams struct {
+type SomConfig struct {
 	Size         Size
 	Layers       []LayerDef
 	Neighborhood neighborhood.Neighborhood
@@ -28,7 +28,7 @@ type Som struct {
 	neighborhood neighborhood.Neighborhood
 }
 
-func New(params *SomParams) Som {
+func New(params *SomConfig) Som {
 	lay := make([]Layer, len(params.Layers))
 	weight := make([]float64, len(params.Layers))
 	offset := make([]int, len(params.Layers))

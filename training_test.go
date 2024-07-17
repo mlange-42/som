@@ -10,8 +10,8 @@ import (
 )
 
 func TestNewTrainer(t *testing.T) {
-	params := TrainingParams{}
-	somParams := SomParams{
+	params := TrainingConfig{}
+	somParams := SomConfig{
 		Size: Size{2, 3},
 		Layers: []LayerDef{
 			{
@@ -45,11 +45,11 @@ func TestNewTrainer(t *testing.T) {
 }
 
 func TestTrainerDecay(t *testing.T) {
-	params := TrainingParams{
+	params := TrainingConfig{
 		LearningRate:       &decay.Linear{Start: 0.5, End: 0.01},
 		NeighborhoodRadius: &decay.Power{Start: 5, End: 0.5},
 	}
-	somParams := SomParams{
+	somParams := SomConfig{
 		Size: Size{2, 3},
 		Layers: []LayerDef{
 			{
@@ -74,11 +74,11 @@ func TestTrainerDecay(t *testing.T) {
 }
 
 func TestTrainerTrain(t *testing.T) {
-	params := TrainingParams{
+	params := TrainingConfig{
 		LearningRate:       &decay.Linear{Start: 0.5, End: 0.01},
 		NeighborhoodRadius: &decay.Power{Start: 3, End: 0.5},
 	}
-	somParams := SomParams{
+	somParams := SomConfig{
 		Size: Size{2, 3},
 		Layers: []LayerDef{
 			{
