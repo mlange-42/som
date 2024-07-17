@@ -2,25 +2,29 @@ package norm
 
 import "github.com/mlange-42/som/table"
 
-var normalizers = map[string]Normalizer{}
+var normalizers = map[string]func() Normalizer{}
 
 func init() {
-	n := []Normalizer{
-		&None{},
-		&Gaussian{},
-		&Uniform{},
+	n := []func() Normalizer{
+		func() Normalizer { return &None{} },
+		func() Normalizer { return &Gaussian{} },
+		func() Normalizer { return &Uniform{} },
 	}
 	for _, v := range n {
-		if _, ok := normalizers[v.Name()]; ok {
-			panic("duplicate normalizer name: " + v.Name())
+		vv := v()
+		if _, ok := normalizers[vv.Name()]; ok {
+			panic("duplicate normalizer name: " + vv.Name())
 		}
-		normalizers[v.Name()] = v
+		normalizers[vv.Name()] = v
 	}
 }
 
 func GetNormalizer(name string) (Normalizer, bool) {
 	n, ok := normalizers[name]
-	return n, ok
+	if ok {
+		return n(), ok
+	}
+	return nil, ok
 }
 
 type Normalizer interface {

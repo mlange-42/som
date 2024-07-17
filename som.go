@@ -9,6 +9,7 @@ import (
 	"github.com/mlange-42/som/distance"
 	"github.com/mlange-42/som/layer"
 	"github.com/mlange-42/som/neighborhood"
+	"github.com/mlange-42/som/norm"
 	"github.com/mlange-42/som/table"
 )
 
@@ -51,6 +52,7 @@ func (c *SomConfig) PrepareTables(reader csv.Reader) ([]*table.Table, error) {
 type LayerDef struct {
 	Name        string
 	Columns     []string
+	Norm        []norm.Normalizer
 	Metric      distance.Distance
 	Weight      float64
 	Categorical bool
@@ -82,10 +84,10 @@ func New(params *SomConfig) (Som, error) {
 			}
 		}
 		if len(l.Data) == 0 {
-			lay[i] = layer.New(l.Name, l.Columns, params.Size, metric, weight, l.Categorical)
+			lay[i] = layer.New(l.Name, l.Columns, l.Norm, params.Size, metric, weight, l.Categorical)
 		} else {
 			var err error
-			lay[i], err = layer.NewWithData(l.Name, l.Columns, params.Size, metric, weight, l.Categorical, l.Data)
+			lay[i], err = layer.NewWithData(l.Name, l.Columns, l.Norm, params.Size, metric, weight, l.Categorical, l.Data)
 			if err != nil {
 				return Som{}, err
 			}

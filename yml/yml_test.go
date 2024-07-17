@@ -1,12 +1,14 @@
 package yml
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/distance"
 	"github.com/mlange-42/som/layer"
 	"github.com/mlange-42/som/neighborhood"
+	"github.com/mlange-42/som/norm"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,6 +20,7 @@ neighborhood: gaussian
 layers:
   - name: layer1
     columns: [a, b, c]
+    norm: [gaussian, uniform, none]
     metric: euclidean
     weight: 1.0
   - name: layer2
@@ -42,6 +45,10 @@ layers:
 		assert.Equal(t, []string{"d", "e"}, config.Layers[1].Columns)
 		assert.Equal(t, &distance.Manhattan{}, config.Layers[1].Metric)
 		assert.Equal(t, 0.5, config.Layers[1].Weight)
+
+		assert.Equal(t, &norm.Gaussian{}, config.Layers[0].Norm[0])
+		assert.Equal(t, &norm.Uniform{}, config.Layers[0].Norm[1])
+		assert.Equal(t, &norm.None{}, config.Layers[0].Norm[2])
 	})
 
 	t.Run("Invalid YAML syntax", func(t *testing.T) {
@@ -157,5 +164,6 @@ layers:
 neighborhood: gaussian
 `
 
+	fmt.Println(string(result))
 	assert.Equal(t, expected, string(result))
 }
