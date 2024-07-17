@@ -53,8 +53,12 @@ func (t *Table) Column(col string) int {
 	return slices.Index(t.columns, col)
 }
 
-func (t *Table) Columns() []string {
+func (t *Table) ColumnNames() []string {
 	return t.columns
+}
+
+func (t *Table) Columns() int {
+	return len(t.columns)
 }
 
 func (t *Table) Rows() int {
@@ -77,9 +81,13 @@ func (t *Table) GetRow(row int) []float64 {
 	return t.data[idx : idx+len(t.columns)]
 }
 
+func (t *Table) Data() []float64 {
+	return t.data
+}
+
 func (t *Table) ToCSV(sep rune) string {
 	b := strings.Builder{}
-	cols := t.Columns()
+	cols := t.ColumnNames()
 	for i, col := range cols {
 		b.WriteString(col)
 		if i < len(cols)-1 {
