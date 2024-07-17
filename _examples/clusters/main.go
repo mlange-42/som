@@ -37,8 +37,8 @@ func main() {
 
 	trainer.Train(1000)
 
-	//fmt.Println(s.Layers()[0].ToCSV(';'))
-	fmt.Println(s.Layers()[0].ColumnMatrix(0))
+	fmt.Println(s.Layers()[0].ToCSV(';'))
+	//fmt.Println(s.Layers()[0].ColumnMatrix(0))
 }
 
 func generateData(rows, cols int) []float64 {
