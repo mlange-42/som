@@ -71,3 +71,4 @@ jobs:
     - name: Run examples
       run: |
         go run ./_examples/clusters
+        go run ./_examples/countries
