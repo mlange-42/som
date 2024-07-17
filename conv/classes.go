@@ -2,11 +2,12 @@ package conv
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/mlange-42/som"
 )
 
-func ClassesToTable[T comparable](classes []T) ([]T, som.Table) {
+func ClassesToTable[T comparable](classes []T) som.Table {
 	classList := []T{}
 	classNames := []string{}
 	classMap := map[T]int{}
@@ -27,5 +28,23 @@ func ClassesToTable[T comparable](classes []T) ([]T, som.Table) {
 	if err != nil {
 		panic(err)
 	}
-	return classList, table
+	return table
+}
+
+func TableToClasses(table som.Table) ([]string, []int) {
+	classes := make([]int, table.Rows())
+	for i := 0; i < table.Rows(); i++ {
+		row := table.GetRow(i)
+		maxValue := math.Inf(-1)
+		maxIndex := 0
+		cols := table.Columns()
+		for j := 0; j < cols; j++ {
+			if row[j] > maxValue {
+				maxValue = row[j]
+				maxIndex = j
+			}
+		}
+		classes[i] = maxIndex
+	}
+	return append([]string{}, table.ColumnNames()...), classes
 }
