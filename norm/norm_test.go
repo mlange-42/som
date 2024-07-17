@@ -62,3 +62,30 @@ func TestUniform(t *testing.T) {
 		assert.Equal(t, 6.0, u.max)
 	})
 }
+
+func TestNone(t *testing.T) {
+	n := &None{}
+
+	t.Run("Name", func(t *testing.T) {
+		assert.Equal(t, "none", n.Name())
+	})
+
+	t.Run("Normalize", func(t *testing.T) {
+		assert.InDelta(t, 5, n.Normalize(5), 0.001)
+	})
+
+	t.Run("DeNormalize", func(t *testing.T) {
+		assert.InDelta(t, 0.5, n.DeNormalize(0.5), 0.001)
+	})
+
+	t.Run("Initialize", func(t *testing.T) {
+		mockTable, err := table.NewWithData([]string{"x"}, []float64{
+			2.0, 4.0, 6.0,
+		})
+		assert.NoError(t, err)
+
+		n.Initialize(mockTable, 0)
+
+		// No assertions needed for None as it doesn't modify any internal state
+	})
+}

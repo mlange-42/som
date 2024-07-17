@@ -6,6 +6,7 @@ var normalizers = map[string]Normalizer{}
 
 func init() {
 	n := []Normalizer{
+		&None{},
 		&Gaussian{},
 		&Uniform{},
 	}
@@ -28,6 +29,22 @@ type Normalizer interface {
 	DeNormalize(value float64) float64
 	Initialize(t *table.Table, column int)
 }
+
+type None struct{}
+
+func (n *None) Name() string {
+	return "none"
+}
+
+func (n *None) Normalize(value float64) float64 {
+	return value
+}
+
+func (n *None) DeNormalize(value float64) float64 {
+	return value
+}
+
+func (n *None) Initialize(t *table.Table, column int) {}
 
 type Gaussian struct {
 	mean, std float64
