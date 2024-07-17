@@ -23,10 +23,10 @@ func New(columns []string, rows int) *Table {
 	}
 }
 
-// NewFromData creates a new Table from the given column names and data.
+// NewWithData creates a new Table from the given column names and data.
 // If the length of the columns slice is zero, an error is returned.
 // If the length of the data slice is not a multiple of the length of the columns slice, an error is returned.
-func NewFromData(columns []string, data []float64) (*Table, error) {
+func NewWithData(columns []string, data []float64) (*Table, error) {
 	if len(columns) == 0 {
 		return nil, fmt.Errorf("columns length must be greater than zero")
 	}

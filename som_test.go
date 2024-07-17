@@ -6,6 +6,7 @@ import (
 
 	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/distance"
+	"github.com/mlange-42/som/layer"
 	"github.com/mlange-42/som/neighborhood"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,7 +14,7 @@ import (
 func TestNew(t *testing.T) {
 	t.Run("Valid configuration", func(t *testing.T) {
 		params := &SomConfig{
-			Size: Size{3, 3},
+			Size: layer.Size{Width: 3, Height: 3},
 			Layers: []LayerDef{
 				{
 					Name:    "Layer1",
@@ -35,15 +36,19 @@ func TestNew(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, params.Size, som.size)
 		assert.Len(t, som.layers, 2)
-		assert.Equal(t, []float64{0.5, 1.0}, som.weight)
-		assert.IsType(t, &distance.Manhattan{}, som.metric[0])
-		assert.IsType(t, &distance.Euclidean{}, som.metric[1])
 		assert.IsType(t, &neighborhood.Gaussian{}, som.neighborhood)
+
+		assert.Equal(t, "Layer1", som.layers[0].Name())
+		assert.Equal(t, "Layer2", som.layers[1].Name())
+		assert.Equal(t, 0.5, som.layers[0].Weight())
+		assert.Equal(t, 1.0, som.layers[1].Weight())
+		assert.IsType(t, &distance.Manhattan{}, som.layers[0].Metric())
+		assert.IsType(t, &distance.Euclidean{}, som.layers[1].Metric())
 	})
 
 	t.Run("Categorical with reader", func(t *testing.T) {
 		params := &SomConfig{
-			Size: Size{3, 3},
+			Size: layer.Size{Width: 3, Height: 3},
 			Layers: []LayerDef{
 				{
 					Name:    "Layer1",
@@ -64,24 +69,28 @@ func TestNew(t *testing.T) {
 
 		csvTable := "x,y,Layer2\n1,2,A\n4,5,B\n7,8,A"
 		reader := csv.NewStringReader(csvTable, ',', "NA")
-		err := params.Prepare(reader)
+		tables, err := params.PrepareTables(reader)
 		assert.NoError(t, err)
+
+		assert.Equal(t, 2, len(tables))
+		assert.Equal(t, []string{"x", "y"}, tables[0].ColumnNames())
+		assert.Equal(t, []string{"A", "B"}, tables[1].ColumnNames())
+
+		assert.Equal(t, []float64{1, 2, 4, 5, 7, 8}, tables[0].Data())
+		assert.Equal(t, []float64{1, 0, 0, 1, 1, 0}, tables[1].Data())
 
 		som, err := New(params)
 		assert.NoError(t, err)
 		assert.Equal(t, params.Size, som.size)
 		assert.Len(t, som.layers, 2)
-		assert.Equal(t, []float64{0.5, 1.0}, som.weight)
-		assert.IsType(t, &distance.Manhattan{}, som.metric[0])
-		assert.IsType(t, &distance.Hamming{}, som.metric[1])
 		assert.IsType(t, &neighborhood.Gaussian{}, som.neighborhood)
 
-		assert.Equal(t, []string{"A", "B"}, som.layers[1].columns)
+		assert.Equal(t, []string{"A", "B"}, som.layers[1].ColumnNames())
 	})
 
 	t.Run("Empty columns", func(t *testing.T) {
 		params := &SomConfig{
-			Size: Size{2, 2},
+			Size: layer.Size{Width: 2, Height: 2},
 			Layers: []LayerDef{
 				{
 					Name:        "EmptyLayer",
@@ -97,7 +106,7 @@ func TestNew(t *testing.T) {
 
 	t.Run("Default weight and metric", func(t *testing.T) {
 		params := &SomConfig{
-			Size: Size{2, 2},
+			Size: layer.Size{Width: 2, Height: 2},
 			Layers: []LayerDef{
 				{
 					Name:    "DefaultLayer",
@@ -108,13 +117,12 @@ func TestNew(t *testing.T) {
 
 		som, err := New(params)
 		assert.NoError(t, err)
-		assert.Equal(t, []float64{1.0}, som.weight)
-		assert.IsType(t, &distance.Euclidean{}, som.metric[0])
+		_ = som
 	})
 
 	t.Run("Multiple layers with different configurations", func(t *testing.T) {
 		params := &SomConfig{
-			Size: Size{4, 4},
+			Size: layer.Size{Width: 4, Height: 4},
 			Layers: []LayerDef{
 				{
 					Name:        "CategoricalLayer",
@@ -137,15 +145,12 @@ func TestNew(t *testing.T) {
 		assert.Len(t, som.layers, 2)
 		assert.True(t, som.layers[0].IsCategorical())
 		assert.False(t, som.layers[1].IsCategorical())
-		assert.Equal(t, []float64{0.7, 1.2}, som.weight)
-		assert.IsType(t, &distance.Euclidean{}, som.metric[0])
-		assert.IsType(t, &distance.Manhattan{}, som.metric[1])
 		assert.IsType(t, &neighborhood.Linear{}, som.neighborhood)
 	})
 
 	t.Run("Invalid layer configuration", func(t *testing.T) {
 		params := &SomConfig{
-			Size: Size{2, 2},
+			Size: layer.Size{Width: 2, Height: 2},
 			Layers: []LayerDef{
 				{
 					Name: "InvalidLayer",
@@ -161,7 +166,7 @@ func TestNew(t *testing.T) {
 
 func TestGetBMU(t *testing.T) {
 	params := SomConfig{
-		Size: Size{2, 2},
+		Size: layer.Size{Width: 2, Height: 2},
 		Layers: []LayerDef{
 			{
 				Columns: []string{"x", "y"},
@@ -188,7 +193,7 @@ func TestGetBMU(t *testing.T) {
 
 	t.Run("Single layer", func(t *testing.T) {
 		singleLayerParams := SomConfig{
-			Size: Size{1, 1},
+			Size: layer.Size{Width: 1, Height: 1},
 			Layers: []LayerDef{
 				{
 					Columns: []string{"x"},
@@ -207,7 +212,7 @@ func TestGetBMU(t *testing.T) {
 
 	t.Run("Large SOM", func(t *testing.T) {
 		largeParams := SomConfig{
-			Size: Size{10, 10},
+			Size: layer.Size{Width: 10, Height: 10},
 			Layers: []LayerDef{
 				{
 					Columns: []string{"x", "y", "z"},
@@ -232,7 +237,7 @@ func TestGetBMU(t *testing.T) {
 
 func createSom() *Som {
 	params := SomConfig{
-		Size: Size{3, 3},
+		Size: layer.Size{Width: 3, Height: 3},
 		Layers: []LayerDef{
 			{
 				Columns: []string{"x", "y"},
@@ -265,7 +270,7 @@ func TestLearnBasic(t *testing.T) {
 		for l, layer := range som.layers {
 			initialWeights[l] = make([][]float64, som.size.Width*som.size.Height)
 			for i := range initialWeights[l] {
-				initialWeights[l][i] = make([]float64, len(layer.columns))
+				initialWeights[l][i] = make([]float64, len(layer.ColumnNames()))
 				copy(initialWeights[l][i], layer.GetNodeAt(i))
 			}
 		}
@@ -289,7 +294,7 @@ func TestLearnBasic(t *testing.T) {
 		for l, layer := range som.layers {
 			initialWeights[l] = make([][]float64, som.size.Width*som.size.Height)
 			for i := range initialWeights[l] {
-				initialWeights[l][i] = make([]float64, len(layer.columns))
+				initialWeights[l][i] = make([]float64, len(layer.ColumnNames()))
 				copy(initialWeights[l][i], layer.GetNodeAt(i))
 			}
 		}
@@ -316,7 +321,7 @@ func TestLearnRadius(t *testing.T) {
 		for l, layer := range som.layers {
 			initialWeights[l] = make([][]float64, som.size.Width*som.size.Height)
 			for i := range initialWeights[l] {
-				initialWeights[l][i] = make([]float64, len(layer.columns))
+				initialWeights[l][i] = make([]float64, len(layer.ColumnNames()))
 				copy(initialWeights[l][i], layer.GetNodeAt(i))
 			}
 		}

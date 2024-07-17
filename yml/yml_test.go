@@ -5,6 +5,7 @@ import (
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/distance"
+	"github.com/mlange-42/som/layer"
 	"github.com/mlange-42/som/neighborhood"
 	"github.com/stretchr/testify/assert"
 )
@@ -12,7 +13,7 @@ import (
 func TestToSomConfig(t *testing.T) {
 	t.Run("Valid YAML configuration", func(t *testing.T) {
 		ymlData := []byte(`
-size: [10, 8]
+size: [4, 3]
 neighborhood: gaussian
 layers:
   - name: layer1
@@ -23,13 +24,14 @@ layers:
     columns: [d, e]
     metric: manhattan
     weight: 0.5
+    data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 `)
 
 		config, err := ToSomConfig(ymlData)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, config)
-		assert.Equal(t, som.Size{Width: 10, Height: 8}, config.Size)
+		assert.Equal(t, layer.Size{Width: 4, Height: 3}, config.Size)
 		assert.IsType(t, &neighborhood.Gaussian{}, config.Neighborhood)
 		assert.Len(t, config.Layers, 2)
 		assert.Equal(t, "layer1", config.Layers[0].Name)
@@ -88,6 +90,25 @@ layers:
 		assert.Contains(t, err.Error(), "unknown metric: unknown")
 	})
 
+	t.Run("Invalid data size", func(t *testing.T) {
+		ymlData := []byte(`
+size: [4, 3]
+neighborhood: gaussian
+layers:
+  - name: Layer A
+    columns: [a, b, c]
+    weight: 1.0
+    metric: euclidean
+    data: [0, 0, 0, 0]
+`)
+
+		config, err := ToSomConfig(ymlData)
+
+		assert.Error(t, err)
+		assert.Nil(t, config)
+		assert.Contains(t, err.Error(), "invalid data size for layer Layer A")
+	})
+
 	t.Run("Empty configuration", func(t *testing.T) {
 		ymlData := []byte(``)
 
@@ -96,4 +117,45 @@ layers:
 		assert.Error(t, err)
 		assert.Nil(t, config)
 	})
+}
+func TestToYAML(t *testing.T) {
+	ymlData := []byte(`
+size: [4, 3]
+neighborhood: gaussian
+layers:
+- name: layer1
+  columns: [a, b, c]
+  metric: euclidean
+  weight: 1.0
+- name: layer2
+  columns: [d, e]
+  metric: manhattan
+  weight: 0.5
+`)
+
+	config, err := ToSomConfig(ymlData)
+	assert.NoError(t, err)
+
+	s, err := som.New(config)
+	assert.NoError(t, err)
+
+	result, err := ToYAML(&s)
+	assert.NoError(t, err)
+
+	expected := `size: [4, 3]
+layers:
+  - name: layer1
+    columns: [a, b, c]
+    metric: euclidean
+    weight: 1
+    data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  - name: layer2
+    columns: [d, e]
+    metric: manhattan
+    weight: 0.5
+    data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+neighborhood: gaussian
+`
+
+	assert.Equal(t, expected, string(result))
 }

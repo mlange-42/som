@@ -2,11 +2,21 @@ package neighborhood
 
 import "math"
 
-var neighborhoods = map[string]Neighborhood{
-	"gaussian":    &Gaussian{},
-	"cutgaussian": &CutGaussian{},
-	"linear":      &Linear{},
-	"box":         &Box{},
+var neighborhoods = map[string]Neighborhood{}
+
+func init() {
+	n := []Neighborhood{
+		&Gaussian{},
+		&CutGaussian{},
+		&Linear{},
+		&Box{},
+	}
+	for _, v := range n {
+		if _, ok := neighborhoods[v.Name()]; ok {
+			panic("duplicate neighborhood name: " + v.Name())
+		}
+		neighborhoods[v.Name()] = v
+	}
 }
 
 func GetNeighborhood(name string) (Neighborhood, bool) {
@@ -15,11 +25,16 @@ func GetNeighborhood(name string) (Neighborhood, bool) {
 }
 
 type Neighborhood interface {
+	Name() string
 	Weight(x1, y1, x2, y2 int, radius float64) float64
 	MaxRadius(radius float64) int
 }
 
 type Gaussian struct{}
+
+func (g *Gaussian) Name() string {
+	return "gaussian"
+}
 
 func (g *Gaussian) Weight(x1, y1, x2, y2 int, radius float64) float64 {
 	dx := float64(x1 - x2)
@@ -33,6 +48,10 @@ func (g *Gaussian) MaxRadius(radius float64) int {
 
 type CutGaussian struct{}
 
+func (g *CutGaussian) Name() string {
+	return "cutgaussian"
+}
+
 func (g *CutGaussian) Weight(x1, y1, x2, y2 int, radius float64) float64 {
 	dx := float64(x1 - x2)
 	dy := float64(y1 - y2)
@@ -44,6 +63,10 @@ func (g *CutGaussian) MaxRadius(radius float64) int {
 }
 
 type Linear struct{}
+
+func (l *Linear) Name() string {
+	return "linear"
+}
 
 func (l *Linear) Weight(x1, y1, x2, y2 int, radius float64) float64 {
 	dx, dy := float64(x1-x2), float64(y1-y2)
@@ -59,6 +82,10 @@ func (g *Linear) MaxRadius(radius float64) int {
 }
 
 type Box struct{}
+
+func (b *Box) Name() string {
+	return "box"
+}
 
 func (b *Box) Weight(x1, y1, x2, y2 int, radius float64) float64 {
 	dx := float64(x1 - x2)

@@ -4,11 +4,20 @@ import (
 	"math"
 )
 
-var metrics = map[string]Distance{
-	"sumofsquares": &SumOfSquares{},
-	"euclidean":    &Euclidean{},
-	"manhattan":    &Manhattan{},
-	"hamming":      &Hamming{},
+var metrics = map[string]Distance{}
+
+func init() {
+	m := []Distance{
+		&SumOfSquares{},
+		&Euclidean{},
+		&Manhattan{},
+	}
+	for _, v := range m {
+		if _, ok := metrics[v.Name()]; ok {
+			panic("duplicate metric name: " + v.Name())
+		}
+		metrics[v.Name()] = v
+	}
 }
 
 func GetMetric(name string) (Distance, bool) {
@@ -17,14 +26,22 @@ func GetMetric(name string) (Distance, bool) {
 }
 
 type Distance interface {
+	Name() string
 	Distance(x, y []float64) float64
 }
 
 type SumOfSquares struct{}
 
+func (d *SumOfSquares) Name() string {
+	return "sumofsquares"
+}
+
 func (d *SumOfSquares) Distance(x, y []float64) float64 {
 	var sum float64
 	for i := range x {
+		if math.IsNaN(y[i]) {
+			continue
+		}
 		d := x[i] - y[i]
 		sum += d * d
 	}
@@ -33,9 +50,16 @@ func (d *SumOfSquares) Distance(x, y []float64) float64 {
 
 type Euclidean struct{}
 
+func (d *Euclidean) Name() string {
+	return "euclidean"
+}
+
 func (d *Euclidean) Distance(x, y []float64) float64 {
 	var sum float64
 	for i := range x {
+		if math.IsNaN(y[i]) {
+			continue
+		}
 		d := x[i] - y[i]
 		sum += d * d
 	}
@@ -44,9 +68,16 @@ func (d *Euclidean) Distance(x, y []float64) float64 {
 
 type Manhattan struct{}
 
+func (d *Manhattan) Name() string {
+	return "manhattan"
+}
+
 func (d *Manhattan) Distance(x, y []float64) float64 {
 	var sum float64
 	for i := range x {
+		if math.IsNaN(y[i]) {
+			continue
+		}
 		sum += math.Abs(x[i] - y[i])
 	}
 	return sum
@@ -54,9 +85,16 @@ func (d *Manhattan) Distance(x, y []float64) float64 {
 
 type Hamming struct{}
 
+func (d *Hamming) Name() string {
+	return "hamming"
+}
+
 func (d *Hamming) Distance(x, y []float64) float64 {
 	var sum float64
 	for i := range x {
+		if math.IsNaN(y[i]) {
+			continue
+		}
 		if (x[i] < 0.5) != (y[i] < 0.5) {
 			sum++
 		}

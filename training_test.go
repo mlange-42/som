@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/mlange-42/som/decay"
+	"github.com/mlange-42/som/layer"
 	"github.com/mlange-42/som/neighborhood"
 	"github.com/mlange-42/som/table"
 	"github.com/stretchr/testify/assert"
@@ -13,7 +14,7 @@ import (
 func TestNewTrainer(t *testing.T) {
 	params := TrainingConfig{}
 	somParams := SomConfig{
-		Size: Size{2, 3},
+		Size: layer.Size{Width: 2, Height: 3},
 		Layers: []LayerDef{
 			{
 				Columns: []string{"x", "y"},
@@ -65,7 +66,7 @@ func TestTrainerDecay(t *testing.T) {
 		NeighborhoodRadius: &decay.Power{Start: 5, End: 0.5},
 	}
 	somParams := SomConfig{
-		Size: Size{2, 3},
+		Size: layer.Size{Width: 2, Height: 3},
 		Layers: []LayerDef{
 			{
 				Columns: []string{"x", "y"},
@@ -99,7 +100,7 @@ func TestTrainerTrain(t *testing.T) {
 		NeighborhoodRadius: &decay.Power{Start: 3, End: 0.5},
 	}
 	somParams := SomConfig{
-		Size: Size{2, 3},
+		Size: layer.Size{Width: 2, Height: 3},
 		Layers: []LayerDef{
 			{
 				Columns: []string{"x", "y"},
@@ -127,7 +128,7 @@ func TestTrainerTrain(t *testing.T) {
 
 		trainer.Train(0)
 
-		for _, v := range som.layers[0].data {
+		for _, v := range som.layers[0].Data() {
 			assert.NotEqual(t, 0, v)
 		}
 	})
@@ -153,7 +154,7 @@ func TestTrainerTrain(t *testing.T) {
 
 		trainer.Train(25)
 
-		for _, v := range som.layers[0].data {
+		for _, v := range som.layers[0].Data() {
 			assert.InDelta(t, 0, v, 0.0001)
 		}
 	})

@@ -6,6 +6,7 @@ import (
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/decay"
+	"github.com/mlange-42/som/layer"
 	"github.com/mlange-42/som/neighborhood"
 	"github.com/mlange-42/som/table"
 )
@@ -14,7 +15,7 @@ func main() {
 	rng := rand.New(rand.NewSource(1))
 
 	somParams := som.SomConfig{
-		Size:         som.Size{Width: 8, Height: 6},
+		Size:         layer.Size{Width: 8, Height: 6},
 		Layers:       []som.LayerDef{{Columns: []string{"x", "y"}}},
 		Neighborhood: &neighborhood.Linear{},
 	}
@@ -25,7 +26,7 @@ func main() {
 
 	rows := 250
 	data := generateData(rows, 2)
-	tab, err := table.NewFromData([]string{"x", "y"}, data)
+	tab, err := table.NewWithData([]string{"x", "y"}, data)
 	if err != nil {
 		panic(err)
 	}

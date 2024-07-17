@@ -1,9 +1,11 @@
-package som
+package layer
 
 import (
 	"fmt"
 	"slices"
 	"strings"
+
+	"github.com/mlange-42/som/distance"
 )
 
 // Size represents the width and height of a 2D layer or grid.
@@ -19,26 +21,55 @@ func (s *Size) CoordsAt(idx int) (int, int) {
 
 // Layer represents a layer of data in a Self-organizing Map.
 type Layer struct {
-	name        string    // The name of the layer
-	columns     []string  // The names of the columns in the layer
-	size        Size      // The width and height of the layer
-	data        []float64 // The data values for the layer
-	categorical bool      // Whether the layer is categorical or continuous
+	name        string            // The name of the layer
+	columns     []string          // The names of the columns in the layer
+	size        Size              // The width and height of the layer
+	weight      float64           // The weight of the layer
+	metric      distance.Distance // The distance metric for the layer
+	data        []float64         // The data values for the layer
+	categorical bool              // Whether the layer is categorical or continuous
 }
 
-// NewLayer creates a new Layer with the given columns and size.
-func NewLayer(name string, columns []string, size Size, categorical bool) Layer {
+// New creates a new Layer with the given columns and size.
+func New(name string, columns []string, size Size, metric distance.Distance, weight float64, categorical bool) Layer {
 	return Layer{
 		name:        name,
 		columns:     columns,
 		size:        size,
+		metric:      metric,
+		weight:      weight,
 		data:        make([]float64, size.Width*size.Height*len(columns)),
 		categorical: categorical,
 	}
 }
 
+func NewWithData(name string, columns []string, size Size, metric distance.Distance, weight float64, categorical bool, data []float64) (Layer, error) {
+	if len(data) != size.Width*size.Height*len(columns) {
+		return Layer{}, fmt.Errorf("data length (%d) does not match layer size (%d)", len(data), size.Width*size.Height*len(columns))
+	}
+	return Layer{
+		name:        name,
+		columns:     columns,
+		size:        size,
+		data:        data,
+		categorical: categorical,
+	}, nil
+}
+
 func (l *Layer) Name() string {
 	return l.name
+}
+
+func (l *Layer) Data() []float64 {
+	return l.data
+}
+
+func (l *Layer) Metric() distance.Distance {
+	return l.metric
+}
+
+func (l *Layer) Weight() float64 {
+	return l.weight
 }
 
 func (l *Layer) nodeIndex(x, y int) int {
@@ -63,8 +94,12 @@ func (l *Layer) Column(col string) int {
 	return slices.Index(l.columns, col)
 }
 
-func (l *Layer) Columns() []string {
+func (l *Layer) ColumnNames() []string {
 	return l.columns
+}
+
+func (l *Layer) Columns() int {
+	return len(l.columns)
 }
 
 func (l *Layer) Nodes() int {
@@ -120,7 +155,7 @@ func (l *Layer) ColumnMatrix(col int) [][]float64 {
 func (l *Layer) ToCSV(sep rune) string {
 	b := strings.Builder{}
 	s := string(sep)
-	cols := l.Columns()
+	cols := l.ColumnNames()
 
 	b.WriteString(fmt.Sprintf("id%scol%srow%s", s, s, s))
 	for i, col := range cols {
