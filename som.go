@@ -1,6 +1,7 @@
 package som
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/mlange-42/som/distance"
@@ -14,10 +15,11 @@ type SomConfig struct {
 }
 
 type LayerDef struct {
-	Name    string
-	Columns []string
-	Metric  distance.Distance
-	Weight  float64
+	Name        string
+	Columns     []string
+	Metric      distance.Distance
+	Weight      float64
+	Categorical bool
 }
 
 type Som struct {
@@ -28,12 +30,16 @@ type Som struct {
 	neighborhood neighborhood.Neighborhood
 }
 
-func New(params *SomConfig) Som {
+func New(params *SomConfig) (Som, error) {
 	lay := make([]Layer, len(params.Layers))
 	weight := make([]float64, len(params.Layers))
 	metric := make([]distance.Distance, len(params.Layers))
 	for i, l := range params.Layers {
-		lay[i] = NewLayer(l.Name, l.Columns, params.Size)
+		if len(l.Columns) == 0 {
+			return Som{}, fmt.Errorf("layer %d has no columns", i)
+		}
+
+		lay[i] = NewLayer(l.Name, l.Columns, params.Size, l.Categorical)
 
 		weight[i] = l.Weight
 		if weight[i] == 0 {
@@ -51,7 +57,7 @@ func New(params *SomConfig) Som {
 		weight:       weight,
 		metric:       metric,
 		neighborhood: params.Neighborhood,
-	}
+	}, nil
 }
 
 func (s *Som) learn(data [][]float64, alpha, radius float64) {

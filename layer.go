@@ -19,19 +19,21 @@ func (s *Size) CoordsAt(idx int) (int, int) {
 
 // Layer represents a layer of data in a Self-organizing Map.
 type Layer struct {
-	name    string    // The name of the layer
-	columns []string  // The names of the columns in the layer
-	size    Size      // The width and height of the layer
-	data    []float64 // The data values for the layer
+	name        string    // The name of the layer
+	columns     []string  // The names of the columns in the layer
+	size        Size      // The width and height of the layer
+	data        []float64 // The data values for the layer
+	categorical bool      // Whether the layer is categorical or continuous
 }
 
 // NewLayer creates a new Layer with the given columns and size.
-func NewLayer(name string, columns []string, size Size) Layer {
+func NewLayer(name string, columns []string, size Size, categorical bool) Layer {
 	return Layer{
-		name:    name,
-		columns: columns,
-		size:    size,
-		data:    make([]float64, size.Width*size.Height*len(columns)),
+		name:        name,
+		columns:     columns,
+		size:        size,
+		data:        make([]float64, size.Width*size.Height*len(columns)),
+		categorical: categorical,
 	}
 }
 

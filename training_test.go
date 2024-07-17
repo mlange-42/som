@@ -24,14 +24,16 @@ func TestNewTrainer(t *testing.T) {
 			},
 		},
 	}
-	som := New(&somParams)
+	som, err := New(&somParams)
+	assert.NoError(t, err)
+
 	rng := rand.New(rand.NewSource(1))
 
 	t1 := []*Table{
 		NewTable([]string{"x", "y"}, 5),
 		NewTable([]string{"a", "b", "c"}, 5),
 	}
-	_, err := NewTrainer(&som, t1, &params, rng)
+	_, err = NewTrainer(&som, t1, &params, rng)
 	assert.Nil(t, err)
 
 	t1 = []*Table{
@@ -75,7 +77,9 @@ func TestTrainerDecay(t *testing.T) {
 		},
 		Neighborhood: &neighborhood.Gaussian{},
 	}
-	som := New(&somParams)
+	som, err := New(&somParams)
+	assert.NoError(t, err)
+
 	rng := rand.New(rand.NewSource(1))
 
 	t1 := []*Table{
@@ -107,7 +111,9 @@ func TestTrainerTrain(t *testing.T) {
 		},
 		Neighborhood: &neighborhood.Gaussian{},
 	}
-	som := New(&somParams)
+	som, err := New(&somParams)
+	assert.NoError(t, err)
+
 	rng := rand.New(rand.NewSource(1))
 
 	t.Run("Train with zero epochs", func(t *testing.T) {

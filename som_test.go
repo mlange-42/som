@@ -23,7 +23,8 @@ func TestNewSom(t *testing.T) {
 			},
 		},
 	}
-	som := New(&params)
+	som, err := New(&params)
+	assert.NoError(t, err)
 
 	assert.Equal(t, 2, len(som.layers))
 	assert.Equal(t, []float64{0.5, 1.0}, som.weight)
@@ -46,7 +47,8 @@ func TestGetBMU(t *testing.T) {
 			},
 		},
 	}
-	som := New(&params)
+	som, err := New(&params)
+	assert.NoError(t, err)
 
 	t.Run("Normal case", func(t *testing.T) {
 		data := [][]float64{{1.0, 2.0}, {3.0, 4.0}}
@@ -66,7 +68,9 @@ func TestGetBMU(t *testing.T) {
 				},
 			},
 		}
-		singleLayerSom := New(&singleLayerParams)
+		singleLayerSom, err := New(&singleLayerParams)
+		assert.NoError(t, err)
+
 		data := [][]float64{{1.0}}
 		index, dist := singleLayerSom.getBMU(data)
 		assert.Equal(t, 0, index)
@@ -87,7 +91,9 @@ func TestGetBMU(t *testing.T) {
 				},
 			},
 		}
-		largeSom := New(&largeParams)
+		largeSom, err := New(&largeParams)
+		assert.NoError(t, err)
+
 		data := [][]float64{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}}
 		index, dist := largeSom.getBMU(data)
 		assert.GreaterOrEqual(t, index, 0)
@@ -113,7 +119,11 @@ func createSom() *Som {
 		},
 		Neighborhood: &neighborhood.Linear{},
 	}
-	som := New(&params)
+
+	som, err := New(&params)
+	if err != nil {
+		panic(err)
+	}
 
 	return &som
 }
