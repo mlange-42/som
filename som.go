@@ -15,6 +15,27 @@ type SomConfig struct {
 	Neighborhood neighborhood.Neighborhood
 }
 
+// Prepare initializes the layers in the SomConfig by setting the column names
+// for any categorical layers that don't have them specified. If a layer is categorical and
+// has no columns specified, the unique classes from the input data are used
+// as the column names.
+func (c *SomConfig) Prepare(reader csv.Reader) error {
+	for i := range c.Layers {
+		layer := &c.Layers[i]
+		if len(layer.Columns) == 0 {
+			if !layer.Categorical {
+				return fmt.Errorf("layer %d has no columns", i)
+			}
+			classes, err := reader.UniqueClasses(layer.Name)
+			if err != nil {
+				return err
+			}
+			layer.Columns = classes
+		}
+	}
+	return nil
+}
+
 type LayerDef struct {
 	Name        string
 	Columns     []string
@@ -31,28 +52,15 @@ type Som struct {
 	neighborhood neighborhood.Neighborhood
 }
 
-func New(params *SomConfig, reader csv.Reader) (Som, error) {
-	hasTables := reader != nil
-
+func New(params *SomConfig) (Som, error) {
 	lay := make([]Layer, len(params.Layers))
 	weight := make([]float64, len(params.Layers))
 	metric := make([]distance.Distance, len(params.Layers))
 	for i, l := range params.Layers {
 		if len(l.Columns) == 0 {
-			if !l.Categorical {
-				return Som{}, fmt.Errorf("layer %d has no columns", i)
-			}
-			if !hasTables {
-				return Som{}, fmt.Errorf("categorical layer %d has no columns, and there are no tables to derive them from", i)
-			}
-			classes, err := reader.UniqueClasses(l.Name)
-			if err != nil {
-				return Som{}, err
-			}
-			lay[i] = NewLayer(l.Name, classes, params.Size, l.Categorical)
-		} else {
-			lay[i] = NewLayer(l.Name, l.Columns, params.Size, l.Categorical)
+			return Som{}, fmt.Errorf("layer %d has no columns", i)
 		}
+		lay[i] = NewLayer(l.Name, l.Columns, params.Size, l.Categorical)
 
 		weight[i] = l.Weight
 		if weight[i] == 0 {

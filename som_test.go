@@ -31,7 +31,7 @@ func TestNew(t *testing.T) {
 			Neighborhood: &neighborhood.Gaussian{},
 		}
 
-		som, err := New(params, nil)
+		som, err := New(params)
 		assert.NoError(t, err)
 		assert.Equal(t, params.Size, som.size)
 		assert.Len(t, som.layers, 2)
@@ -64,8 +64,10 @@ func TestNew(t *testing.T) {
 
 		csvTable := "x,y,Layer2\n1,2,A\n4,5,B\n7,8,A"
 		reader := csv.NewStringReader(csvTable, ',', "NA")
+		err := params.Prepare(reader)
+		assert.NoError(t, err)
 
-		som, err := New(params, reader)
+		som, err := New(params)
 		assert.NoError(t, err)
 		assert.Equal(t, params.Size, som.size)
 		assert.Len(t, som.layers, 2)
@@ -77,7 +79,7 @@ func TestNew(t *testing.T) {
 		assert.Equal(t, []string{"A", "B"}, som.layers[1].columns)
 	})
 
-	t.Run("Empty columns with no reader", func(t *testing.T) {
+	t.Run("Empty columns", func(t *testing.T) {
 		params := &SomConfig{
 			Size: Size{2, 2},
 			Layers: []LayerDef{
@@ -88,9 +90,9 @@ func TestNew(t *testing.T) {
 			},
 		}
 
-		_, err := New(params, nil)
+		_, err := New(params)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "categorical layer 0 has no columns, and there are no tables to derive them from")
+		assert.Contains(t, err.Error(), "layer 0 has no columns")
 	})
 
 	t.Run("Default weight and metric", func(t *testing.T) {
@@ -104,7 +106,7 @@ func TestNew(t *testing.T) {
 			},
 		}
 
-		som, err := New(params, nil)
+		som, err := New(params)
 		assert.NoError(t, err)
 		assert.Equal(t, []float64{1.0}, som.weight)
 		assert.IsType(t, &distance.Euclidean{}, som.metric[0])
@@ -130,7 +132,7 @@ func TestNew(t *testing.T) {
 			Neighborhood: &neighborhood.Linear{},
 		}
 
-		som, err := New(params, nil)
+		som, err := New(params)
 		assert.NoError(t, err)
 		assert.Len(t, som.layers, 2)
 		assert.True(t, som.layers[0].IsCategorical())
@@ -151,7 +153,7 @@ func TestNew(t *testing.T) {
 			},
 		}
 
-		_, err := New(params, nil)
+		_, err := New(params)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "layer 0 has no columns")
 	})
@@ -173,7 +175,7 @@ func TestGetBMU(t *testing.T) {
 			},
 		},
 	}
-	som, err := New(&params, nil)
+	som, err := New(&params)
 	assert.NoError(t, err)
 
 	t.Run("Normal case", func(t *testing.T) {
@@ -194,7 +196,7 @@ func TestGetBMU(t *testing.T) {
 				},
 			},
 		}
-		singleLayerSom, err := New(&singleLayerParams, nil)
+		singleLayerSom, err := New(&singleLayerParams)
 		assert.NoError(t, err)
 
 		data := [][]float64{{1.0}}
@@ -217,7 +219,7 @@ func TestGetBMU(t *testing.T) {
 				},
 			},
 		}
-		largeSom, err := New(&largeParams, nil)
+		largeSom, err := New(&largeParams)
 		assert.NoError(t, err)
 
 		data := [][]float64{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}}
@@ -246,7 +248,7 @@ func createSom() *Som {
 		Neighborhood: &neighborhood.Linear{},
 	}
 
-	som, err := New(&params, nil)
+	som, err := New(&params)
 	if err != nil {
 		panic(err)
 	}

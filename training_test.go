@@ -25,7 +25,7 @@ func TestNewTrainer(t *testing.T) {
 			},
 		},
 	}
-	som, err := New(&somParams, nil)
+	som, err := New(&somParams)
 	assert.NoError(t, err)
 
 	rng := rand.New(rand.NewSource(1))
@@ -78,7 +78,7 @@ func TestTrainerDecay(t *testing.T) {
 		},
 		Neighborhood: &neighborhood.Gaussian{},
 	}
-	som, err := New(&somParams, nil)
+	som, err := New(&somParams)
 	assert.NoError(t, err)
 
 	rng := rand.New(rand.NewSource(1))
@@ -112,7 +112,7 @@ func TestTrainerTrain(t *testing.T) {
 		},
 		Neighborhood: &neighborhood.Gaussian{},
 	}
-	som, err := New(&somParams, nil)
+	som, err := New(&somParams)
 	assert.NoError(t, err)
 
 	rng := rand.New(rand.NewSource(1))
