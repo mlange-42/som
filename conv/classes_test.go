@@ -10,7 +10,8 @@ import (
 func TestClassesToTable(t *testing.T) {
 	t.Run("String classes", func(t *testing.T) {
 		classes := []string{"A", "B", "A", "C", "B", "A"}
-		table := ClassesToTable(classes)
+		table, err := ClassesToTable(classes, nil)
+		assert.NoError(t, err)
 
 		assert.Equal(t, 3, table.Columns())
 		assert.Equal(t, 6, table.Rows())
@@ -27,9 +28,30 @@ func TestClassesToTable(t *testing.T) {
 		assert.Equal(t, expectedData, table.Data())
 	})
 
+	t.Run("String classes with columns", func(t *testing.T) {
+		classes := []string{"A", "B", "A", "C", "B", "A"}
+		table, err := ClassesToTable(classes, []string{"C", "A"})
+		assert.NoError(t, err)
+
+		assert.Equal(t, 2, table.Columns())
+		assert.Equal(t, 6, table.Rows())
+		assert.Equal(t, []string{"C", "A"}, table.ColumnNames())
+
+		expectedData := []float64{
+			0, 1,
+			0, 0,
+			0, 1,
+			1, 0,
+			0, 0,
+			0, 1,
+		}
+		assert.Equal(t, expectedData, table.Data())
+	})
+
 	t.Run("Integer classes", func(t *testing.T) {
 		classes := []int{1, 2, 1, 3, 2, 1}
-		table := ClassesToTable(classes)
+		table, err := ClassesToTable(classes, nil)
+		assert.NoError(t, err)
 
 		assert.Equal(t, 3, table.Columns())
 		assert.Equal(t, 6, table.Rows())
@@ -48,7 +70,8 @@ func TestClassesToTable(t *testing.T) {
 
 	t.Run("Single class", func(t *testing.T) {
 		classes := []string{"A", "A", "A"}
-		table := ClassesToTable(classes)
+		table, err := ClassesToTable(classes, nil)
+		assert.NoError(t, err)
 
 		assert.Equal(t, 1, table.Columns())
 		assert.Equal(t, 3, table.Rows())
