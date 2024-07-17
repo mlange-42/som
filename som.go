@@ -23,7 +23,7 @@ type SomConfig struct {
 // If a categorical layer has no columns specified, it will attempt to read the class names for that layer
 // and create a table from the classes. The created tables are returned in the same order as
 // the layers in the SomConfig.
-func (c *SomConfig) PrepareTables(reader csv.Reader) ([]*table.Table, error) {
+func (c *SomConfig) PrepareTables(reader csv.Reader, updateNormalizers bool) ([]*table.Table, error) {
 	tables := make([]*table.Table, len(c.Layers))
 	for i := range c.Layers {
 		layer := &c.Layers[i]
@@ -44,6 +44,16 @@ func (c *SomConfig) PrepareTables(reader csv.Reader) ([]*table.Table, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		if len(layer.Norm) != 0 {
+			for j := range layer.Columns {
+				if updateNormalizers {
+					layer.Norm[j].Initialize(table, j)
+				}
+				table.NormalizeColumn(j, layer.Norm[j])
+			}
+		}
+
 		tables[i] = table
 	}
 	return tables, nil

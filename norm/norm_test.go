@@ -3,9 +3,23 @@ package norm
 import (
 	"testing"
 
-	"github.com/mlange-42/som/table"
 	"github.com/stretchr/testify/assert"
 )
+
+type mockTable struct {
+	Mean float64
+	Std  float64
+	Min  float64
+	Max  float64
+}
+
+func (m *mockTable) Range(col int) (min, max float64) {
+	return m.Min, m.Max
+}
+
+func (m *mockTable) MeanStdDev(col int) (mean, std float64) {
+	return m.Mean, m.Std
+}
 
 func TestGaussian(t *testing.T) {
 	g := &Gaussian{mean: 10, std: 2}
@@ -23,15 +37,15 @@ func TestGaussian(t *testing.T) {
 	})
 
 	t.Run("Initialize", func(t *testing.T) {
-		mockTable, err := table.NewWithData([]string{"x"}, []float64{
-			2.0, 2.0, 2.0,
-		})
-		assert.NoError(t, err)
+		mock := mockTable{
+			Mean: 2,
+			Std:  1,
+		}
 
-		g.Initialize(mockTable, 0)
+		g.Initialize(&mock, 0)
 
 		assert.Equal(t, 2.0, g.mean)
-		assert.Equal(t, 0.0, g.std)
+		assert.Equal(t, 1.0, g.std)
 	})
 }
 
@@ -51,12 +65,12 @@ func TestUniform(t *testing.T) {
 	})
 
 	t.Run("Initialize", func(t *testing.T) {
-		mockTable, err := table.NewWithData([]string{"x"}, []float64{
-			2.0, 4.0, 6.0,
-		})
-		assert.NoError(t, err)
+		mock := mockTable{
+			Min: 2,
+			Max: 6,
+		}
 
-		u.Initialize(mockTable, 0)
+		u.Initialize(&mock, 0)
 
 		assert.Equal(t, 2.0, u.min)
 		assert.Equal(t, 6.0, u.max)
@@ -79,13 +93,8 @@ func TestNone(t *testing.T) {
 	})
 
 	t.Run("Initialize", func(t *testing.T) {
-		mockTable, err := table.NewWithData([]string{"x"}, []float64{
-			2.0, 4.0, 6.0,
-		})
-		assert.NoError(t, err)
-
-		n.Initialize(mockTable, 0)
-
+		mock := mockTable{}
+		n.Initialize(&mock, 0)
 		// No assertions needed for None as it doesn't modify any internal state
 	})
 }

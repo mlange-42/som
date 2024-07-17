@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	"github.com/mlange-42/som/table"
 )
 
 var normalizers = map[string]func() Normalizer{}
@@ -70,9 +68,14 @@ type Normalizer interface {
 	Name() string
 	Normalize(value float64) float64
 	DeNormalize(value float64) float64
-	Initialize(t *table.Table, column int)
+	Initialize(t DataSource, column int)
 	SetArgs(args ...float64) error
 	GetArgs() []float64
+}
+
+type DataSource interface {
+	MeanStdDev(column int) (mean, stdDev float64)
+	Range(column int) (min, max float64)
 }
 
 type None struct{}
@@ -89,7 +92,7 @@ func (n *None) DeNormalize(value float64) float64 {
 	return value
 }
 
-func (n *None) Initialize(t *table.Table, column int) {}
+func (n *None) Initialize(t DataSource, column int) {}
 
 func (n *None) SetArgs(args ...float64) error {
 	return nil
@@ -115,9 +118,8 @@ func (g *Gaussian) DeNormalize(value float64) float64 {
 	return value*g.std + g.mean
 }
 
-func (g *Gaussian) Initialize(t *table.Table, column int) {
-	g.mean = t.Mean(column)
-	g.std = t.StdDev(column)
+func (g *Gaussian) Initialize(t DataSource, column int) {
+	g.mean, g.std = t.MeanStdDev(column)
 }
 
 func (g *Gaussian) SetArgs(args ...float64) error {
@@ -149,7 +151,7 @@ func (u *Uniform) DeNormalize(value float64) float64 {
 	return value*(u.max-u.min) + u.min
 }
 
-func (u *Uniform) Initialize(t *table.Table, column int) {
+func (u *Uniform) Initialize(t DataSource, column int) {
 	u.min, u.max = t.Range(column)
 }
 

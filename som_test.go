@@ -69,7 +69,7 @@ func TestNew(t *testing.T) {
 
 		csvTable := "x,y,Layer2\n1,2,A\n4,5,B\n7,8,A"
 		reader := csv.NewStringReader(csvTable, ',', "NA")
-		tables, err := params.PrepareTables(reader)
+		tables, err := params.PrepareTables(reader, false)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 2, len(tables))
