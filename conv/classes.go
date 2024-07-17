@@ -8,30 +8,54 @@ import (
 	"github.com/mlange-42/som/table"
 )
 
-func ClassesToTable[T comparable](classes []T) *table.Table {
-	classList := []T{}
-	classNames := []string{}
+// ClassesToTable creates a table.Table from a slice of class labels.
+// If the columns parameter is empty, the table will have a column for each unique class label.
+// If the columns parameter is provided, the table will have a column for each provided class label,
+// and an error will be returned if any duplicate class labels are found.
+func ClassesToTable[T comparable](classes []T, columns []T) (*table.Table, error) {
+	var classList []T
+	var classNames []string
 	classMap := map[T]int{}
 
-	for _, c := range classes {
-		if _, ok := classMap[c]; !ok {
-			classList = append(classList, c)
-			classNames = append(classNames, fmt.Sprintf("%v", c))
-			classMap[c] = len(classList) - 1
+	if len(columns) == 0 {
+		for _, c := range classes {
+			if _, ok := classMap[c]; !ok {
+				classList = append(classList, c)
+				classNames = append(classNames, fmt.Sprintf("%v", c))
+				classMap[c] = len(classList) - 1
+			}
+		}
+	} else {
+		classList = columns
+		classNames = make([]string, len(classList))
+		for i, c := range classList {
+			if _, ok := classMap[c]; !ok {
+				classMap[c] = i
+			} else {
+				return nil, fmt.Errorf("duplicate class: %v", c)
+			}
+			classNames[i] = fmt.Sprintf("%v", c)
 		}
 	}
 
 	data := make([]float64, len(classList)*len(classes))
 	for i, c := range classes {
-		data[i*len(classList)+classMap[c]] = 1
+		idx, ok := classMap[c]
+		if !ok {
+			continue
+		}
+		data[i*len(classList)+idx] = 1
 	}
 	table, err := table.NewWithData(classNames, data)
 	if err != nil {
 		panic(err)
 	}
-	return table
+	return table, nil
 }
 
+// TableToClasses converts a table.Table into a slice of class labels and a slice of class indices.
+// For each row in the table, the function finds the column with the maximum value and returns the index of that column as the class label.
+// The function returns two slices: the first slice contains the column names (class labels), and the second slice contains the class indices for each row.
 func TableToClasses(table *table.Table) ([]string, []int) {
 	classes := make([]int, table.Rows())
 	for i := 0; i < table.Rows(); i++ {
@@ -50,6 +74,9 @@ func TableToClasses(table *table.Table) ([]string, []int) {
 	return append([]string{}, table.ColumnNames()...), classes
 }
 
+// LayerToClasses converts a layer.Layer into a slice of class labels and a slice of class indices.
+// For each node in the layer, the function finds the column with the maximum value and returns the index of that column as the class label.
+// The function returns two slices: the first slice contains the column names (class labels), and the second slice contains the class indices for each node.
 func LayerToClasses(l *layer.Layer) ([]string, []int) {
 	units := l.Nodes()
 	classes := make([]int, units)

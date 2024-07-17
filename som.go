@@ -27,19 +27,26 @@ func (c *SomConfig) PrepareTables(reader csv.Reader, updateNormalizers bool) ([]
 	tables := make([]*table.Table, len(c.Layers))
 	for i := range c.Layers {
 		layer := &c.Layers[i]
-		if len(layer.Columns) == 0 {
-			if !layer.Categorical {
-				return nil, fmt.Errorf("layer %d has no columns", i)
-			}
+
+		if layer.Categorical {
 			classes, err := reader.ReadLabels(layer.Name)
 			if err != nil {
 				return nil, err
 			}
-			table := conv.ClassesToTable(classes)
+
+			table, err := conv.ClassesToTable(classes, layer.Columns)
+			if err != nil {
+				return nil, err
+			}
 			layer.Columns = table.ColumnNames()
 			tables[i] = table
 			continue
 		}
+
+		if len(layer.Columns) == 0 {
+			return nil, fmt.Errorf("layer %d has no columns", i)
+		}
+
 		table, err := reader.ReadColumns(layer.Columns)
 		if err != nil {
 			return nil, err
