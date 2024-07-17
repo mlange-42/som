@@ -7,6 +7,7 @@ import (
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/decay"
 	"github.com/mlange-42/som/neighborhood"
+	"github.com/mlange-42/som/table"
 )
 
 func main() {
@@ -17,11 +18,14 @@ func main() {
 		Layers:       []som.LayerDef{{Columns: []string{"x", "y"}}},
 		Neighborhood: &neighborhood.Linear{},
 	}
-	s := som.New(&somParams)
+	s, err := som.New(&somParams)
+	if err != nil {
+		panic(err)
+	}
 
 	rows := 250
 	data := generateData(rows, 2)
-	table, err := som.NewTableFromData([]string{"x", "y"}, data)
+	tab, err := table.NewFromData([]string{"x", "y"}, data)
 	if err != nil {
 		panic(err)
 	}
@@ -30,7 +34,7 @@ func main() {
 		LearningRate:       &decay.Linear{Start: 0.5, End: 0.01},
 		NeighborhoodRadius: &decay.Linear{Start: 10, End: 0.5},
 	}
-	trainer, err := som.NewTrainer(&s, []*som.Table{table}, &trainingParams, rng)
+	trainer, err := som.NewTrainer(&s, []*table.Table{tab}, &trainingParams, rng)
 	if err != nil {
 		panic(err)
 	}
