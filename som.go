@@ -1,8 +1,10 @@
 package som
 
 import (
+	"fmt"
 	"math"
 
+	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/distance"
 	"github.com/mlange-42/som/neighborhood"
 )
@@ -13,11 +15,33 @@ type SomConfig struct {
 	Neighborhood neighborhood.Neighborhood
 }
 
+// Prepare initializes the layers in the SomConfig by setting the column names
+// for any categorical layers that don't have them specified. If a layer is categorical and
+// has no columns specified, the unique classes from the input data are used
+// as the column names.
+func (c *SomConfig) Prepare(reader csv.Reader) error {
+	for i := range c.Layers {
+		layer := &c.Layers[i]
+		if len(layer.Columns) == 0 {
+			if !layer.Categorical {
+				return fmt.Errorf("layer %d has no columns", i)
+			}
+			classes, err := reader.UniqueClasses(layer.Name)
+			if err != nil {
+				return err
+			}
+			layer.Columns = classes
+		}
+	}
+	return nil
+}
+
 type LayerDef struct {
-	Name    string
-	Columns []string
-	Metric  distance.Distance
-	Weight  float64
+	Name        string
+	Columns     []string
+	Metric      distance.Distance
+	Weight      float64
+	Categorical bool
 }
 
 type Som struct {
@@ -28,12 +52,15 @@ type Som struct {
 	neighborhood neighborhood.Neighborhood
 }
 
-func New(params *SomConfig) Som {
+func New(params *SomConfig) (Som, error) {
 	lay := make([]Layer, len(params.Layers))
 	weight := make([]float64, len(params.Layers))
 	metric := make([]distance.Distance, len(params.Layers))
 	for i, l := range params.Layers {
-		lay[i] = NewLayer(l.Name, l.Columns, params.Size)
+		if len(l.Columns) == 0 {
+			return Som{}, fmt.Errorf("layer %d has no columns", i)
+		}
+		lay[i] = NewLayer(l.Name, l.Columns, params.Size, l.Categorical)
 
 		weight[i] = l.Weight
 		if weight[i] == 0 {
@@ -51,7 +78,7 @@ func New(params *SomConfig) Som {
 		weight:       weight,
 		metric:       metric,
 		neighborhood: params.Neighborhood,
-	}
+	}, nil
 }
 
 func (s *Som) learn(data [][]float64, alpha, radius float64) {

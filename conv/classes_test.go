@@ -3,7 +3,7 @@ package conv
 import (
 	"testing"
 
-	"github.com/mlange-42/som"
+	"github.com/mlange-42/som/table"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -61,7 +61,7 @@ func TestClassesToTable(t *testing.T) {
 
 func TestTableToClasses(t *testing.T) {
 	t.Run("Basic case", func(t *testing.T) {
-		table, err := som.NewTableFromData([]string{"A", "B", "C", "D"}, []float64{
+		table, err := table.NewFromData([]string{"A", "B", "C", "D"}, []float64{
 			0.1, 0.2, 0.7, 0.0,
 			0.8, 0.1, 0.0, 0.1,
 			0.3, 0.3, 0.3, 0.1,
@@ -75,7 +75,7 @@ func TestTableToClasses(t *testing.T) {
 	})
 
 	t.Run("Table with one row", func(t *testing.T) {
-		table, err := som.NewTableFromData([]string{"X", "Y", "Z"}, []float64{
+		table, err := table.NewFromData([]string{"X", "Y", "Z"}, []float64{
 			0.1, 0.5, 0.4,
 		})
 		assert.Nil(t, err)
@@ -87,7 +87,7 @@ func TestTableToClasses(t *testing.T) {
 	})
 
 	t.Run("Table with equal values", func(t *testing.T) {
-		table, err := som.NewTableFromData([]string{"P", "Q"}, []float64{
+		table, err := table.NewFromData([]string{"P", "Q"}, []float64{
 			0.5, 0.5,
 			0.3, 0.3,
 		})
@@ -100,7 +100,7 @@ func TestTableToClasses(t *testing.T) {
 	})
 
 	t.Run("Table with negative values", func(t *testing.T) {
-		table, err := som.NewTableFromData([]string{"A", "B", "C"}, []float64{
+		table, err := table.NewFromData([]string{"A", "B", "C"}, []float64{
 			-0.1, -0.2, -0.3,
 			-0.5, -0.1, -0.4,
 		})

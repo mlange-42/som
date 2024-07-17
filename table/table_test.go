@@ -1,4 +1,4 @@
-package som
+package table
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 )
 
 func TestTable(t *testing.T) {
-	tb := NewTable([]string{"a", "b", "c"}, 5)
+	tb := New([]string{"a", "b", "c"}, 5)
 
 	assert.Equal(t, 15, len(tb.data))
 
@@ -39,7 +39,7 @@ func TestNewTableFromData(t *testing.T) {
 	t.Run("Valid input", func(t *testing.T) {
 		columns := []string{"x", "y", "z"}
 		data := []float64{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}
-		table, err := NewTableFromData(columns, data)
+		table, err := NewFromData(columns, data)
 
 		assert.NoError(t, err)
 		assert.Equal(t, columns, table.columns)
@@ -50,7 +50,7 @@ func TestNewTableFromData(t *testing.T) {
 	t.Run("Empty columns", func(t *testing.T) {
 		columns := []string{}
 		data := []float64{1.0, 2.0, 3.0}
-		_, err := NewTableFromData(columns, data)
+		_, err := NewFromData(columns, data)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "columns length must be greater than zero")
@@ -59,7 +59,7 @@ func TestNewTableFromData(t *testing.T) {
 	t.Run("Data length not multiple of columns", func(t *testing.T) {
 		columns := []string{"a", "b"}
 		data := []float64{1.0, 2.0, 3.0}
-		_, err := NewTableFromData(columns, data)
+		_, err := NewFromData(columns, data)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "data length 3 is not a multiple of columns length 2")
@@ -68,7 +68,7 @@ func TestNewTableFromData(t *testing.T) {
 	t.Run("Single column", func(t *testing.T) {
 		columns := []string{"a"}
 		data := []float64{1.0, 2.0, 3.0}
-		table, err := NewTableFromData(columns, data)
+		table, err := NewFromData(columns, data)
 
 		assert.NoError(t, err)
 		assert.Equal(t, columns, table.columns)
@@ -79,7 +79,7 @@ func TestNewTableFromData(t *testing.T) {
 	t.Run("Empty data", func(t *testing.T) {
 		columns := []string{"a", "b"}
 		data := []float64{}
-		table, err := NewTableFromData(columns, data)
+		table, err := NewFromData(columns, data)
 
 		assert.NoError(t, err)
 		assert.Equal(t, columns, table.columns)

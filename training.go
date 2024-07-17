@@ -5,6 +5,7 @@ import (
 	"math/rand"
 
 	"github.com/mlange-42/som/decay"
+	"github.com/mlange-42/som/table"
 )
 
 type TrainingConfig struct {
@@ -14,12 +15,12 @@ type TrainingConfig struct {
 
 type Trainer struct {
 	som    *Som
-	tables []*Table
+	tables []*table.Table
 	params *TrainingConfig
 	rng    *rand.Rand
 }
 
-func NewTrainer(som *Som, tables []*Table, params *TrainingConfig, rng *rand.Rand) (*Trainer, error) {
+func NewTrainer(som *Som, tables []*table.Table, params *TrainingConfig, rng *rand.Rand) (*Trainer, error) {
 	t := &Trainer{
 		som:    som,
 		tables: tables,
@@ -59,8 +60,8 @@ func (t *Trainer) checkTable() error {
 			return fmt.Errorf("number of columns in table (%d) does not match number of columns in layer (%d)", table.Columns(), len(cols))
 		}
 		for j, col := range cols {
-			if table.columns[j] != col {
-				return fmt.Errorf("column %d in table (%s) does not match column %d in layer (%s)", j, table.columns[j], j, col)
+			if table.ColumnNames()[j] != col {
+				return fmt.Errorf("column %d in table (%s) does not match column %d in layer (%s)", j, table.ColumnNames()[j], j, col)
 			}
 		}
 	}

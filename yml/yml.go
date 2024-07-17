@@ -11,10 +11,11 @@ import (
 )
 
 type ymlLayer struct {
-	Name    string
-	Columns []string
-	Metric  string
-	Weight  float64
+	Name        string
+	Columns     []string
+	Metric      string
+	Weight      float64
+	Categorical bool
 }
 
 type ymlConfig struct {

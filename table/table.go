@@ -1,4 +1,4 @@
-package som
+package table
 
 import (
 	"fmt"
@@ -13,9 +13,9 @@ type Table struct {
 	data    []float64 // The data values stored in row-major order.
 }
 
-// NewTable creates a new Table with the given column names and number of rows.
+// New creates a new Table with the given column names and number of rows.
 // The data slice is initialized to all zeros.
-func NewTable(columns []string, rows int) *Table {
+func New(columns []string, rows int) *Table {
 	return &Table{
 		columns: columns,
 		rows:    rows,
@@ -23,10 +23,10 @@ func NewTable(columns []string, rows int) *Table {
 	}
 }
 
-// NewTableFromData creates a new Table from the given column names and data.
+// NewFromData creates a new Table from the given column names and data.
 // If the length of the columns slice is zero, an error is returned.
 // If the length of the data slice is not a multiple of the length of the columns slice, an error is returned.
-func NewTableFromData(columns []string, data []float64) (*Table, error) {
+func NewFromData(columns []string, data []float64) (*Table, error) {
 	if len(columns) == 0 {
 		return nil, fmt.Errorf("columns length must be greater than zero")
 	}

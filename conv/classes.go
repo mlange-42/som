@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/mlange-42/som"
+	"github.com/mlange-42/som/table"
 )
 
-func ClassesToTable[T comparable](classes []T) *som.Table {
+func ClassesToTable[T comparable](classes []T) *table.Table {
 	classList := []T{}
 	classNames := []string{}
 	classMap := map[T]int{}
@@ -24,14 +24,14 @@ func ClassesToTable[T comparable](classes []T) *som.Table {
 	for i, c := range classes {
 		data[i*len(classList)+classMap[c]] = 1
 	}
-	table, err := som.NewTableFromData(classNames, data)
+	table, err := table.NewFromData(classNames, data)
 	if err != nil {
 		panic(err)
 	}
 	return table
 }
 
-func TableToClasses(table *som.Table) ([]string, []int) {
+func TableToClasses(table *table.Table) ([]string, []int) {
 	classes := make([]int, table.Rows())
 	for i := 0; i < table.Rows(); i++ {
 		row := table.GetRow(i)
