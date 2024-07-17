@@ -4,31 +4,157 @@ import (
 	"math"
 	"testing"
 
+	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/distance"
 	"github.com/mlange-42/som/neighborhood"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewSom(t *testing.T) {
-	params := SomConfig{
-		Size: Size{2, 3},
-		Layers: []LayerDef{
-			{
-				Columns: []string{"x", "y"},
-				Weight:  0.5,
+func TestNew(t *testing.T) {
+	t.Run("Valid configuration", func(t *testing.T) {
+		params := &SomConfig{
+			Size: Size{3, 3},
+			Layers: []LayerDef{
+				{
+					Name:    "Layer1",
+					Columns: []string{"x", "y"},
+					Weight:  0.5,
+					Metric:  &distance.Manhattan{},
+				},
+				{
+					Name:    "Layer2",
+					Columns: []string{"a", "b", "c"},
+					Weight:  1.0,
+					Metric:  &distance.Euclidean{},
+				},
 			},
-			{
-				Columns: []string{"a", "b", "c"},
-				Weight:  1.0,
-			},
-		},
-	}
-	som, err := New(&params)
-	assert.NoError(t, err)
+			Neighborhood: &neighborhood.Gaussian{},
+		}
 
-	assert.Equal(t, 2, len(som.layers))
-	assert.Equal(t, []float64{0.5, 1.0}, som.weight)
-	assert.Equal(t, Size{2, 3}, som.layers[0].size)
+		som, err := New(params, nil)
+		assert.NoError(t, err)
+		assert.Equal(t, params.Size, som.size)
+		assert.Len(t, som.layers, 2)
+		assert.Equal(t, []float64{0.5, 1.0}, som.weight)
+		assert.IsType(t, &distance.Manhattan{}, som.metric[0])
+		assert.IsType(t, &distance.Euclidean{}, som.metric[1])
+		assert.IsType(t, &neighborhood.Gaussian{}, som.neighborhood)
+	})
+
+	t.Run("Categorical with reader", func(t *testing.T) {
+		params := &SomConfig{
+			Size: Size{3, 3},
+			Layers: []LayerDef{
+				{
+					Name:    "Layer1",
+					Columns: []string{"x", "y"},
+					Weight:  0.5,
+					Metric:  &distance.Manhattan{},
+				},
+				{
+					Name:        "Layer2",
+					Columns:     nil,
+					Weight:      1.0,
+					Metric:      &distance.Hamming{},
+					Categorical: true,
+				},
+			},
+			Neighborhood: &neighborhood.Gaussian{},
+		}
+
+		csvTable := "x,y,Layer2\n1,2,A\n4,5,B\n7,8,A"
+		reader := csv.NewStringReader(csvTable, ',', "NA")
+
+		som, err := New(params, reader)
+		assert.NoError(t, err)
+		assert.Equal(t, params.Size, som.size)
+		assert.Len(t, som.layers, 2)
+		assert.Equal(t, []float64{0.5, 1.0}, som.weight)
+		assert.IsType(t, &distance.Manhattan{}, som.metric[0])
+		assert.IsType(t, &distance.Hamming{}, som.metric[1])
+		assert.IsType(t, &neighborhood.Gaussian{}, som.neighborhood)
+
+		assert.Equal(t, []string{"A", "B"}, som.layers[1].columns)
+	})
+
+	t.Run("Empty columns with no reader", func(t *testing.T) {
+		params := &SomConfig{
+			Size: Size{2, 2},
+			Layers: []LayerDef{
+				{
+					Name:        "EmptyLayer",
+					Categorical: true,
+				},
+			},
+		}
+
+		_, err := New(params, nil)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "categorical layer 0 has no columns, and there are no tables to derive them from")
+	})
+
+	t.Run("Default weight and metric", func(t *testing.T) {
+		params := &SomConfig{
+			Size: Size{2, 2},
+			Layers: []LayerDef{
+				{
+					Name:    "DefaultLayer",
+					Columns: []string{"x"},
+				},
+			},
+		}
+
+		som, err := New(params, nil)
+		assert.NoError(t, err)
+		assert.Equal(t, []float64{1.0}, som.weight)
+		assert.IsType(t, &distance.Euclidean{}, som.metric[0])
+	})
+
+	t.Run("Multiple layers with different configurations", func(t *testing.T) {
+		params := &SomConfig{
+			Size: Size{4, 4},
+			Layers: []LayerDef{
+				{
+					Name:        "CategoricalLayer",
+					Categorical: true,
+					Columns:     []string{"category1", "category2"},
+					Weight:      0.7,
+				},
+				{
+					Name:    "NumericLayer",
+					Columns: []string{"x", "y", "z"},
+					Weight:  1.2,
+					Metric:  &distance.Manhattan{},
+				},
+			},
+			Neighborhood: &neighborhood.Linear{},
+		}
+
+		som, err := New(params, nil)
+		assert.NoError(t, err)
+		assert.Len(t, som.layers, 2)
+		assert.True(t, som.layers[0].IsCategorical())
+		assert.False(t, som.layers[1].IsCategorical())
+		assert.Equal(t, []float64{0.7, 1.2}, som.weight)
+		assert.IsType(t, &distance.Euclidean{}, som.metric[0])
+		assert.IsType(t, &distance.Manhattan{}, som.metric[1])
+		assert.IsType(t, &neighborhood.Linear{}, som.neighborhood)
+	})
+
+	t.Run("Invalid layer configuration", func(t *testing.T) {
+		params := &SomConfig{
+			Size: Size{2, 2},
+			Layers: []LayerDef{
+				{
+					Name: "InvalidLayer",
+				},
+			},
+		}
+
+		_, err := New(params, nil)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "layer 0 has no columns")
+	})
 }
 
 func TestGetBMU(t *testing.T) {
@@ -47,7 +173,7 @@ func TestGetBMU(t *testing.T) {
 			},
 		},
 	}
-	som, err := New(&params)
+	som, err := New(&params, nil)
 	assert.NoError(t, err)
 
 	t.Run("Normal case", func(t *testing.T) {
@@ -68,7 +194,7 @@ func TestGetBMU(t *testing.T) {
 				},
 			},
 		}
-		singleLayerSom, err := New(&singleLayerParams)
+		singleLayerSom, err := New(&singleLayerParams, nil)
 		assert.NoError(t, err)
 
 		data := [][]float64{{1.0}}
@@ -91,7 +217,7 @@ func TestGetBMU(t *testing.T) {
 				},
 			},
 		}
-		largeSom, err := New(&largeParams)
+		largeSom, err := New(&largeParams, nil)
 		assert.NoError(t, err)
 
 		data := [][]float64{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}}
@@ -120,7 +246,7 @@ func createSom() *Som {
 		Neighborhood: &neighborhood.Linear{},
 	}
 
-	som, err := New(&params)
+	som, err := New(&params, nil)
 	if err != nil {
 		panic(err)
 	}

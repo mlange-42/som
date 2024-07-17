@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/distance"
 	"github.com/mlange-42/som/neighborhood"
 )
@@ -30,16 +31,28 @@ type Som struct {
 	neighborhood neighborhood.Neighborhood
 }
 
-func New(params *SomConfig) (Som, error) {
+func New(params *SomConfig, reader csv.Reader) (Som, error) {
+	hasTables := reader != nil
+
 	lay := make([]Layer, len(params.Layers))
 	weight := make([]float64, len(params.Layers))
 	metric := make([]distance.Distance, len(params.Layers))
 	for i, l := range params.Layers {
 		if len(l.Columns) == 0 {
-			return Som{}, fmt.Errorf("layer %d has no columns", i)
+			if !l.Categorical {
+				return Som{}, fmt.Errorf("layer %d has no columns", i)
+			}
+			if !hasTables {
+				return Som{}, fmt.Errorf("categorical layer %d has no columns, and there are no tables to derive them from", i)
+			}
+			classes, err := reader.UniqueClasses(l.Name)
+			if err != nil {
+				return Som{}, err
+			}
+			lay[i] = NewLayer(l.Name, classes, params.Size, l.Categorical)
+		} else {
+			lay[i] = NewLayer(l.Name, l.Columns, params.Size, l.Categorical)
 		}
-
-		lay[i] = NewLayer(l.Name, l.Columns, params.Size, l.Categorical)
 
 		weight[i] = l.Weight
 		if weight[i] == 0 {
