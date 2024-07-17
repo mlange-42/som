@@ -12,7 +12,7 @@ import (
 func main() {
 	rng := rand.New(rand.NewSource(1))
 
-	somParams := som.SomParams{
+	somParams := som.SomConfig{
 		Size:         som.Size{Width: 8, Height: 6},
 		Layers:       []som.LayerDef{{Columns: []string{"x", "y"}}},
 		Neighborhood: &neighborhood.Linear{},
@@ -26,7 +26,7 @@ func main() {
 		panic(err)
 	}
 
-	trainingParams := som.TrainingParams{
+	trainingParams := som.TrainingConfig{
 		LearningRate:       &decay.Linear{Start: 0.5, End: 0.01},
 		NeighborhoodRadius: &decay.Linear{Start: 10, End: 0.5},
 	}

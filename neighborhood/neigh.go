@@ -2,6 +2,18 @@ package neighborhood
 
 import "math"
 
+var neighborhoods = map[string]Neighborhood{
+	"gaussian":    &Gaussian{},
+	"cutgaussian": &CutGaussian{},
+	"linear":      &Linear{},
+	"box":         &Box{},
+}
+
+func GetNeighborhood(name string) (Neighborhood, bool) {
+	n, ok := neighborhoods[name]
+	return n, ok
+}
+
 type Neighborhood interface {
 	Weight(x1, y1, x2, y2 int, radius float64) float64
 	MaxRadius(radius float64) int

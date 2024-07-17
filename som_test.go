@@ -10,7 +10,7 @@ import (
 )
 
 func TestNewSom(t *testing.T) {
-	params := SomParams{
+	params := SomConfig{
 		Size: Size{2, 3},
 		Layers: []LayerDef{
 			{
@@ -32,7 +32,7 @@ func TestNewSom(t *testing.T) {
 }
 
 func TestGetBMU(t *testing.T) {
-	params := SomParams{
+	params := SomConfig{
 		Size: Size{2, 2},
 		Layers: []LayerDef{
 			{
@@ -58,7 +58,7 @@ func TestGetBMU(t *testing.T) {
 	})
 
 	t.Run("Single layer", func(t *testing.T) {
-		singleLayerParams := SomParams{
+		singleLayerParams := SomConfig{
 			Size: Size{1, 1},
 			Layers: []LayerDef{
 				{
@@ -75,7 +75,7 @@ func TestGetBMU(t *testing.T) {
 	})
 
 	t.Run("Large SOM", func(t *testing.T) {
-		largeParams := SomParams{
+		largeParams := SomConfig{
 			Size: Size{10, 10},
 			Layers: []LayerDef{
 				{
@@ -98,7 +98,7 @@ func TestGetBMU(t *testing.T) {
 }
 
 func createSom() *Som {
-	params := SomParams{
+	params := SomConfig{
 		Size: Size{3, 3},
 		Layers: []LayerDef{
 			{

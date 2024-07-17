@@ -4,6 +4,18 @@ import (
 	"math"
 )
 
+var metrics = map[string]Distance{
+	"sumofsquares": &SumOfSquares{},
+	"euclidean":    &Euclidean{},
+	"manhattan":    &Manhattan{},
+	"hamming":      &Hamming{},
+}
+
+func GetMetric(name string) (Distance, bool) {
+	d, ok := metrics[name]
+	return d, ok
+}
+
 type Distance interface {
 	Distance(x, y []float64) float64
 }
