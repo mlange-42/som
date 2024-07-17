@@ -11,6 +11,7 @@ import (
 	"github.com/mlange-42/som/distance"
 	"github.com/mlange-42/som/layer"
 	"github.com/mlange-42/som/neighborhood"
+	"github.com/mlange-42/som/norm"
 )
 
 func main() {
@@ -33,13 +34,23 @@ func main() {
 					"log_GNI",
 					"LifeExpectancy",
 					"PopGrowth",
-					"Fertility",
 					"PopUrbanized",
 					"PopGrowthUrb",
 					"AdultLiteracy",
-					"PrimSchool",
 					"Income_low_40",
 					"Income_high_20",
+				},
+				Norm: []norm.Normalizer{
+					&norm.Gaussian{},
+					&norm.Gaussian{},
+					&norm.Gaussian{},
+					&norm.Gaussian{},
+					&norm.Gaussian{},
+					&norm.Gaussian{},
+					&norm.Gaussian{},
+					&norm.Gaussian{},
+					&norm.Gaussian{},
+					&norm.Gaussian{},
 				},
 				Metric: &distance.Euclidean{},
 			},
@@ -50,7 +61,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	tables, err := conf.PrepareTables(reader)
+	tables, err := conf.PrepareTables(reader, true)
 	if err != nil {
 		panic(err)
 	}

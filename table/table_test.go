@@ -3,6 +3,7 @@ package table
 import (
 	"testing"
 
+	"github.com/mlange-42/som/norm"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -86,4 +87,19 @@ func TestNewTableFromData(t *testing.T) {
 		assert.Equal(t, 0, table.rows)
 		assert.Equal(t, data, table.data)
 	})
+}
+func TestNormalizeColumn(t *testing.T) {
+	tb := New([]string{"a"}, 9)
+	for i := range tb.data {
+		tb.data[i] = float64(i)
+	}
+
+	minMaxNormalizer := &norm.Uniform{}
+	minMaxNormalizer.SetArgs(0, 8)
+
+	tb.NormalizeColumn(0, minMaxNormalizer)
+
+	expected := []float64{0, 1 / 8.0, 2 / 8.0, 3 / 8.0, 4 / 8.0, 5 / 8.0, 6 / 8.0, 7 / 8.0, 8 / 8.0}
+	assert.InDeltaSlice(t, expected, tb.data, 1e-6)
+
 }

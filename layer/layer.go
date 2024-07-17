@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/mlange-42/som/distance"
+	"github.com/mlange-42/som/norm"
 )
 
 // Size represents the width and height of a 2D layer or grid.
@@ -23,6 +24,7 @@ func (s *Size) CoordsAt(idx int) (int, int) {
 type Layer struct {
 	name        string            // The name of the layer
 	columns     []string          // The names of the columns in the layer
+	norm        []norm.Normalizer // The normalizers for the layer
 	size        Size              // The width and height of the layer
 	weight      float64           // The weight of the layer
 	metric      distance.Distance // The distance metric for the layer
@@ -31,10 +33,20 @@ type Layer struct {
 }
 
 // New creates a new Layer with the given columns and size.
-func New(name string, columns []string, size Size, metric distance.Distance, weight float64, categorical bool) Layer {
+func New(name string, columns []string, normalizers []norm.Normalizer, size Size, metric distance.Distance, weight float64, categorical bool) Layer {
+	if len(normalizers) == 0 {
+		normalizers = make([]norm.Normalizer, len(columns))
+		for i := range columns {
+			normalizers[i] = &norm.None{}
+		}
+	}
+	if len(normalizers) != len(columns) {
+		panic(fmt.Sprintf("invalid number of normalizers: expected %d, got %d", len(columns), len(normalizers)))
+	}
 	return Layer{
 		name:        name,
 		columns:     columns,
+		norm:        normalizers,
 		size:        size,
 		metric:      metric,
 		weight:      weight,
@@ -43,13 +55,23 @@ func New(name string, columns []string, size Size, metric distance.Distance, wei
 	}
 }
 
-func NewWithData(name string, columns []string, size Size, metric distance.Distance, weight float64, categorical bool, data []float64) (Layer, error) {
+func NewWithData(name string, columns []string, normalizers []norm.Normalizer, size Size, metric distance.Distance, weight float64, categorical bool, data []float64) (Layer, error) {
 	if len(data) != size.Width*size.Height*len(columns) {
 		return Layer{}, fmt.Errorf("data length (%d) does not match layer size (%d)", len(data), size.Width*size.Height*len(columns))
+	}
+	if len(normalizers) == 0 {
+		normalizers = make([]norm.Normalizer, len(columns))
+		for i := range columns {
+			normalizers[i] = &norm.None{}
+		}
+	}
+	if len(normalizers) != len(columns) {
+		panic(fmt.Sprintf("invalid number of normalizers: expected %d, got %d", len(columns), len(normalizers)))
 	}
 	return Layer{
 		name:        name,
 		columns:     columns,
+		norm:        normalizers,
 		size:        size,
 		data:        data,
 		categorical: categorical,
@@ -104,6 +126,10 @@ func (l *Layer) Columns() int {
 
 func (l *Layer) Nodes() int {
 	return l.size.Width * l.size.Height
+}
+
+func (l *Layer) Normalizers() []norm.Normalizer {
+	return l.norm
 }
 
 // Get returns the value at the specified column and coordinate in the Layer.

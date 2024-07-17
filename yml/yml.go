@@ -8,12 +8,14 @@ import (
 	"github.com/mlange-42/som/distance"
 	"github.com/mlange-42/som/layer"
 	"github.com/mlange-42/som/neighborhood"
+	"github.com/mlange-42/som/norm"
 	"gopkg.in/yaml.v3"
 )
 
 type ymlLayer struct {
 	Name        string
 	Columns     []string `yaml:",flow,omitempty"`
+	Norm        []string `yaml:",flow,omitempty"`
 	Metric      string
 	Weight      float64
 	Categorical bool      `yaml:",omitempty"`
@@ -55,9 +57,19 @@ func ToSomConfig(ymlData []byte) (*som.SomConfig, error) {
 		if len(l.Data) > 0 && len(l.Data) != len(l.Columns)*yml.Size[0]*yml.Size[1] {
 			return nil, fmt.Errorf("invalid data size for layer %s", l.Name)
 		}
+		norms := make([]norm.Normalizer, len(l.Norm))
+		for i, n := range l.Norm {
+			normalizer, err := norm.FromString(n)
+			if err != nil {
+				return nil, err
+			}
+			norms[i] = normalizer
+		}
+
 		conf.Layers = append(conf.Layers, som.LayerDef{
 			Name:    l.Name,
 			Columns: l.Columns,
+			Norm:    norms,
 			Metric:  metric,
 			Weight:  l.Weight,
 			Data:    l.Data,
@@ -74,9 +86,22 @@ func ToYAML(som *som.Som) ([]byte, error) {
 		Neighborhood: som.Neighborhood().Name(),
 	}
 	for _, l := range som.Layers() {
+		norms := make([]string, len(l.Normalizers()))
+		allNone := true
+		for i, n := range l.Normalizers() {
+			norms[i] = norm.ToString(n)
+			if _, ok := n.(*norm.None); !ok {
+				allNone = false
+			}
+		}
+		if allNone {
+			norms = nil
+		}
+
 		yml.Layers = append(yml.Layers, ymlLayer{
 			Name:        l.Name(),
 			Columns:     l.ColumnNames(),
+			Norm:        norms,
 			Metric:      l.Metric().Name(),
 			Weight:      l.Weight(),
 			Categorical: l.IsCategorical(),
