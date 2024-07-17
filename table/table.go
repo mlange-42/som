@@ -2,6 +2,7 @@ package table
 
 import (
 	"fmt"
+	"math"
 	"slices"
 	"strings"
 )
@@ -83,6 +84,41 @@ func (t *Table) GetRow(row int) []float64 {
 
 func (t *Table) Data() []float64 {
 	return t.data
+}
+
+func (t *Table) Mean(col int) float64 {
+	return t.Sum(col) / float64(t.Rows())
+}
+
+func (t *Table) Sum(col int) float64 {
+	sum := 0.0
+	for i := 0; i < t.Rows(); i++ {
+		sum += t.Get(i, col)
+	}
+	return sum
+}
+
+func (t *Table) StdDev(col int) float64 {
+	mean := t.Mean(col)
+	sum := 0.0
+	for i := 0; i < t.Rows(); i++ {
+		sum += (t.Get(i, col) - mean) * (t.Get(i, col) - mean)
+	}
+	return math.Sqrt(sum / float64(t.Rows()))
+}
+
+func (t *Table) Range(col int) (min, max float64) {
+	min = t.Get(0, col)
+	max = t.Get(0, col)
+	for i := 1; i < t.Rows(); i++ {
+		if t.Get(i, col) < min {
+			min = t.Get(i, col)
+		}
+		if t.Get(i, col) > max {
+			max = t.Get(i, col)
+		}
+	}
+	return
 }
 
 func (t *Table) ToCSV(sep rune) string {
