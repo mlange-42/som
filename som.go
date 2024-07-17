@@ -94,7 +94,7 @@ func (s *Som) getBMU(data []float64) (int, float64) {
 	for i := 0; i < units; i++ {
 		totalDist := 0.0
 		for l, layer := range s.layers {
-			node := layer.GetNodeAt(l)
+			node := layer.GetNodeAt(i)
 			offset := s.offset[l]
 			cols := len(layer.columns)
 			dist := s.metric[l].Distance(node, data[offset:offset+cols])

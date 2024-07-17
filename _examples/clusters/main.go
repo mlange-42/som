@@ -38,7 +38,7 @@ func main() {
 
 	//fmt.Println(printTable(&table))
 
-	trainer.Train(10)
+	trainer.Train(1000)
 
 	fmt.Println(printLayer(&s.Layers()[0], 0, 1))
 }
