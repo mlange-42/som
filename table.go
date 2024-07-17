@@ -15,8 +15,8 @@ type Table struct {
 
 // NewTable creates a new Table with the given column names and number of rows.
 // The data slice is initialized to all zeros.
-func NewTable(columns []string, rows int) Table {
-	return Table{
+func NewTable(columns []string, rows int) *Table {
+	return &Table{
 		columns: columns,
 		rows:    rows,
 		data:    make([]float64, rows*len(columns)),
@@ -26,14 +26,14 @@ func NewTable(columns []string, rows int) Table {
 // NewTableFromData creates a new Table from the given column names and data.
 // If the length of the columns slice is zero, an error is returned.
 // If the length of the data slice is not a multiple of the length of the columns slice, an error is returned.
-func NewTableFromData(columns []string, data []float64) (Table, error) {
+func NewTableFromData(columns []string, data []float64) (*Table, error) {
 	if len(columns) == 0 {
-		return Table{}, fmt.Errorf("columns length must be greater than zero")
+		return nil, fmt.Errorf("columns length must be greater than zero")
 	}
 	if len(data)%len(columns) != 0 {
-		return Table{}, fmt.Errorf("data length %d is not a multiple of columns length %d", len(data), len(columns))
+		return nil, fmt.Errorf("data length %d is not a multiple of columns length %d", len(data), len(columns))
 	}
-	return Table{
+	return &Table{
 		columns: columns,
 		rows:    len(data) / len(columns),
 		data:    data,

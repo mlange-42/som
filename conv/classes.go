@@ -7,7 +7,7 @@ import (
 	"github.com/mlange-42/som"
 )
 
-func ClassesToTable[T comparable](classes []T) som.Table {
+func ClassesToTable[T comparable](classes []T) *som.Table {
 	classList := []T{}
 	classNames := []string{}
 	classMap := map[T]int{}
@@ -31,7 +31,7 @@ func ClassesToTable[T comparable](classes []T) som.Table {
 	return table
 }
 
-func TableToClasses(table som.Table) ([]string, []int) {
+func TableToClasses(table *som.Table) ([]string, []int) {
 	classes := make([]int, table.Rows())
 	for i := 0; i < table.Rows(); i++ {
 		row := table.GetRow(i)
