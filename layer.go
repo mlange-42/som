@@ -101,6 +101,10 @@ func (l *Layer) CoordsAt(idx int) (int, int) {
 	return l.size.CoordsAt(idx)
 }
 
+func (l *Layer) IsCategorical() bool {
+	return l.categorical
+}
+
 func (l *Layer) ColumnMatrix(col int) [][]float64 {
 	data := make([][]float64, l.size.Height)
 	for y := 0; y < l.size.Height; y++ {

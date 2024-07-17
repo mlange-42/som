@@ -3,6 +3,7 @@ package csv
 import (
 	"io"
 	"math"
+	"os"
 	"strings"
 	"testing"
 
@@ -14,7 +15,7 @@ func TestReadColumns(t *testing.T) {
 		input := "a,b,c\n1,2,3\n4,5,6"
 		reader := strings.NewReader(input)
 		columns := []string{"a", "c"}
-		table, err := ReadColumns(reader, columns, ',', "")
+		table, err := readColumns(reader, columns, ',', "")
 
 		assert.NoError(t, err)
 		assert.Equal(t, columns, table.ColumnNames())
@@ -26,7 +27,7 @@ func TestReadColumns(t *testing.T) {
 		input := "a,b,c\n1,2,3"
 		reader := strings.NewReader(input)
 		columns := []string{"a", "d"}
-		_, err := ReadColumns(reader, columns, ',', "")
+		_, err := readColumns(reader, columns, ',', "")
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "column \"d\" not found")
@@ -36,7 +37,7 @@ func TestReadColumns(t *testing.T) {
 		input := "a,b,c\n1,NA,3\n4,5,NA"
 		reader := strings.NewReader(input)
 		columns := []string{"a", "b", "c"}
-		table, err := ReadColumns(reader, columns, ',', "NA")
+		table, err := readColumns(reader, columns, ',', "NA")
 
 		assert.NoError(t, err)
 		assert.Equal(t, 2, table.Rows())
@@ -48,7 +49,7 @@ func TestReadColumns(t *testing.T) {
 		input := "a,b,c\n1,2,3\n4,invalid,6"
 		reader := strings.NewReader(input)
 		columns := []string{"a", "b", "c"}
-		_, err := ReadColumns(reader, columns, ',', "")
+		_, err := readColumns(reader, columns, ',', "")
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "invalid syntax")
@@ -57,7 +58,7 @@ func TestReadColumns(t *testing.T) {
 	t.Run("Empty input", func(t *testing.T) {
 		reader := strings.NewReader("")
 		columns := []string{"a", "b"}
-		_, err := ReadColumns(reader, columns, ',', "")
+		_, err := readColumns(reader, columns, ',', "")
 
 		assert.Error(t, err)
 		assert.Equal(t, io.EOF, err)
@@ -67,7 +68,7 @@ func TestReadColumns(t *testing.T) {
 		input := "a;b;c\n1;2;3\n4;5;6"
 		reader := strings.NewReader(input)
 		columns := []string{"b", "c"}
-		table, err := ReadColumns(reader, columns, ';', "")
+		table, err := readColumns(reader, columns, ';', "")
 
 		assert.NoError(t, err)
 		assert.Equal(t, columns, table.ColumnNames())
@@ -80,7 +81,7 @@ func TestReadClasses(t *testing.T) {
 	t.Run("Valid input", func(t *testing.T) {
 		input := "a,b,c\nred,2,3\nblue,5,6\ngreen,8,9"
 		reader := strings.NewReader(input)
-		classes, err := ReadClasses(reader, "a", ',')
+		classes, err := readClasses(reader, "a", ',')
 
 		assert.NoError(t, err)
 		assert.Equal(t, []string{"red", "blue", "green"}, classes)
@@ -89,7 +90,7 @@ func TestReadClasses(t *testing.T) {
 	t.Run("Column not in first position", func(t *testing.T) {
 		input := "x,y,z\n1,cat,3\n4,dog,6\n7,fish,9"
 		reader := strings.NewReader(input)
-		classes, err := ReadClasses(reader, "y", ',')
+		classes, err := readClasses(reader, "y", ',')
 
 		assert.NoError(t, err)
 		assert.Equal(t, []string{"cat", "dog", "fish"}, classes)
@@ -97,7 +98,7 @@ func TestReadClasses(t *testing.T) {
 
 	t.Run("Empty input", func(t *testing.T) {
 		reader := strings.NewReader("")
-		_, err := ReadClasses(reader, "a", ',')
+		_, err := readClasses(reader, "a", ',')
 
 		assert.Error(t, err)
 		assert.Equal(t, io.EOF, err)
@@ -106,7 +107,7 @@ func TestReadClasses(t *testing.T) {
 	t.Run("Column not found", func(t *testing.T) {
 		input := "a,b,c\n1,2,3\n4,5,6"
 		reader := strings.NewReader(input)
-		_, err := ReadClasses(reader, "d", ',')
+		_, err := readClasses(reader, "d", ',')
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "column \"d\" not found")
@@ -115,7 +116,7 @@ func TestReadClasses(t *testing.T) {
 	t.Run("Custom delimiter", func(t *testing.T) {
 		input := "a;b;c\napple;2;3\nbanana;5;6\ncherry;8;9"
 		reader := strings.NewReader(input)
-		classes, err := ReadClasses(reader, "a", ';')
+		classes, err := readClasses(reader, "a", ';')
 
 		assert.NoError(t, err)
 		assert.Equal(t, []string{"apple", "banana", "cherry"}, classes)
@@ -124,7 +125,7 @@ func TestReadClasses(t *testing.T) {
 	t.Run("Single column input", func(t *testing.T) {
 		input := "class\nA\nB\nC"
 		reader := strings.NewReader(input)
-		classes, err := ReadClasses(reader, "class", ',')
+		classes, err := readClasses(reader, "class", ',')
 
 		assert.NoError(t, err)
 		assert.Equal(t, []string{"A", "B", "C"}, classes)
@@ -133,9 +134,143 @@ func TestReadClasses(t *testing.T) {
 	t.Run("Empty values in target column", func(t *testing.T) {
 		input := "a,b,c\n1,,3\n,5,6\n7,,9"
 		reader := strings.NewReader(input)
-		classes, err := ReadClasses(reader, "b", ',')
+		classes, err := readClasses(reader, "b", ',')
 
 		assert.NoError(t, err)
 		assert.Equal(t, []string{"", "5", ""}, classes)
+	})
+}
+func TestNewFileReader(t *testing.T) {
+	t.Run("Valid file", func(t *testing.T) {
+		tempFile, err := os.CreateTemp("", "test*.csv")
+		assert.NoError(t, err)
+		defer os.Remove(tempFile.Name())
+
+		_, err = tempFile.WriteString("a,b,c\n1,2,3\n4,5,6")
+		assert.NoError(t, err)
+		tempFile.Close()
+
+		reader, err := NewFileReader(tempFile.Name(), ',', "")
+		assert.NoError(t, err)
+		assert.NotNil(t, reader)
+		assert.Equal(t, tempFile.Name(), reader.path)
+		assert.Equal(t, "a,b,c\n1,2,3\n4,5,6", reader.text)
+		assert.Equal(t, ',', reader.delim)
+		assert.Equal(t, "", reader.noData)
+	})
+
+	t.Run("Non-existent file", func(t *testing.T) {
+		_, err := NewFileReader("non_existent_file.csv", ',', "")
+		assert.Error(t, err)
+	})
+
+	t.Run("Custom delimiter and noData", func(t *testing.T) {
+		tempFile, err := os.CreateTemp("", "test*.csv")
+		assert.NoError(t, err)
+		defer os.Remove(tempFile.Name())
+
+		_, err = tempFile.WriteString("a;b;c\n1;NA;3\n4;5;NA")
+		assert.NoError(t, err)
+		tempFile.Close()
+
+		reader, err := NewFileReader(tempFile.Name(), ';', "NA")
+		assert.NoError(t, err)
+		assert.NotNil(t, reader)
+		assert.Equal(t, ';', reader.delim)
+		assert.Equal(t, "NA", reader.noData)
+	})
+}
+
+func TestFileReader_ReadColumns(t *testing.T) {
+	t.Run("Read specific columns", func(t *testing.T) {
+		tempFile, err := os.CreateTemp("", "test*.csv")
+		assert.NoError(t, err)
+		defer os.Remove(tempFile.Name())
+
+		_, err = tempFile.WriteString("a,b,c,d\n1,2,3,4\n5,6,7,8")
+		assert.NoError(t, err)
+		tempFile.Close()
+
+		reader, err := NewFileReader(tempFile.Name(), ',', "")
+		assert.NoError(t, err)
+
+		table, err := reader.ReadColumns([]string{"a", "c"})
+		assert.NoError(t, err)
+		assert.NotNil(t, table)
+		assert.Equal(t, []string{"a", "c"}, table.ColumnNames())
+		assert.Equal(t, 2, table.Rows())
+		assert.Equal(t, []float64{1, 3, 5, 7}, table.Data())
+	})
+
+	t.Run("Read with noData values", func(t *testing.T) {
+		tempFile, err := os.CreateTemp("", "test*.csv")
+		assert.NoError(t, err)
+		defer os.Remove(tempFile.Name())
+
+		_, err = tempFile.WriteString("a,b,c\n1,N/A,3\n4,5,N/A")
+		assert.NoError(t, err)
+		tempFile.Close()
+
+		reader, err := NewFileReader(tempFile.Name(), ',', "N/A")
+		assert.NoError(t, err)
+
+		table, err := reader.ReadColumns([]string{"a", "b", "c"})
+		assert.NoError(t, err)
+		assert.NotNil(t, table)
+		assert.True(t, math.IsNaN(table.Get(0, 1)))
+		assert.True(t, math.IsNaN(table.Get(1, 2)))
+	})
+}
+
+func TestFileReader_ReadClasses(t *testing.T) {
+	t.Run("Read classes from specific column", func(t *testing.T) {
+		tempFile, err := os.CreateTemp("", "test*.csv")
+		assert.NoError(t, err)
+		defer os.Remove(tempFile.Name())
+
+		_, err = tempFile.WriteString("id,category,value\n1,A,10\n2,B,20\n3,A,30")
+		assert.NoError(t, err)
+		tempFile.Close()
+
+		reader, err := NewFileReader(tempFile.Name(), ',', "")
+		assert.NoError(t, err)
+
+		classes, err := reader.ReadClasses("category")
+		assert.NoError(t, err)
+		assert.Equal(t, []string{"A", "B", "A"}, classes)
+	})
+
+	t.Run("Read classes with custom delimiter", func(t *testing.T) {
+		tempFile, err := os.CreateTemp("", "test*.csv")
+		assert.NoError(t, err)
+		defer os.Remove(tempFile.Name())
+
+		_, err = tempFile.WriteString("id|type|value\n1|X|10\n2|Y|20\n3|Z|30")
+		assert.NoError(t, err)
+		tempFile.Close()
+
+		reader, err := NewFileReader(tempFile.Name(), '|', "")
+		assert.NoError(t, err)
+
+		classes, err := reader.ReadClasses("type")
+		assert.NoError(t, err)
+		assert.Equal(t, []string{"X", "Y", "Z"}, classes)
+	})
+
+	t.Run("Read classes from non-existent column", func(t *testing.T) {
+		tempFile, err := os.CreateTemp("", "test*.csv")
+		assert.NoError(t, err)
+		defer os.Remove(tempFile.Name())
+
+		_, err = tempFile.WriteString("a,b,c\n1,2,3\n4,5,6")
+		assert.NoError(t, err)
+		tempFile.Close()
+
+		reader, err := NewFileReader(tempFile.Name(), ',', "")
+		assert.NoError(t, err)
+
+		_, err = reader.ReadClasses("non_existent")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "column \"non_existent\" not found")
 	})
 }
