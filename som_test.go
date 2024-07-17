@@ -64,8 +64,15 @@ func TestNew(t *testing.T) {
 
 		csvTable := "x,y,Layer2\n1,2,A\n4,5,B\n7,8,A"
 		reader := csv.NewStringReader(csvTable, ',', "NA")
-		err := params.Prepare(reader)
+		tables, err := params.PrepareTables(reader)
 		assert.NoError(t, err)
+
+		assert.Equal(t, 2, len(tables))
+		assert.Equal(t, []string{"x", "y"}, tables[0].ColumnNames())
+		assert.Equal(t, []string{"A", "B"}, tables[1].ColumnNames())
+
+		assert.Equal(t, []float64{1, 2, 4, 5, 7, 8}, tables[0].Data())
+		assert.Equal(t, []float64{1, 0, 0, 1, 1, 0}, tables[1].Data())
 
 		som, err := New(params)
 		assert.NoError(t, err)

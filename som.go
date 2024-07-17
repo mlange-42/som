@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/mlange-42/som/conv"
 	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/distance"
 	"github.com/mlange-42/som/neighborhood"
+	"github.com/mlange-42/som/table"
 )
 
 type SomConfig struct {
@@ -15,25 +17,34 @@ type SomConfig struct {
 	Neighborhood neighborhood.Neighborhood
 }
 
-// Prepare initializes the layers in the SomConfig by setting the column names
-// for any categorical layers that don't have them specified. If a layer is categorical and
-// has no columns specified, the unique classes from the input data are used
-// as the column names.
-func (c *SomConfig) Prepare(reader csv.Reader) error {
+// PrepareTables reads the CSV data and creates a table for each layer defined in the SomConfig.
+// If a categorical layer has no columns specified, it will attempt to read the class names for that layer
+// and create a table from the classes. The created tables are returned in the same order as
+// the layers in the SomConfig.
+func (c *SomConfig) PrepareTables(reader csv.Reader) ([]*table.Table, error) {
+	tables := make([]*table.Table, len(c.Layers))
 	for i := range c.Layers {
 		layer := &c.Layers[i]
 		if len(layer.Columns) == 0 {
 			if !layer.Categorical {
-				return fmt.Errorf("layer %d has no columns", i)
+				return nil, fmt.Errorf("layer %d has no columns", i)
 			}
-			classes, err := reader.UniqueClasses(layer.Name)
+			classes, err := reader.ReadClasses(layer.Name)
 			if err != nil {
-				return err
+				return nil, err
 			}
-			layer.Columns = classes
+			table := conv.ClassesToTable(classes)
+			layer.Columns = table.ColumnNames()
+			tables[i] = table
+			continue
 		}
+		table, err := reader.ReadColumns(layer.Columns)
+		if err != nil {
+			return nil, err
+		}
+		tables[i] = table
 	}
-	return nil
+	return tables, nil
 }
 
 type LayerDef struct {
