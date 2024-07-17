@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"math/rand"
-	"strings"
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/decay"
@@ -36,11 +35,10 @@ func main() {
 		panic(err)
 	}
 
-	//fmt.Println(printTable(&table))
-
 	trainer.Train(1000)
 
-	fmt.Println(printLayer(&s.Layers()[0], 0, 1))
+	//fmt.Println(s.Layers()[0].ToCSV(';'))
+	fmt.Println(s.Layers()[0].ColumnMatrix(0))
 }
 
 func generateData(rows, cols int) []float64 {
@@ -54,35 +52,4 @@ func generateData(rows, cols int) []float64 {
 		data[i*cols+1] = rand.NormFloat64()*0.1 + 0.8
 	}
 	return data
-}
-
-func printTable(t *som.Table) string {
-	b := strings.Builder{}
-	for _, col := range t.Columns() {
-		b.WriteString(fmt.Sprintf("%12s", col))
-	}
-	b.WriteRune('\n')
-	cols := len(t.Columns())
-	for i := 0; i < t.Rows(); i++ {
-		for j := 0; j < cols; j++ {
-			b.WriteString(fmt.Sprintf("%12.2f", t.Get(i, j)))
-		}
-		b.WriteRune('\n')
-	}
-	return b.String()
-}
-
-func printLayer(l *som.Layer, x, y int) string {
-	b := strings.Builder{}
-	b.WriteString(fmt.Sprintf("%12s", l.Columns()[x]))
-	b.WriteString(fmt.Sprintf("%12s", l.Columns()[y]))
-	b.WriteRune('\n')
-
-	nodes := l.Nodes()
-	for i := 0; i < nodes; i++ {
-		b.WriteString(fmt.Sprintf("%12.2f", l.GetAt(i, x)))
-		b.WriteString(fmt.Sprintf("%12.2f", l.GetAt(i, y)))
-		b.WriteRune('\n')
-	}
-	return b.String()
 }

@@ -3,6 +3,7 @@ package som
 import (
 	"fmt"
 	"slices"
+	"strings"
 )
 
 // Table represents a table of data with columns and rows.
@@ -74,4 +75,26 @@ func (t *Table) Set(row, col int, value float64) {
 func (t *Table) GetRow(row int) []float64 {
 	idx := t.rowIndex(row)
 	return t.data[idx : idx+len(t.columns)]
+}
+
+func (t *Table) ToCSV(sep rune) string {
+	b := strings.Builder{}
+	cols := t.Columns()
+	for i, col := range cols {
+		b.WriteString(col)
+		if i < len(cols)-1 {
+			b.WriteRune(sep)
+		}
+	}
+	b.WriteRune('\n')
+	for i := 0; i < t.Rows(); i++ {
+		for j := 0; j < len(cols); j++ {
+			b.WriteString(fmt.Sprintf("%f", t.Get(i, j)))
+			if j < len(cols)-1 {
+				b.WriteRune(sep)
+			}
+		}
+		b.WriteRune('\n')
+	}
+	return b.String()
 }

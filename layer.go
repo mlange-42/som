@@ -1,6 +1,10 @@
 package som
 
-import "slices"
+import (
+	"fmt"
+	"slices"
+	"strings"
+)
 
 // Size represents the width and height of a 2D layer or grid.
 type Size struct {
@@ -83,4 +87,48 @@ func (l *Layer) GetNode(x, y int) []float64 {
 func (l *Layer) GetNodeAt(idx int) []float64 {
 	idx2 := l.nodeIndexAt(idx)
 	return l.data[idx2 : idx2+len(l.columns)]
+}
+
+func (l *Layer) CoordsAt(idx int) (int, int) {
+	return l.size.CoordsAt(idx)
+}
+
+func (l *Layer) ColumnMatrix(col int) [][]float64 {
+	data := make([][]float64, l.size.Height)
+	for y := 0; y < l.size.Height; y++ {
+		row := make([]float64, l.size.Width)
+		for x := 0; x < l.size.Width; x++ {
+			row[x] = l.Get(x, y, col)
+		}
+		data[y] = row
+	}
+	return data
+}
+
+func (l *Layer) ToCSV(sep rune) string {
+	b := strings.Builder{}
+	s := string(sep)
+	cols := l.Columns()
+
+	b.WriteString(fmt.Sprintf("id%scol%srow%s", s, s, s))
+	for i, col := range cols {
+		b.WriteString(col)
+		if i < len(cols)-1 {
+			b.WriteRune(sep)
+		}
+	}
+	b.WriteRune('\n')
+	nodes := l.Nodes()
+	for i := 0; i < nodes; i++ {
+		col, row := l.CoordsAt(i)
+		b.WriteString(fmt.Sprintf("%d%s%d%s%d%s", i, s, col, s, row, s))
+		for j := 0; j < len(cols); j++ {
+			b.WriteString(fmt.Sprintf("%f", l.GetAt(i, j)))
+			if j < len(cols)-1 {
+				b.WriteRune(sep)
+			}
+		}
+		b.WriteRune('\n')
+	}
+	return b.String()
 }
