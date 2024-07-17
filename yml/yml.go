@@ -11,6 +11,7 @@ import (
 )
 
 type ymlLayer struct {
+	Name    string
 	Columns []string
 	Metric  string
 	Weight  float64
@@ -49,6 +50,7 @@ func ToSomConfig(ymlData []byte) (*som.SomConfig, error) {
 			return nil, fmt.Errorf("unknown metric: %s", l.Metric)
 		}
 		conf.Layers = append(conf.Layers, som.LayerDef{
+			Name:    l.Name,
 			Columns: l.Columns,
 			Metric:  metric,
 			Weight:  l.Weight,

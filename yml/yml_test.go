@@ -15,10 +15,12 @@ func TestToSomConfig(t *testing.T) {
 size: [10, 8]
 neighborhood: gaussian
 layers:
-  - columns: [a, b, c]
+  - name: layer1
+    columns: [a, b, c]
     metric: euclidean
     weight: 1.0
-  - columns: [d, e]
+  - name: layer2
+    columns: [d, e]
     metric: manhattan
     weight: 0.5
 `)
@@ -30,9 +32,11 @@ layers:
 		assert.Equal(t, som.Size{Width: 10, Height: 8}, config.Size)
 		assert.IsType(t, &neighborhood.Gaussian{}, config.Neighborhood)
 		assert.Len(t, config.Layers, 2)
+		assert.Equal(t, "layer1", config.Layers[0].Name)
 		assert.Equal(t, []string{"a", "b", "c"}, config.Layers[0].Columns)
 		assert.Equal(t, &distance.Euclidean{}, config.Layers[0].Metric)
 		assert.Equal(t, 1.0, config.Layers[0].Weight)
+		assert.Equal(t, "layer2", config.Layers[1].Name)
 		assert.Equal(t, []string{"d", "e"}, config.Layers[1].Columns)
 		assert.Equal(t, &distance.Manhattan{}, config.Layers[1].Metric)
 		assert.Equal(t, 0.5, config.Layers[1].Weight)

@@ -14,6 +14,7 @@ type SomConfig struct {
 }
 
 type LayerDef struct {
+	Name    string
 	Columns []string
 	Metric  distance.Distance
 	Weight  float64
@@ -35,7 +36,7 @@ func New(params *SomConfig) Som {
 	metric := make([]distance.Distance, len(params.Layers))
 	off := 0
 	for i, l := range params.Layers {
-		lay[i] = NewLayer(l.Columns, params.Size)
+		lay[i] = NewLayer(l.Name, l.Columns, params.Size)
 		offset[i] = off
 		off += len(l.Columns)
 

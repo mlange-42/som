@@ -19,18 +19,24 @@ func (s *Size) CoordsAt(idx int) (int, int) {
 
 // Layer represents a layer of data in a Self-organizing Map.
 type Layer struct {
+	name    string    // The name of the layer
 	columns []string  // The names of the columns in the layer
 	size    Size      // The width and height of the layer
 	data    []float64 // The data values for the layer
 }
 
 // NewLayer creates a new Layer with the given columns and size.
-func NewLayer(columns []string, size Size) Layer {
+func NewLayer(name string, columns []string, size Size) Layer {
 	return Layer{
+		name:    name,
 		columns: columns,
 		size:    size,
 		data:    make([]float64, size.Width*size.Height*len(columns)),
 	}
+}
+
+func (l *Layer) Name() string {
+	return l.name
 }
 
 func (l *Layer) nodeIndex(x, y int) int {
