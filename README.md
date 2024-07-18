@@ -9,3 +9,33 @@ Go implementation of Self-Organizing Maps (SOM) alias Kohonen maps.
 Provides a command line tool and a library for training and visualizing SOMs.
 
 :warning: This is early work in progress!
+
+## Installation
+
+As long as there are no official releases, you can install the latest version from GitHub with Go:
+
+```shell
+go install github.com/mlange-42/som/cmd/som@latest
+```
+
+## Usage
+
+Here is an example of how to use the command line tool, using the well-known Iris dataset.
+
+First, train a SOM with the Iris dataset:
+
+```shell
+som train _examples/iris/untrained.yml _examples/iris/data.csv > trained.yml
+```
+
+You can then export the trained SOM to a CSV file:
+
+```shell
+som export trained.yml > nodes.csv
+```
+
+You can also determine the best-matching unit (BMU) for a each row in the dataset:
+
+```shell
+som bmu trained.yml _examples/iris/data.csv --preserve species > bmu.csv
+```
