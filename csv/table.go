@@ -13,11 +13,6 @@ import (
 	"github.com/mlange-42/som/table"
 )
 
-type Reader interface {
-	ReadColumns(columns []string) (*table.Table, error)
-	ReadLabels(column string) ([]string, error)
-}
-
 type StringReader struct {
 	text   string
 	delim  rune

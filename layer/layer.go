@@ -142,6 +142,14 @@ func (l *Layer) GetAt(idx, col int) float64 {
 	return l.data[l.indexAt(idx, col)]
 }
 
+func (l *Layer) Set(x, y, col int, value float64) {
+	l.data[l.index(x, y, col)] = value
+}
+
+func (l *Layer) SetAt(idx, col int, value float64) {
+	l.data[l.indexAt(idx, col)] = value
+}
+
 // GetNode returns a slice of float64 values representing the data for the node
 // at the specified (x, y) coordinates in the Layer. The slice contains the
 // values for each column in the Layer, in the same order as the columns slice.
@@ -204,4 +212,14 @@ func (l *Layer) ToCSV(sep rune) string {
 		b.WriteRune('\n')
 	}
 	return b.String()
+}
+
+func (l *Layer) DeNormalize() {
+	nodes := l.Nodes()
+	cols := len(l.columns)
+	for i := 0; i < nodes; i++ {
+		for col := 0; col < cols; col++ {
+			l.SetAt(i, col, l.norm[col].DeNormalize(l.GetAt(i, col)))
+		}
+	}
 }

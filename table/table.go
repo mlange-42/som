@@ -9,6 +9,11 @@ import (
 	"github.com/mlange-42/som/norm"
 )
 
+type Reader interface {
+	ReadColumns(columns []string) (*Table, error)
+	ReadLabels(column string) ([]string, error)
+}
+
 // Table represents a table of data with columns and rows.
 type Table struct {
 	columns []string  // The names of the columns in the table.
