@@ -149,7 +149,7 @@ layers:
 	s, err := som.New(config)
 	assert.NoError(t, err)
 
-	result, err := ToYAML(&s)
+	result, err := ToYAML(s)
 	assert.NoError(t, err)
 
 	expected := `size: [4, 3]

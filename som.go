@@ -82,11 +82,11 @@ type Som struct {
 	neighborhood neighborhood.Neighborhood
 }
 
-func New(params *SomConfig) (Som, error) {
+func New(params *SomConfig) (*Som, error) {
 	lay := make([]layer.Layer, len(params.Layers))
 	for i, l := range params.Layers {
 		if len(l.Columns) == 0 {
-			return Som{}, fmt.Errorf("layer %s has no columns", l.Name)
+			return nil, fmt.Errorf("layer %s has no columns", l.Name)
 		}
 		weight := l.Weight
 		if weight == 0 {
@@ -108,10 +108,10 @@ func New(params *SomConfig) (Som, error) {
 			lay[i], err = layer.NewWithData(l.Name, l.Columns, l.Norm, params.Size, metric, weight, l.Categorical, l.Data)
 		}
 		if err != nil {
-			return Som{}, err
+			return nil, err
 		}
 	}
-	return Som{
+	return &Som{
 		size:         params.Size,
 		layers:       lay,
 		neighborhood: params.Neighborhood,

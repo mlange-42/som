@@ -43,7 +43,7 @@ func exportCommand() *cobra.Command {
 			}
 
 			writer := strings.Builder{}
-			err = csv.SomToCsv(&s, &writer, del[0], noData)
+			err = csv.SomToCsv(s, &writer, del[0], noData)
 			if err != nil {
 				return err
 			}
@@ -55,7 +55,7 @@ func exportCommand() *cobra.Command {
 	}
 
 	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")
-	command.Flags().StringVarP(&noData, "no-data", "n", "-", "No data string")
+	command.Flags().StringVarP(&noData, "no-data", "n", "", "No data string")
 
 	return command
 }

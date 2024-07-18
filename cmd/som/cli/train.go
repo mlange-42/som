@@ -70,14 +70,14 @@ func trainCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			trainer, err := som.NewTrainer(&s, tables, trainingConfig, rand.New(rand.NewSource(seed)))
+			trainer, err := som.NewTrainer(s, tables, trainingConfig, rand.New(rand.NewSource(seed)))
 			if err != nil {
 				return err
 			}
 
 			trainer.Train(epochs)
 
-			outYaml, err := yml.ToYAML(&s)
+			outYaml, err := yml.ToYAML(s)
 			if err != nil {
 				return err
 			}
@@ -87,14 +87,14 @@ func trainCommand() *cobra.Command {
 		},
 	}
 
-	command.Flags().StringVarP(&alpha, "alpha", "a", "linear 0.5 0.01", "Learning rate function")
-	command.Flags().StringVarP(&radius, "radius", "r", "linear 10 0.5", "Radius function")
+	command.Flags().StringVarP(&alpha, "alpha", "a", "power 0.5 0.01", "Learning rate function")
+	command.Flags().StringVarP(&radius, "radius", "r", "power 10 0.7", "Radius function")
 
 	command.Flags().IntVarP(&epochs, "epochs", "e", 1000, "Number of epochs")
 	command.Flags().Int64VarP(&seed, "seed", "s", 42, "Random seed")
 
 	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")
-	command.Flags().StringVarP(&noData, "no-data", "n", "-", "No data string")
+	command.Flags().StringVarP(&noData, "no-data", "n", "", "No data string")
 
 	return command
 }

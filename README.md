@@ -20,15 +20,21 @@ go install github.com/mlange-42/som/cmd/som@latest
 
 ## Usage
 
-Here is an example of how to use the command line tool, using the well-known Iris dataset.
+Here is an example of how to use the command line tool, using the well-known World Countries dataset.
 
 First, train a SOM with the Iris dataset:
 
 ```shell
-som train _examples/iris/untrained.yml _examples/iris/data.csv > trained.yml
+som train _examples/countries/untrained.yml _examples/countries/data.csv > trained.yml
 ```
 
-You can then export the trained SOM to a CSV file:
+Visualize the trained SOM, showing labels of data points:
+
+```shell
+som plot heatmap trained.yml heatmap.png --data-file _examples/countries/data.csv --labels Country
+```
+
+You can also export the trained SOM to a CSV file:
 
 ```shell
 som export trained.yml > nodes.csv
@@ -37,5 +43,5 @@ som export trained.yml > nodes.csv
 You can also determine the best-matching unit (BMU) for a each row in the dataset:
 
 ```shell
-som bmu trained.yml _examples/iris/data.csv --preserve species > bmu.csv
+som bmu trained.yml _examples/countries/data.csv --preserve Country,code,continent > bmu.csv
 ```

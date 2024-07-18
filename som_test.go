@@ -275,7 +275,7 @@ func createSom() *Som {
 		panic(err)
 	}
 
-	return &som
+	return som
 }
 
 func TestLearnBasic(t *testing.T) {
