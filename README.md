@@ -67,6 +67,36 @@ Determine the best-matching unit (BMU) for a each row in the dataset:
 som bmu trained.yml _examples/countries/data.csv --preserve Country,code,continent > bmu.csv
 ```
 
+### YAML configuration
+
+The command line tool uses a YAML configuration file to specify the SOM parameters.
+
+Here is an example of a configuration file for the World Countries dataset:
+
+```yaml
+size: [8, 6]           # Size of the SOM
+neighborhood: gaussian # Neighborhood function
+
+layers:                # Layers of the SOM
+
+  - name: Scalars      # Name of the layer. Has no meaning for continuous layers
+    columns:           # Columns of the layer
+      - sepal_length   # Column names as in the dataset
+      - sepal_width
+      - petal_length
+      - petal_width
+    norm: [gaussian]   # Normalization function(s) for columns
+    metric: euclidean  # Distance metric
+    weight: 1          # Weight of the layer
+
+  - name: species      # Name of the layer. Use column name for categorical layers
+    metric: hamming    # Distance metric
+    categorical: true  # Layer is categorical. Omit columns
+    weight: 0.5        # Weight of the layer
+```
+
+See the [examples](./_examples) folder for more examples.
+
 ## License
 
 This project is distributed under the [MIT license](./LICENSE).
