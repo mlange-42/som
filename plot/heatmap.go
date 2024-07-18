@@ -15,36 +15,31 @@ import (
 	"gonum.org/v1/plot/vg/vgimg"
 )
 
-type grid struct {
-	som    *som.Som
-	layer  int
-	column int
+type SomLayerGrid struct {
+	Som    *som.Som
+	Layer  int
+	Column int
 }
 
-func (g *grid) Dims() (c, r int) {
-	return g.som.Size().Width, g.som.Size().Height
+func (g *SomLayerGrid) Dims() (c, r int) {
+	return g.Som.Size().Width, g.Som.Size().Height
 }
 
-func (g *grid) Z(c, r int) float64 {
-	l := &g.som.Layers()[g.layer]
-	v := l.Get(c, r, g.column)
-	return l.Normalizers()[g.column].DeNormalize(v)
+func (g *SomLayerGrid) Z(c, r int) float64 {
+	l := &g.Som.Layers()[g.Layer]
+	v := l.Get(c, r, g.Column)
+	return l.Normalizers()[g.Column].DeNormalize(v)
 }
 
-func (g *grid) X(c int) float64 {
+func (g *SomLayerGrid) X(c int) float64 {
 	return float64(c)
 }
 
-func (g *grid) Y(r int) float64 {
+func (g *SomLayerGrid) Y(r int) float64 {
 	return float64(r)
 }
 
-func Heatmap(som *som.Som, layer, column, width, height int, labels []string, positions []plotter.XY) (image.Image, error) {
-	g := grid{
-		som:    som,
-		layer:  layer,
-		column: column,
-	}
+func Heatmap(title string, g plotter.GridXYZ, width, height int, labels []string, positions []plotter.XY) (image.Image, error) {
 	p := plot.New()
 	l := plot.NewLegend()
 	p.Title.TextStyle.Font.Size = 16
@@ -55,9 +50,9 @@ func Heatmap(som *som.Som, layer, column, width, height int, labels []string, po
 	numColors := legendHeight / int(itemHeight)
 
 	pal := palette.Rainbow(numColors, palette.Blue, palette.Red, 1, 1, 1)
-	h := plotter.NewHeatMap(&g, pal)
+	h := plotter.NewHeatMap(g, pal)
 
-	p.Title.Text = fmt.Sprintf("%s - %s", som.Layers()[layer].Name(), som.Layers()[layer].ColumnNames()[column])
+	p.Title.Text = title
 	p.HideAxes()
 	p.Add(h)
 

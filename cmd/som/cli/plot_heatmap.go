@@ -83,7 +83,11 @@ func heatmapCommand() *cobra.Command {
 				layer, col := indices[i][0], indices[i][1]
 				c, r := i%plotColumns, i/plotColumns
 
-				subImg, err := plot.Heatmap(&s, layer, col, size[0], size[1], labels, positions)
+				l := &s.Layers()[layer]
+				grid := plot.SomLayerGrid{Som: &s, Layer: layer, Column: col}
+				title := fmt.Sprintf("%s: %s", l.Name(), l.ColumnNames()[col])
+
+				subImg, err := plot.Heatmap(title, &grid, size[0], size[1], labels, positions)
 				if err != nil {
 					return err
 				}
