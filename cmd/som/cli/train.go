@@ -87,8 +87,8 @@ func trainCommand() *cobra.Command {
 		},
 	}
 
-	command.Flags().StringVarP(&alpha, "alpha", "a", "linear 0.5 0.01", "Learning rate function")
-	command.Flags().StringVarP(&radius, "radius", "r", "linear 10 0.5", "Radius function")
+	command.Flags().StringVarP(&alpha, "alpha", "a", "power 0.5 0.01", "Learning rate function")
+	command.Flags().StringVarP(&radius, "radius", "r", "power 10 0.7", "Radius function")
 
 	command.Flags().IntVarP(&epochs, "epochs", "e", 1000, "Number of epochs")
 	command.Flags().Int64VarP(&seed, "seed", "s", 42, "Random seed")
