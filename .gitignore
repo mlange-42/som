@@ -6,4 +6,5 @@
 *.txt
 *.pprof
 *.out
+/*.yml
 /out/
