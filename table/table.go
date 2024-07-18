@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"slices"
-	"strings"
 
 	"github.com/mlange-42/som/norm"
 )
@@ -141,30 +140,14 @@ func (t *Table) Range(col int) (min, max float64) {
 	return
 }
 
-func (t *Table) ToCSV(sep rune) string {
-	b := strings.Builder{}
-	cols := t.ColumnNames()
-	for i, col := range cols {
-		b.WriteString(col)
-		if i < len(cols)-1 {
-			b.WriteRune(sep)
-		}
-	}
-	b.WriteRune('\n')
-	for i := 0; i < t.Rows(); i++ {
-		for j := 0; j < len(cols); j++ {
-			b.WriteString(fmt.Sprintf("%f", t.Get(i, j)))
-			if j < len(cols)-1 {
-				b.WriteRune(sep)
-			}
-		}
-		b.WriteRune('\n')
-	}
-	return b.String()
-}
-
 func (t *Table) NormalizeColumn(col int, n norm.Normalizer) {
 	for i := 0; i < t.Rows(); i++ {
 		t.Set(i, col, n.Normalize(t.Get(i, col)))
+	}
+}
+
+func (t *Table) DeNormalizeColumn(col int, n norm.Normalizer) {
+	for i := 0; i < t.Rows(); i++ {
+		t.Set(i, col, n.DeNormalize(t.Get(i, col)))
 	}
 }

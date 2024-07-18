@@ -100,14 +100,15 @@ func New(params *SomConfig) (Som, error) {
 				metric = &distance.Euclidean{}
 			}
 		}
+
+		var err error
 		if len(l.Data) == 0 {
-			lay[i] = layer.New(l.Name, l.Columns, l.Norm, params.Size, metric, weight, l.Categorical)
+			lay[i], err = layer.New(l.Name, l.Columns, l.Norm, params.Size, metric, weight, l.Categorical)
 		} else {
-			var err error
 			lay[i], err = layer.NewWithData(l.Name, l.Columns, l.Norm, params.Size, metric, weight, l.Categorical, l.Data)
-			if err != nil {
-				return Som{}, err
-			}
+		}
+		if err != nil {
+			return Som{}, err
 		}
 	}
 	return Som{

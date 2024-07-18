@@ -129,3 +129,40 @@ func readLabels(reader io.Reader, column string, delim rune) ([]string, error) {
 
 	return data, nil
 }
+
+func TableToCSV(t *table.Table, writer io.Writer, sep rune, noData string) error {
+	b := strings.Builder{}
+	cols := t.ColumnNames()
+	for i, col := range cols {
+		b.WriteString(col)
+		if i < len(cols)-1 {
+			b.WriteRune(sep)
+		}
+	}
+	b.WriteRune('\n')
+	writer.Write([]byte(b.String()))
+	b.Reset()
+
+	for i := 0; i < t.Rows(); i++ {
+		for j := 0; j < len(cols); j++ {
+			v := t.Get(i, j)
+			if math.IsNaN(v) {
+				b.WriteString(noData)
+			} else {
+				b.WriteString(strconv.FormatFloat(v, 'f', -1, 64))
+			}
+			if j < len(cols)-1 {
+				b.WriteRune(sep)
+			}
+		}
+		if i < t.Rows()-1 {
+			b.WriteRune('\n')
+		}
+		_, err := writer.Write([]byte(b.String()))
+		if err != nil {
+			return err
+		}
+		b.Reset()
+	}
+	return nil
+}

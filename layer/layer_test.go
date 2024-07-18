@@ -8,7 +8,8 @@ import (
 )
 
 func TestLayer(t *testing.T) {
-	l := New("L1", []string{"a", "b", "c"}, nil, Size{3, 2}, &distance.Manhattan{}, 1.0, false)
+	l, err := New("L1", []string{"a", "b", "c"}, nil, Size{3, 2}, &distance.Manhattan{}, 1.0, false)
+	assert.NoError(t, err)
 
 	assert.Equal(t, 18, len(l.data))
 

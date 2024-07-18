@@ -33,26 +33,12 @@ type Layer struct {
 }
 
 // New creates a new Layer with the given columns and size.
-func New(name string, columns []string, normalizers []norm.Normalizer, size Size, metric distance.Distance, weight float64, categorical bool) Layer {
-	if len(normalizers) == 0 {
-		normalizers = make([]norm.Normalizer, len(columns))
-		for i := range columns {
-			normalizers[i] = &norm.None{}
-		}
-	}
-	if len(normalizers) != len(columns) {
-		panic(fmt.Sprintf("invalid number of normalizers: expected %d, got %d", len(columns), len(normalizers)))
-	}
-	return Layer{
-		name:        name,
-		columns:     columns,
-		norm:        normalizers,
-		size:        size,
-		metric:      metric,
-		weight:      weight,
-		data:        make([]float64, size.Width*size.Height*len(columns)),
-		categorical: categorical,
-	}
+func New(name string, columns []string, normalizers []norm.Normalizer, size Size, metric distance.Distance, weight float64, categorical bool) (Layer, error) {
+	return NewWithData(
+		name, columns, normalizers,
+		size, metric, weight, categorical,
+		make([]float64, size.Width*size.Height*len(columns)),
+	)
 }
 
 func NewWithData(name string, columns []string, normalizers []norm.Normalizer, size Size, metric distance.Distance, weight float64, categorical bool, data []float64) (Layer, error) {
@@ -72,6 +58,8 @@ func NewWithData(name string, columns []string, normalizers []norm.Normalizer, s
 		name:        name,
 		columns:     columns,
 		norm:        normalizers,
+		metric:      metric,
+		weight:      weight,
 		size:        size,
 		data:        data,
 		categorical: categorical,
