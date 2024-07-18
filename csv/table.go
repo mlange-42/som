@@ -176,20 +176,9 @@ func TablesToCsv(tables []*table.Table, labelColumns []string, labels [][]string
 	del := string(delim)
 	builder := strings.Builder{}
 
-	rows := -1
-	for _, t := range tables {
-		if rows == -1 {
-			rows = t.Rows()
-		} else if rows != t.Rows() {
-			return fmt.Errorf("all tables and labels must have the same number of rows")
-		}
-	}
-	for _, lab := range labels {
-		if rows == -1 {
-			rows = len(lab)
-		} else if len(lab) != rows {
-			return fmt.Errorf("all tables and labels must have the same number of rows")
-		}
+	rows, err := checkAndCountTables(tables, labels)
+	if err != nil {
+		return err
 	}
 
 	for i := 0; i < rows; i++ {
@@ -225,6 +214,26 @@ func TablesToCsv(tables []*table.Table, labelColumns []string, labels [][]string
 	}
 
 	return nil
+}
+
+func checkAndCountTables(tables []*table.Table, labels [][]string) (int, error) {
+	rows := -1
+	for _, t := range tables {
+		if rows == -1 {
+			rows = t.Rows()
+		} else if rows != t.Rows() {
+			return -1, fmt.Errorf("all tables and labels must have the same number of rows")
+		}
+	}
+	for _, lab := range labels {
+		if rows == -1 {
+			rows = len(lab)
+		} else if len(lab) != rows {
+			return -1, fmt.Errorf("all tables and labels must have the same number of rows")
+		}
+	}
+
+	return rows, nil
 }
 
 func writeHeadersTables(writer io.Writer, labelColumns []string, tables []*table.Table, delim rune) error {
