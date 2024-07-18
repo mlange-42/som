@@ -51,7 +51,7 @@ func heatmapCommand() *cobra.Command {
 				return fmt.Errorf("could not find column %s", column)
 			}
 
-			img, err := plot.Heatmap(&s, layer, col, size[0], size[1])
+			img, err := plot.Heatmap(&s, layer, col, size[0], size[1], nil, nil)
 			if err != nil {
 				return err
 			}

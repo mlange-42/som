@@ -9,6 +9,7 @@ import (
 	"gonum.org/v1/plot/font"
 	"gonum.org/v1/plot/palette"
 	"gonum.org/v1/plot/plotter"
+	"gonum.org/v1/plot/text"
 	"gonum.org/v1/plot/vg"
 	"gonum.org/v1/plot/vg/draw"
 	"gonum.org/v1/plot/vg/vgimg"
@@ -38,7 +39,7 @@ func (g *grid) Y(r int) float64 {
 	return float64(r)
 }
 
-func Heatmap(som *som.Som, layer, column, width, height int) (image.Image, error) {
+func Heatmap(som *som.Som, layer, column, width, height int, labels []string, positions []plotter.XY) (image.Image, error) {
 	g := grid{
 		som:    som,
 		layer:  layer,
@@ -49,7 +50,7 @@ func Heatmap(som *som.Som, layer, column, width, height int) (image.Image, error
 
 	titleHeight := p.Title.TextStyle.FontExtents().Height.Points()
 	legendHeight := height - int(titleHeight) - 2
-	itemHeight := l.TextStyle.Rectangle("Aq").Max.Y.Points()
+	itemHeight := l.TextStyle.Rectangle("Aq").Max.Y.Points() + 1
 	numColors := legendHeight / int(itemHeight)
 
 	pal := palette.Rainbow(numColors, palette.Blue, palette.Red, 1, 1, 1)
@@ -57,8 +58,10 @@ func Heatmap(som *som.Som, layer, column, width, height int) (image.Image, error
 
 	p.Title.Text = fmt.Sprintf("%s - %s", som.Layers()[layer].Name(), som.Layers()[layer].ColumnNames()[column])
 	p.HideAxes()
-
 	p.Add(h)
+
+	labelsPlot := createLabels(labels, positions, l.TextStyle)
+	p.Add(labelsPlot)
 
 	thumbs := plotter.PaletteThumbnailers(pal)
 	for i := len(thumbs) - 1; i >= 0; i-- {
@@ -95,4 +98,31 @@ func Heatmap(som *som.Som, layer, column, width, height int) (image.Image, error
 	p.Draw(dc)
 
 	return img.Image(), nil
+}
+
+func createLabels(labels []string, positions []plotter.XY, baseStyle text.Style) *Labels {
+	style := baseStyle
+	style.Font.Size = 12
+	style.XAlign = text.XCenter
+	style.YAlign = text.YCenter
+
+	styles := make([]text.Style, len(labels))
+	for i := range styles {
+		styles[i] = style
+	}
+
+	l := &plotter.Labels{
+		XYs:       positions,
+		Labels:    labels,
+		TextStyle: styles,
+	}
+	return &Labels{l}
+}
+
+type Labels struct {
+	labels *plotter.Labels
+}
+
+func (l *Labels) Plot(c draw.Canvas, p *plot.Plot) {
+	l.labels.Plot(c, p)
 }
