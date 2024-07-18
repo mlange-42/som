@@ -49,35 +49,9 @@ func heatmapCommand() *cobra.Command {
 				return err
 			}
 
-			var layers, cols []int
-
-			if len(columns) == 0 {
-				for i, l := range s.Layers() {
-					if l.IsCategorical() {
-						continue
-					}
-					for j, c := range l.ColumnNames() {
-						layers = append(layers, i)
-						cols = append(cols, j)
-						columns = append(columns, c)
-					}
-				}
-			} else {
-				layers, cols := make([]int, len(columns)), make([]int, len(columns))
-				for i, col := range columns {
-					found := false
-					for j, l := range s.Layers() {
-						for k, c := range l.ColumnNames() {
-							if c == col {
-								layers[i], cols[i] = j, k
-								found = true
-							}
-						}
-					}
-					if !found {
-						return fmt.Errorf("could not find column %s", col)
-					}
-				}
+			columns, indices, err := extractIndices(&s, columns)
+			if err != nil {
+				return err
 			}
 
 			if plotColumns == 0 {
@@ -105,8 +79,8 @@ func heatmapCommand() *cobra.Command {
 				}
 			}
 
-			for i := range cols {
-				layer, col := layers[i], cols[i]
+			for i := range indices {
+				layer, col := indices[i][0], indices[i][1]
 				c, r := i%plotColumns, i/plotColumns
 
 				subImg, err := plot.Heatmap(&s, layer, col, size[0], size[1], labels, positions)
@@ -139,6 +113,40 @@ func heatmapCommand() *cobra.Command {
 	command.Flags().StringVarP(&noData, "no-data", "n", "-", "No.data value")
 
 	return command
+}
+
+func extractIndices(s *som.Som, columns []string) ([]string, [][2]int, error) {
+	var indices [][2]int
+
+	if len(columns) == 0 {
+		for i, l := range s.Layers() {
+			if l.IsCategorical() {
+				continue
+			}
+			for j, c := range l.ColumnNames() {
+				indices = append(indices, [2]int{i, j})
+				columns = append(columns, c)
+			}
+		}
+	} else {
+		indices = make([][2]int, len(columns))
+		for i, col := range columns {
+			found := false
+			for j, l := range s.Layers() {
+				for k, c := range l.ColumnNames() {
+					if c == col {
+						indices[i] = [2]int{j, k}
+						found = true
+					}
+				}
+			}
+			if !found {
+				return nil, nil, fmt.Errorf("could not find column %s", col)
+			}
+		}
+	}
+
+	return columns, indices, nil
 }
 
 func extractLabels(
