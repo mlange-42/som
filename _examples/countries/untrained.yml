@@ -3,6 +3,7 @@ neighborhood: gaussian
 layers:
   - name: Scalars
     columns:
+      - Fertility
       - child_mort_2010
       - birth_p_1000
       - log_GNI
@@ -10,6 +11,7 @@ layers:
       - PopGrowth
       - PopUrbanized
       - AdultLiteracy
+      - PrimSchool
       - Income_low_40
       - Income_high_20
     norm: [gaussian]
@@ -18,4 +20,4 @@ layers:
   - name: continent
     metric: hamming
     categorical: true
-    weight: 0.5
+    weight: 0.25

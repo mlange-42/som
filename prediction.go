@@ -17,6 +17,10 @@ func NewPredictor(som *Som, tables []*table.Table) (*Predictor, error) {
 	}, nil
 }
 
+func (p *Predictor) Som() *Som {
+	return p.som
+}
+
 func (p *Predictor) GetBMU() (*table.Table, error) {
 	data := make([][]float64, len(p.tables))
 	rows := p.tables[0].Rows()

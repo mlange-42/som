@@ -43,7 +43,7 @@ func (g *Gaussian) Weight(x1, y1, x2, y2 int, radius float64) float64 {
 }
 
 func (g *Gaussian) MaxRadius(radius float64) int {
-	return -1
+	return int(3 * radius)
 }
 
 type CutGaussian struct{}

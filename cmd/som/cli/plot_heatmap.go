@@ -10,8 +10,10 @@ import (
 	"path"
 
 	"github.com/mlange-42/som"
+	"github.com/mlange-42/som/conv"
 	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/plot"
+	"github.com/mlange-42/som/table"
 	"github.com/mlange-42/som/yml"
 	"github.com/spf13/cobra"
 	"gonum.org/v1/plot/plotter"
@@ -34,6 +36,11 @@ func heatmapCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]
 			outFile := args[1]
+
+			del := []rune(delim)
+			if len(delim) != 1 {
+				panic("delimiter must be a single character")
+			}
 
 			somYaml, err := os.ReadFile(somFile)
 			if err != nil {
@@ -61,6 +68,21 @@ func heatmapCommand() *cobra.Command {
 			plotRows := int(math.Ceil(float64(len(columns)) / float64(plotColumns)))
 			img := image.NewRGBA(image.Rect(0, 0, plotColumns*size[0], plotRows*size[1]))
 
+			var reader table.Reader
+			var predictor *som.Predictor
+
+			if dataFile != "" {
+				var err error
+				reader, err = csv.NewFileReader(dataFile, del[0], noData)
+				if err != nil {
+					return err
+				}
+				predictor, _, err = createPredictor(config, &s, reader)
+				if err != nil {
+					return err
+				}
+			}
+
 			var labels []string
 			var positions []plotter.XY
 
@@ -69,11 +91,7 @@ func heatmapCommand() *cobra.Command {
 					return fmt.Errorf("data file must be specified when labels column is specified")
 				}
 
-				del := []rune(delim)
-				if len(delim) != 1 {
-					panic("delimiter must be a single character")
-				}
-				labels, positions, err = extractLabels(config, &s, labelsColumn, dataFile, del[0], noData)
+				labels, positions, err = extractLabels(predictor, labelsColumn, reader)
 				if err != nil {
 					return err
 				}
@@ -83,11 +101,22 @@ func heatmapCommand() *cobra.Command {
 				layer, col := indices[i][0], indices[i][1]
 				c, r := i%plotColumns, i/plotColumns
 
-				l := &s.Layers()[layer]
-				grid := plot.SomLayerGrid{Som: &s, Layer: layer, Column: col}
-				title := fmt.Sprintf("%s: %s", l.Name(), l.ColumnNames()[col])
+				var grid plotter.GridXYZ
+				var title string
+				var classes []string
 
-				subImg, err := plot.Heatmap(title, &grid, size[0], size[1], labels, positions)
+				l := &s.Layers()[layer]
+				if col >= 0 {
+					grid = &plot.SomLayerGrid{Som: &s, Layer: layer, Column: col}
+					title = fmt.Sprintf("%s: %s", l.Name(), l.ColumnNames()[col])
+				} else {
+					title = l.Name()
+					var classIndices []int
+					classes, classIndices = conv.LayerToClasses(l)
+					grid = &plot.ClassesGrid{Size: *s.Size(), Indices: classIndices}
+				}
+
+				subImg, err := plot.Heatmap(title, grid, size[0], size[1], classes, labels, positions)
 				if err != nil {
 					return err
 				}
@@ -125,6 +154,8 @@ func extractIndices(s *som.Som, columns []string) ([]string, [][2]int, error) {
 	if len(columns) == 0 {
 		for i, l := range s.Layers() {
 			if l.IsCategorical() {
+				indices = append(indices, [2]int{i, -1})
+				columns = append(columns, l.Name())
 				continue
 			}
 			for j, c := range l.ColumnNames() {
@@ -137,10 +168,19 @@ func extractIndices(s *som.Som, columns []string) ([]string, [][2]int, error) {
 		for i, col := range columns {
 			found := false
 			for j, l := range s.Layers() {
+				if l.IsCategorical() {
+					if col == l.Name() {
+						indices[i] = [2]int{j, -1}
+						found = true
+						break
+					}
+					continue
+				}
 				for k, c := range l.ColumnNames() {
 					if c == col {
 						indices[i] = [2]int{j, k}
 						found = true
+						break
 					}
 				}
 			}
@@ -153,19 +193,7 @@ func extractIndices(s *som.Som, columns []string) ([]string, [][2]int, error) {
 	return columns, indices, nil
 }
 
-func extractLabels(
-	config *som.SomConfig, s *som.Som,
-	labelsColumn string, dataFile string, delim rune, noData string) ([]string, []plotter.XY, error) {
-
-	reader, err := csv.NewFileReader(dataFile, delim, noData)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	labels, err := reader.ReadLabels(labelsColumn)
-	if err != nil {
-		return nil, nil, err
-	}
+func createPredictor(config *som.SomConfig, s *som.Som, reader table.Reader) (*som.Predictor, []*table.Table, error) {
 
 	tables, err := config.PrepareTables(reader, false)
 	if err != nil {
@@ -177,17 +205,30 @@ func extractLabels(
 		return nil, nil, err
 	}
 
-	bmu, err := pred.GetBMU()
+	return pred, tables, nil
+}
+
+func extractLabels(predictor *som.Predictor,
+	labelsColumn string, reader table.Reader) ([]string, []plotter.XY, error) {
+
+	labels, err := reader.ReadLabels(labelsColumn)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	perCell := make([]int, s.Size().Height*s.Size().Width)
+	bmu, err := predictor.GetBMU()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	nodes := predictor.Som().Size().Height * predictor.Som().Size().Width
+
+	perCell := make([]int, nodes)
 	for i := range labels {
 		idx := int(bmu.Get(i, 0))
 		perCell[idx]++
 	}
-	count := make([]int, s.Size().Height*s.Size().Width)
+	count := make([]int, nodes)
 
 	xy := make([]plotter.XY, len(labels))
 	for i := range labels {

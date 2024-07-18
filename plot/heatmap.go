@@ -5,6 +5,7 @@ import (
 	"image"
 
 	"github.com/mlange-42/som"
+	"github.com/mlange-42/som/layer"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/font"
 	"gonum.org/v1/plot/palette"
@@ -39,7 +40,29 @@ func (g *SomLayerGrid) Y(r int) float64 {
 	return float64(r)
 }
 
-func Heatmap(title string, g plotter.GridXYZ, width, height int, labels []string, positions []plotter.XY) (image.Image, error) {
+type ClassesGrid struct {
+	Size    layer.Size
+	Indices []int
+}
+
+func (g *ClassesGrid) Dims() (c, r int) {
+	return g.Size.Width, g.Size.Height
+}
+
+func (g *ClassesGrid) Z(c, r int) float64 {
+	idx := r + c*g.Size.Height
+	return float64(g.Indices[idx])
+}
+
+func (g *ClassesGrid) X(c int) float64 {
+	return float64(c)
+}
+
+func (g *ClassesGrid) Y(r int) float64 {
+	return float64(r)
+}
+
+func Heatmap(title string, g plotter.GridXYZ, width, height int, categories []string, labels []string, positions []plotter.XY) (image.Image, error) {
 	p := plot.New()
 	l := plot.NewLegend()
 	p.Title.TextStyle.Font.Size = 16
@@ -49,7 +72,13 @@ func Heatmap(title string, g plotter.GridXYZ, width, height int, labels []string
 	itemHeight := l.TextStyle.Rectangle("Aq").Max.Y.Points() + 1
 	numColors := legendHeight / int(itemHeight)
 
-	pal := palette.Rainbow(numColors, palette.Blue, palette.Red, 1, 1, 1)
+	categorical := len(categories) > 0
+	var pal palette.Palette
+	if categorical {
+		pal = NewRandomPalette(len(categories))
+	} else {
+		pal = palette.Rainbow(numColors, palette.Blue, palette.Red, 1, 1, 1)
+	}
 	h := plotter.NewHeatMap(g, pal)
 
 	p.Title.Text = title
@@ -62,6 +91,11 @@ func Heatmap(title string, g plotter.GridXYZ, width, height int, labels []string
 	thumbs := plotter.PaletteThumbnailers(pal)
 	for i := len(thumbs) - 1; i >= 0; i-- {
 		t := thumbs[i]
+		if categorical {
+			l.Add(categories[i], t)
+			continue
+		}
+
 		if i != 0 && i != len(thumbs)-1 {
 			l.Add("", t)
 			continue
