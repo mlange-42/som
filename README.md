@@ -12,12 +12,12 @@ Provides a command line tool and a library for training and visualizing SOMs.
 
 ## Features
 
-* Multi-layered SOMs, alias XYF, alias super-SOMs
-* Supports continuous and discrete data
-* Training from CSV files without any manual preprocessing
-* Fully customizable training parameters
-* Visualization of SOMs through heatmaps with data point labels
-* Use as command line tool or as [Go](https://go.dev) library
+* Multi-layered SOMs, alias XYF, alias super-SOMs.
+* Supports continuous and discrete data.
+* Training from CSV files without any manual preprocessing.
+* Fully customizable training parameters.
+* Visualization of SOMs through heatmaps with data point labels.
+* Use as command line tool or as [Go](https://go.dev) library.
 
 > Please note that the **built-in visualizations** are not intended for publication-quality output.
 > Instead, they serve as quick tools for inspecting training and prediction results.
