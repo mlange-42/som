@@ -70,12 +70,12 @@ func Heatmap(title string, g plotter.GridXYZ, width, height int, categories []st
 	dc := draw.New(img)
 
 	l.Top = true
-	// Calculate the width of the legend.
-	//r := l.Rectangle(dc)
-	legendWidth := l.TextStyle.Rectangle("9999.00").Max.X + l.ThumbnailWidth //r.Max.X - r.Min.X
-	l.YOffs = font.Length(-titleHeight)                                      // Adjust the legend down a little.
+	legendWidth := l.TextStyle.Rectangle("9999.00").Max.X + l.ThumbnailWidth + 3*vg.Millimeter
+	l.YOffs = font.Length(-titleHeight) // Adjust the legend down a little.
+	l.XOffs = -2 * vg.Millimeter
 
 	l.Draw(dc)
+
 	dc = draw.Crop(dc, 0, -legendWidth-vg.Millimeter, 0, 0) // Make space for the legend.
 	p.Draw(dc)
 
