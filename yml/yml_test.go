@@ -153,6 +153,7 @@ layers:
 	assert.NoError(t, err)
 
 	expected := `size: [4, 3]
+neighborhood: gaussian
 layers:
   - name: layer1
     columns: [a, b, c]
@@ -165,7 +166,6 @@ layers:
     metric: manhattan
     weight: 0.5
     data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-neighborhood: gaussian
 `
 
 	assert.Equal(t, expected, string(result))

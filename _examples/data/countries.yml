@@ -1,0 +1,22 @@
+size: [4, 3]
+neighborhood: gaussian
+layers:
+  - name: Scalars
+    columns:
+      - child_mort_2010
+      - birth_p_1000
+      - log_GNI
+      - LifeExpectancy
+      - PopGrowth
+      - PopUrbanized
+      - PopGrowthUrb
+      - AdultLiteracy
+      - Income_low_40
+      - Income_high_20
+    norm: [gaussian]
+    metric: euclidean
+    weight: 1
+  - name: continent
+    metric: hamming
+    categorical: true
+    weight: 0.5

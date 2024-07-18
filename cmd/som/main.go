@@ -1,7 +1,13 @@
 package main
 
-import "fmt"
+import (
+	"log"
+
+	"github.com/mlange-42/som/cmd/som/cli"
+)
 
 func main() {
-	fmt.Println("Hello, World!")
+	if err := cli.RootCommand().Execute(); err != nil {
+		log.Fatal(err)
+	}
 }
