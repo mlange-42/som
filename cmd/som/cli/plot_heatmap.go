@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"image/png"
 	"os"
 	"path"
@@ -12,6 +13,9 @@ import (
 )
 
 func heatmapCommand() *cobra.Command {
+	var size []int
+	var column string
+
 	command := &cobra.Command{
 		Use:   "heatmap [flags] <som-file> <out-file>",
 		Short: "Plots heat maps of SOM variables",
@@ -35,7 +39,19 @@ func heatmapCommand() *cobra.Command {
 				return err
 			}
 
-			img, err := plot.Heatmap(&s, 0, 0, 250, 200)
+			layer, col := -1, -1
+			for i, l := range s.Layers() {
+				for j, c := range l.ColumnNames() {
+					if c == column {
+						layer, col = i, j
+					}
+				}
+			}
+			if layer == -1 || col == -1 {
+				return fmt.Errorf("could not find column %s", column)
+			}
+
+			img, err := plot.Heatmap(&s, layer, col, size[0], size[1])
 			if err != nil {
 				return err
 			}
@@ -52,6 +68,9 @@ func heatmapCommand() *cobra.Command {
 			return png.Encode(file, img)
 		},
 	}
+
+	command.Flags().StringVarP(&column, "column", "c", "", "Column to plot")
+	command.Flags().IntSliceVarP(&size, "size", "s", []int{250, 180}, "Size of the heatmap image")
 
 	return command
 }
