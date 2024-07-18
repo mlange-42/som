@@ -44,19 +44,22 @@ func Heatmap(som *som.Som, layer, column, width, height int) (image.Image, error
 		layer:  layer,
 		column: column,
 	}
+	p := plot.New()
+	l := plot.NewLegend()
 
-	colors := 12
-	//pal := palette.Heat(colors, 1)
-	pal := palette.Rainbow(colors, palette.Blue, palette.Red, 1, 1, 1)
+	titleHeight := p.Title.TextStyle.FontExtents().Height.Points()
+	legendHeight := height - int(titleHeight) - 2
+	itemHeight := l.TextStyle.Rectangle("Aq").Max.Y.Points()
+	numColors := legendHeight / int(itemHeight)
+
+	pal := palette.Rainbow(numColors, palette.Blue, palette.Red, 1, 1, 1)
 	h := plotter.NewHeatMap(&g, pal)
 
-	p := plot.New()
 	p.Title.Text = fmt.Sprintf("%s - %s", som.Layers()[layer].Name(), som.Layers()[layer].ColumnNames()[column])
 	p.HideAxes()
 
 	p.Add(h)
 
-	l := plot.NewLegend()
 	thumbs := plotter.PaletteThumbnailers(pal)
 	for i := len(thumbs) - 1; i >= 0; i-- {
 		t := thumbs[i]
@@ -71,7 +74,11 @@ func Heatmap(som *som.Som, layer, column, width, height int) (image.Image, error
 		case len(thumbs) - 1:
 			val = h.Max
 		}
-		l.Add(fmt.Sprintf("%.2g", val), t)
+		if val < 10000 {
+			l.Add(fmt.Sprintf("%.2f", val), t)
+		} else {
+			l.Add(fmt.Sprintf("%.2g", val), t)
+		}
 	}
 
 	img := vgimg.NewWith(vgimg.UseWH(font.Length(width), font.Length(height)), vgimg.UseDPI(72))
@@ -80,23 +87,12 @@ func Heatmap(som *som.Som, layer, column, width, height int) (image.Image, error
 	l.Top = true
 	// Calculate the width of the legend.
 	//r := l.Rectangle(dc)
-	legendWidth := font.Length(60)                    //r.Max.X - r.Min.X
-	l.YOffs = -p.Title.TextStyle.FontExtents().Height // Adjust the legend down a little.
+	legendWidth := l.TextStyle.Rectangle("9999.00").Max.X + l.ThumbnailWidth //r.Max.X - r.Min.X
+	l.YOffs = font.Length(-titleHeight)                                      // Adjust the legend down a little.
 
 	l.Draw(dc)
 	dc = draw.Crop(dc, 0, -legendWidth-vg.Millimeter, 0, 0) // Make space for the legend.
 	p.Draw(dc)
 
 	return img.Image(), nil
-
-	/*w, err := os.Create("heatMap.png")
-	if err != nil {
-		return err
-	}
-	png := vgimg.PngCanvas{Canvas: img}
-	if _, err = png.WriteTo(w); err != nil {
-		return err
-	}
-
-	return nil*/
 }
