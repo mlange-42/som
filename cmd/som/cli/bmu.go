@@ -63,7 +63,7 @@ func bmuCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			pred, err := som.NewPredictor(&s, tables)
+			pred, err := som.NewPredictor(s, tables)
 			if err != nil {
 				return err
 			}

@@ -73,5 +73,5 @@ func createMockSom() *som.Som {
 	if err != nil {
 		panic(err)
 	}
-	return &som
+	return som
 }

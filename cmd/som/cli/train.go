@@ -70,14 +70,14 @@ func trainCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			trainer, err := som.NewTrainer(&s, tables, trainingConfig, rand.New(rand.NewSource(seed)))
+			trainer, err := som.NewTrainer(s, tables, trainingConfig, rand.New(rand.NewSource(seed)))
 			if err != nil {
 				return err
 			}
 
 			trainer.Train(epochs)
 
-			outYaml, err := yml.ToYAML(&s)
+			outYaml, err := yml.ToYAML(s)
 			if err != nil {
 				return err
 			}

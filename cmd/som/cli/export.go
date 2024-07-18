@@ -43,7 +43,7 @@ func exportCommand() *cobra.Command {
 			}
 
 			writer := strings.Builder{}
-			err = csv.SomToCsv(&s, &writer, del[0], noData)
+			err = csv.SomToCsv(s, &writer, del[0], noData)
 			if err != nil {
 				return err
 			}

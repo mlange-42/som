@@ -39,24 +39,15 @@ func heatmapCommand() *cobra.Command {
 
 			del := []rune(delim)
 			if len(delim) != 1 {
-				panic("delimiter must be a single character")
+				return fmt.Errorf("delimiter must be a single character")
 			}
 
-			somYaml, err := os.ReadFile(somFile)
-			if err != nil {
-				return err
-			}
-			config, err := yml.ToSomConfig(somYaml)
+			config, s, err := readSom(somFile)
 			if err != nil {
 				return err
 			}
 
-			s, err := som.New(config)
-			if err != nil {
-				return err
-			}
-
-			columns, indices, err := extractIndices(&s, columns)
+			columns, indices, err := extractIndices(s, columns)
 			if err != nil {
 				return err
 			}
@@ -77,7 +68,7 @@ func heatmapCommand() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				predictor, _, err = createPredictor(config, &s, reader)
+				predictor, _, err = createPredictor(config, s, reader)
 				if err != nil {
 					return err
 				}
@@ -107,7 +98,7 @@ func heatmapCommand() *cobra.Command {
 
 				l := &s.Layers()[layer]
 				if col >= 0 {
-					grid = &plot.SomLayerGrid{Som: &s, Layer: layer, Column: col}
+					grid = &plot.SomLayerGrid{Som: s, Layer: layer, Column: col}
 					title = fmt.Sprintf("%s: %s", l.Name(), l.ColumnNames()[col])
 				} else {
 					title = l.Name()
@@ -124,16 +115,7 @@ func heatmapCommand() *cobra.Command {
 				draw.Draw(img, image.Rect(c*size[0], r*size[1], (c+1)*size[0], (r+1)*size[1]), subImg, image.Point{}, draw.Src)
 			}
 
-			err = os.MkdirAll(path.Dir(outFile), os.ModePerm)
-			if err != nil {
-				return err
-			}
-			file, err := os.Create(outFile)
-			if err != nil {
-				return err
-			}
-
-			return png.Encode(file, img)
+			return writeImage(img, outFile)
 		},
 	}
 
@@ -146,6 +128,37 @@ func heatmapCommand() *cobra.Command {
 	command.Flags().StringVarP(&noData, "no-data", "n", "-", "No.data value")
 
 	return command
+}
+
+func writeImage(img image.Image, outFile string) error {
+	err := os.MkdirAll(path.Dir(outFile), os.ModePerm)
+	if err != nil {
+		return err
+	}
+	file, err := os.Create(outFile)
+	if err != nil {
+		return err
+	}
+
+	return png.Encode(file, img)
+}
+
+func readSom(somFile string) (*som.SomConfig, *som.Som, error) {
+	somYaml, err := os.ReadFile(somFile)
+	if err != nil {
+		return nil, nil, err
+	}
+	config, err := yml.ToSomConfig(somYaml)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	s, err := som.New(config)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return config, s, nil
 }
 
 func extractIndices(s *som.Som, columns []string) ([]string, [][2]int, error) {

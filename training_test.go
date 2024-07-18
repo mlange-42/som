@@ -35,28 +35,28 @@ func TestNewTrainer(t *testing.T) {
 		table.New([]string{"x", "y"}, 5),
 		table.New([]string{"a", "b", "c"}, 5),
 	}
-	_, err = NewTrainer(&som, t1, &params, rng)
+	_, err = NewTrainer(som, t1, &params, rng)
 	assert.Nil(t, err)
 
 	t1 = []*table.Table{
 		table.New([]string{"x", "y"}, 5),
 		table.New([]string{"a", "b"}, 5),
 	}
-	_, err = NewTrainer(&som, t1, &params, rng)
+	_, err = NewTrainer(som, t1, &params, rng)
 	assert.NotNil(t, err)
 
 	t1 = []*table.Table{
 		table.New([]string{"x", "y"}, 5),
 		table.New([]string{"a", "b", "c", "d"}, 5),
 	}
-	_, err = NewTrainer(&som, t1, &params, rng)
+	_, err = NewTrainer(som, t1, &params, rng)
 	assert.NotNil(t, err)
 
 	t1 = []*table.Table{
 		table.New([]string{"x", "y"}, 5),
 		table.New([]string{"a", "c", "b"}, 5),
 	}
-	_, err = NewTrainer(&som, t1, &params, rng)
+	_, err = NewTrainer(som, t1, &params, rng)
 	assert.NotNil(t, err)
 }
 
@@ -88,7 +88,7 @@ func TestTrainerDecay(t *testing.T) {
 		table.New([]string{"x", "y"}, 5),
 		table.New([]string{"a", "b", "c"}, 5),
 	}
-	trainer, err := NewTrainer(&som, t1, &params, rng)
+	trainer, err := NewTrainer(som, t1, &params, rng)
 	assert.Nil(t, err)
 
 	trainer.Train(10)
@@ -123,7 +123,7 @@ func TestTrainerTrain(t *testing.T) {
 			table.New([]string{"x", "y"}, 5),
 			table.New([]string{"a", "b", "c"}, 5),
 		}
-		trainer, err := NewTrainer(&som, tables, &params, rng)
+		trainer, err := NewTrainer(som, tables, &params, rng)
 		assert.Nil(t, err)
 
 		trainer.Train(0)
@@ -138,7 +138,7 @@ func TestTrainerTrain(t *testing.T) {
 			table.New([]string{"x", "y"}, 5),
 			table.New([]string{"a", "b", "c"}, 5),
 		}
-		trainer, err := NewTrainer(&som, tables, &params, rng)
+		trainer, err := NewTrainer(som, tables, &params, rng)
 		assert.Nil(t, err)
 
 		trainer.Train(1)
@@ -149,7 +149,7 @@ func TestTrainerTrain(t *testing.T) {
 			table.New([]string{"x", "y"}, 5),
 			table.New([]string{"a", "b", "c"}, 5),
 		}
-		trainer, err := NewTrainer(&som, tables, &params, rng)
+		trainer, err := NewTrainer(som, tables, &params, rng)
 		assert.Nil(t, err)
 
 		trainer.Train(25)
@@ -164,7 +164,7 @@ func TestTrainerTrain(t *testing.T) {
 			table.New([]string{"x", "y"}, 5),
 			table.New([]string{"a", "b", "c"}, 5),
 		}
-		trainer, err := NewTrainer(&som, tables, &params, rng)
+		trainer, err := NewTrainer(som, tables, &params, rng)
 		assert.Nil(t, err)
 
 		trainer.Train(10)
