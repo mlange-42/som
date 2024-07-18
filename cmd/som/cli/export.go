@@ -16,7 +16,7 @@ func exportCommand() *cobra.Command {
 	var noData string
 
 	command := &cobra.Command{
-		Use:   "export",
+		Use:   "export [flags] <som-file>",
 		Short: "Exports a SOM to a CSV table of node vectors",
 		Long:  `Exports a SOM to a CSV table of node vectors`,
 		Args:  cobra.ExactArgs(1),
