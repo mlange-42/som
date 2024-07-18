@@ -70,7 +70,8 @@ jobs:
       run: go get ./...
     - name: Run examples
       run: |
-        go run ./cmd/som train _examples/data/countries.yml _examples/data/countries.csv -d=";"
+        go run ./cmd/som train _examples/data/countries.yml _examples/data/countries.csv -d=";" > test.yml
+        go run ./cmd/som export test.yml
 
   examples:
     name: Run examples

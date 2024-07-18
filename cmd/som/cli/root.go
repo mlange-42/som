@@ -21,6 +21,7 @@ func RootCommand() *cobra.Command {
 	}
 
 	root.AddCommand(trainCommand())
+	root.AddCommand(exportCommand())
 
 	return root
 }

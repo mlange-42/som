@@ -4,12 +4,25 @@ import (
 	"math"
 	"testing"
 
-	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/distance"
 	"github.com/mlange-42/som/layer"
 	"github.com/mlange-42/som/neighborhood"
+	"github.com/mlange-42/som/table"
 	"github.com/stretchr/testify/assert"
 )
+
+type mockReader struct {
+	Table  *table.Table
+	Labels []string
+}
+
+func (r *mockReader) ReadColumns(columns []string) (*table.Table, error) {
+	return r.Table, nil
+}
+
+func (r *mockReader) ReadLabels(column string) ([]string, error) {
+	return r.Labels, nil
+}
 
 func TestNew(t *testing.T) {
 	t.Run("Valid configuration", func(t *testing.T) {
@@ -67,9 +80,13 @@ func TestNew(t *testing.T) {
 			Neighborhood: &neighborhood.Gaussian{},
 		}
 
-		csvTable := "x,y,Layer2\n1,2,A\n4,5,B\n7,8,A"
-		reader := csv.NewStringReader(csvTable, ',', "NA")
-		tables, err := params.PrepareTables(reader, false)
+		tab, err := table.NewWithData([]string{"x", "y"}, []float64{1, 2, 4, 5, 7, 8})
+		assert.NoError(t, err)
+		reader := mockReader{
+			Table:  tab,
+			Labels: []string{"A", "B", "A"},
+		}
+		tables, err := params.PrepareTables(&reader, false)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 2, len(tables))
