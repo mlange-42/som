@@ -1,4 +1,4 @@
-size: [8, 6]
+size: [12, 10]
 neighborhood: gaussian
 layers:
   - name: Scalars

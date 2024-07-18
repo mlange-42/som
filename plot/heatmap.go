@@ -74,13 +74,13 @@ func Heatmap(som *som.Som, layer, column, width, height int) (image.Image, error
 		l.Add(fmt.Sprintf("%.2g", val), t)
 	}
 
-	img := vgimg.New(font.Length(width), font.Length(height))
+	img := vgimg.NewWith(vgimg.UseWH(font.Length(width), font.Length(height)), vgimg.UseDPI(72))
 	dc := draw.New(img)
 
 	l.Top = true
 	// Calculate the width of the legend.
-	r := l.Rectangle(dc)
-	legendWidth := r.Max.X - r.Min.X
+	//r := l.Rectangle(dc)
+	legendWidth := font.Length(60)                    //r.Max.X - r.Min.X
 	l.YOffs = -p.Title.TextStyle.FontExtents().Height // Adjust the legend down a little.
 
 	l.Draw(dc)
