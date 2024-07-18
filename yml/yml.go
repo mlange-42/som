@@ -58,14 +58,18 @@ func ToSomConfig(ymlData []byte) (*som.SomConfig, error) {
 			return nil, fmt.Errorf("invalid data size for layer %s", l.Name)
 		}
 
-		if len(l.Norm) != 1 && len(l.Norm) != len(l.Columns) {
-			return nil, fmt.Errorf("invalid number of normalizers for layer %s; must be one or number of columns", l.Name)
+		if len(l.Norm) > 1 && len(l.Norm) != len(l.Columns) {
+			return nil, fmt.Errorf("invalid number of normalizers for layer %s; must be zero, one or number of columns", l.Name)
 		}
 
 		norms := make([]norm.Normalizer, len(l.Columns))
 		for i := range norms {
 			var err error
 			if i >= len(l.Norm) {
+				if len(l.Norm) == 0 {
+					norms[i] = &norm.None{}
+					continue
+				}
 				norms[i], err = norm.FromString(l.Norm[0])
 				if err != nil {
 					return nil, err

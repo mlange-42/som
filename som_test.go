@@ -101,7 +101,7 @@ func TestNew(t *testing.T) {
 
 		_, err := New(params)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "layer 0 has no columns")
+		assert.Contains(t, err.Error(), "layer EmptyLayer has no columns")
 	})
 
 	t.Run("Default weight and metric", func(t *testing.T) {
@@ -160,7 +160,7 @@ func TestNew(t *testing.T) {
 
 		_, err := New(params)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "layer 0 has no columns")
+		assert.Contains(t, err.Error(), "layer InvalidLayer has no columns")
 	})
 }
 
