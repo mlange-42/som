@@ -28,7 +28,13 @@ First, train a SOM with the Iris dataset:
 som train _examples/iris/untrained.yml _examples/iris/data.csv > trained.yml
 ```
 
-You can then export the trained SOM to a CSV file:
+Visualize the trained SOM, showing labels of data points:
+
+```shell
+som plot heatmap trained.yml heatmap.png --data-file _examples/countries/data.csv --labels Country
+```
+
+You can also export the trained SOM to a CSV file:
 
 ```shell
 som export trained.yml > nodes.csv
