@@ -89,35 +89,48 @@ func (t *Table) Data() []float64 {
 }
 
 func (t *Table) mean(col int) float64 {
-	return t.sum(col) / float64(t.Rows())
-}
-
-func (t *Table) sum(col int) float64 {
 	sum := 0.0
+	count := 0
 	for i := 0; i < t.Rows(); i++ {
-		sum += t.Get(i, col)
+		v := t.Get(i, col)
+		if math.IsNaN(v) {
+			continue
+		}
+		sum += v
+		count++
 	}
-	return sum
+	return sum / float64(count)
 }
 
 func (t *Table) MeanStdDev(col int) (float64, float64) {
 	mean := t.mean(col)
 	sum := 0.0
+	cnt := 0
 	for i := 0; i < t.Rows(); i++ {
-		sum += (t.Get(i, col) - mean) * (t.Get(i, col) - mean)
+		v := t.Get(i, col)
+		if math.IsNaN(v) {
+			continue
+		}
+		diff := v - mean
+		sum += diff * diff
+		cnt++
 	}
-	return mean, math.Sqrt(sum / float64(t.Rows()))
+	return mean, math.Sqrt(sum / float64(cnt))
 }
 
 func (t *Table) Range(col int) (min, max float64) {
-	min = t.Get(0, col)
-	max = t.Get(0, col)
+	min = math.Inf(1)
+	max = math.Inf(-1)
 	for i := 1; i < t.Rows(); i++ {
-		if t.Get(i, col) < min {
-			min = t.Get(i, col)
+		v := t.Get(i, col)
+		if math.IsNaN(v) {
+			continue
 		}
-		if t.Get(i, col) > max {
-			max = t.Get(i, col)
+		if v < min {
+			min = v
+		}
+		if v > max {
+			max = v
 		}
 	}
 	return

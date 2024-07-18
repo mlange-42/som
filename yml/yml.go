@@ -24,8 +24,8 @@ type ymlLayer struct {
 
 type ymlConfig struct {
 	Size         [2]int `yaml:",flow"`
-	Layers       []ymlLayer
 	Neighborhood string
+	Layers       []ymlLayer
 }
 
 func ToSomConfig(ymlData []byte) (*som.SomConfig, error) {
@@ -57,22 +57,35 @@ func ToSomConfig(ymlData []byte) (*som.SomConfig, error) {
 		if len(l.Data) > 0 && len(l.Data) != len(l.Columns)*yml.Size[0]*yml.Size[1] {
 			return nil, fmt.Errorf("invalid data size for layer %s", l.Name)
 		}
-		norms := make([]norm.Normalizer, len(l.Norm))
-		for i, n := range l.Norm {
-			normalizer, err := norm.FromString(n)
+
+		if len(l.Norm) != 1 && len(l.Norm) != len(l.Columns) {
+			return nil, fmt.Errorf("invalid number of normalizers for layer %s; must be one or number of columns", l.Name)
+		}
+
+		norms := make([]norm.Normalizer, len(l.Columns))
+		for i := range norms {
+			var err error
+			if i >= len(l.Norm) {
+				norms[i], err = norm.FromString(l.Norm[0])
+				if err != nil {
+					return nil, err
+				}
+				continue
+			}
+			norms[i], err = norm.FromString(l.Norm[i])
 			if err != nil {
 				return nil, err
 			}
-			norms[i] = normalizer
 		}
 
 		conf.Layers = append(conf.Layers, som.LayerDef{
-			Name:    l.Name,
-			Columns: l.Columns,
-			Norm:    norms,
-			Metric:  metric,
-			Weight:  l.Weight,
-			Data:    l.Data,
+			Name:        l.Name,
+			Columns:     l.Columns,
+			Norm:        norms,
+			Metric:      metric,
+			Weight:      l.Weight,
+			Data:        l.Data,
+			Categorical: l.Categorical,
 		})
 	}
 

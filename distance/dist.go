@@ -11,6 +11,7 @@ func init() {
 		&SumOfSquares{},
 		&Euclidean{},
 		&Manhattan{},
+		&Hamming{},
 	}
 	for _, v := range m {
 		if _, ok := metrics[v.Name()]; ok {

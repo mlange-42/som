@@ -40,11 +40,12 @@ func (c *SomConfig) PrepareTables(reader csv.Reader, updateNormalizers bool) ([]
 			}
 			layer.Columns = table.ColumnNames()
 			tables[i] = table
+
 			continue
 		}
 
 		if len(layer.Columns) == 0 {
-			return nil, fmt.Errorf("layer %d has no columns", i)
+			return nil, fmt.Errorf("layer %s has no columns", layer.Name)
 		}
 
 		table, err := reader.ReadColumns(layer.Columns)
@@ -86,7 +87,7 @@ func New(params *SomConfig) (Som, error) {
 	lay := make([]layer.Layer, len(params.Layers))
 	for i, l := range params.Layers {
 		if len(l.Columns) == 0 {
-			return Som{}, fmt.Errorf("layer %d has no columns", i)
+			return Som{}, fmt.Errorf("layer %s has no columns", l.Name)
 		}
 		weight := l.Weight
 		if weight == 0 {
