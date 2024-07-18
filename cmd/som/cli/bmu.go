@@ -1,0 +1,81 @@
+package cli
+
+import (
+	"fmt"
+	"os"
+	"strings"
+
+	"github.com/mlange-42/som"
+	"github.com/mlange-42/som/csv"
+	"github.com/mlange-42/som/yml"
+	"github.com/spf13/cobra"
+)
+
+func bmuCommand() *cobra.Command {
+	var delim string
+	var noData string
+
+	command := &cobra.Command{
+		Use:   "bmu [flags] <som-file> <data-file>",
+		Short: "Finds the best-matching unit (BMU) for each table row in a dataset",
+		Long:  `Finds the best-matching unit (BMU) for each table row in a dataset`,
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			somFile := args[0]
+			dataFile := args[1]
+
+			somYaml, err := os.ReadFile(somFile)
+			if err != nil {
+				return err
+			}
+			config, err := yml.ToSomConfig(somYaml)
+			if err != nil {
+				return err
+			}
+
+			del := []rune(delim)
+			if len(delim) != 1 {
+				return fmt.Errorf("delimiter must be a single character")
+			}
+
+			reader, err := csv.NewFileReader(dataFile, del[0], noData)
+			if err != nil {
+				return err
+			}
+
+			tables, err := config.PrepareTables(reader, false)
+			if err != nil {
+				return err
+			}
+
+			s, err := som.New(config)
+			if err != nil {
+				return err
+			}
+			pred, err := som.NewPredictor(&s, tables)
+			if err != nil {
+				return err
+			}
+
+			bmu, err := pred.GetBMU()
+			if err != nil {
+				return err
+			}
+
+			writer := strings.Builder{}
+			err = csv.TableToCSV(bmu, &writer, del[0], noData)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println(writer.String())
+
+			return nil
+		},
+	}
+
+	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")
+	command.Flags().StringVarP(&noData, "no-data", "n", "-", "No data string")
+
+	return command
+}
