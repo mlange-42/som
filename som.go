@@ -117,8 +117,8 @@ func New(params *SomConfig) (Som, error) {
 	}, nil
 }
 
-func (s *Som) Size() layer.Size {
-	return s.size
+func (s *Som) Size() *layer.Size {
+	return &s.size
 }
 
 func (s *Som) Neighborhood() neighborhood.Neighborhood {
