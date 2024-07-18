@@ -92,13 +92,20 @@ func writeHeaders(writer io.Writer, labelColumns []string, layers []*layer.Layer
 
 func collectLayers(som *som.Som) []*layer.Layer {
 	layers := []*layer.Layer{}
-	for _, layer := range som.Layers() {
-		if layer.IsCategorical() {
+	for _, lay := range som.Layers() {
+		if lay.IsCategorical() {
 			continue
 		}
 
-		layer.DeNormalize()
-		layers = append(layers, &layer)
+		lay, err := layer.NewWithData(
+			lay.Name(), lay.ColumnNames(), lay.Normalizers(), *som.Size(),
+			lay.Metric(), lay.Weight(), lay.IsCategorical(), append([]float64{}, lay.Data()...))
+		if err != nil {
+			panic(err)
+		}
+
+		lay.DeNormalize()
+		layers = append(layers, &lay)
 	}
 
 	return layers
