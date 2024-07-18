@@ -47,6 +47,7 @@ func Heatmap(som *som.Som, layer, column, width, height int, labels []string, po
 	}
 	p := plot.New()
 	l := plot.NewLegend()
+	p.Title.TextStyle.Font.Size = 16
 
 	titleHeight := p.Title.TextStyle.FontExtents().Height.Points()
 	legendHeight := height - int(titleHeight) - 2

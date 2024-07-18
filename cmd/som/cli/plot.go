@@ -15,7 +15,6 @@ func plotCommand() *cobra.Command {
 	}
 
 	command.AddCommand(heatmapCommand())
-	command.AddCommand(heatmapsCommand())
 
 	return command
 }

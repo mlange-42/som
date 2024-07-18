@@ -9,7 +9,6 @@ layers:
       - LifeExpectancy
       - PopGrowth
       - PopUrbanized
-      - PopGrowthUrb
       - AdultLiteracy
       - Income_low_40
       - Income_high_20
