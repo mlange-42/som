@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"image"
 
-	"github.com/mlange-42/som"
-	"github.com/mlange-42/som/layer"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/font"
 	"gonum.org/v1/plot/palette"
@@ -15,52 +13,6 @@ import (
 	"gonum.org/v1/plot/vg/draw"
 	"gonum.org/v1/plot/vg/vgimg"
 )
-
-type SomLayerGrid struct {
-	Som    *som.Som
-	Layer  int
-	Column int
-}
-
-func (g *SomLayerGrid) Dims() (c, r int) {
-	return g.Som.Size().Width, g.Som.Size().Height
-}
-
-func (g *SomLayerGrid) Z(c, r int) float64 {
-	l := &g.Som.Layers()[g.Layer]
-	v := l.Get(c, r, g.Column)
-	return l.Normalizers()[g.Column].DeNormalize(v)
-}
-
-func (g *SomLayerGrid) X(c int) float64 {
-	return float64(c)
-}
-
-func (g *SomLayerGrid) Y(r int) float64 {
-	return float64(r)
-}
-
-type ClassesGrid struct {
-	Size    layer.Size
-	Indices []int
-}
-
-func (g *ClassesGrid) Dims() (c, r int) {
-	return g.Size.Width, g.Size.Height
-}
-
-func (g *ClassesGrid) Z(c, r int) float64 {
-	idx := r + c*g.Size.Height
-	return float64(g.Indices[idx])
-}
-
-func (g *ClassesGrid) X(c int) float64 {
-	return float64(c)
-}
-
-func (g *ClassesGrid) Y(r int) float64 {
-	return float64(r)
-}
 
 func Heatmap(title string, g plotter.GridXYZ, width, height int, categories []string, labels []string, positions []plotter.XY) (image.Image, error) {
 	p := plot.New()
@@ -130,7 +82,7 @@ func Heatmap(title string, g plotter.GridXYZ, width, height int, categories []st
 	return img.Image(), nil
 }
 
-func createLabels(labels []string, positions []plotter.XY, baseStyle text.Style) *Labels {
+func createLabels(labels []string, positions []plotter.XY, baseStyle text.Style) *ZeroSizeLabel {
 	style := baseStyle
 	style.Font.Size = 12
 	style.XAlign = text.XCenter
@@ -146,13 +98,5 @@ func createLabels(labels []string, positions []plotter.XY, baseStyle text.Style)
 		Labels:    labels,
 		TextStyle: styles,
 	}
-	return &Labels{l}
-}
-
-type Labels struct {
-	labels *plotter.Labels
-}
-
-func (l *Labels) Plot(c draw.Canvas, p *plot.Plot) {
-	l.labels.Plot(c, p)
+	return &ZeroSizeLabel{l}
 }
