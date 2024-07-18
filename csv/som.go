@@ -36,7 +36,7 @@ func SomToCsv(som *som.Som, writer io.Writer, delim rune, noData string) error {
 	del := string(delim)
 	builder := strings.Builder{}
 
-	builder.WriteString(fmt.Sprintf("id%snode_x%snode_y%s", del, del, del))
+	builder.WriteString(fmt.Sprintf("node_id%snode_x%snode_y%s", del, del, del))
 
 	for i, col := range labelColumns {
 		builder.WriteString(col)

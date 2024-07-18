@@ -21,7 +21,7 @@ func TestSomToCsv(t *testing.T) {
 	assert.NoError(t, err)
 
 	result := buf.String()
-	expectedHeader := "id,node_x,node_y,CategoricalLayer,a,b,c,d\n"
+	expectedHeader := "node_id,node_x,node_y,CategoricalLayer,a,b,c,d\n"
 	fmt.Println(result)
 	assert.True(t, strings.HasPrefix(result, expectedHeader))
 
