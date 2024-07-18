@@ -13,54 +13,16 @@ import (
 )
 
 func SomToCsv(som *som.Som, writer io.Writer, delim rune, noData string) error {
-	labels := [][]string{}
-	labelColumns := []string{}
-	layers := []*layer.Layer{}
+	layers := collectLayers(som)
+	labelColumns, labels := collectLabels(som)
 
-	for _, layer := range som.Layers() {
-		if layer.IsCategorical() {
-			classes, indices := conv.LayerToClasses(&layer)
-			labs := make([]string, len(indices))
-			for i := range indices {
-				labs[i] = classes[indices[i]]
-			}
-			labels = append(labels, labs)
-			labelColumns = append(labelColumns, layer.Name())
-			continue
-		}
-
-		layer.DeNormalize()
-		layers = append(layers, &layer)
+	err := writeHeaders(writer, labelColumns, layers, delim)
+	if err != nil {
+		return err
 	}
 
 	del := string(delim)
 	builder := strings.Builder{}
-
-	builder.WriteString(fmt.Sprintf("node_id%snode_x%snode_y%s", del, del, del))
-
-	for i, col := range labelColumns {
-		builder.WriteString(col)
-		if i < len(labelColumns)-1 || len(layers) > 0 {
-			builder.WriteString(del)
-		}
-	}
-
-	for i, layer := range layers {
-		cols := layer.ColumnNames()
-		for j, col := range cols {
-			builder.WriteString(col)
-			if j < len(cols)-1 || i < len(layers)-1 {
-				builder.WriteString(del)
-			}
-		}
-	}
-
-	builder.WriteRune('\n')
-	_, err := writer.Write([]byte(builder.String()))
-	if err != nil {
-		return err
-	}
-	builder.Reset()
 
 	nodes := som.Size().Width * som.Size().Height
 	for i := 0; i < nodes; i++ {
@@ -99,4 +61,65 @@ func SomToCsv(som *som.Som, writer io.Writer, delim rune, noData string) error {
 	}
 
 	return nil
+}
+
+func writeHeaders(writer io.Writer, labelColumns []string, layers []*layer.Layer, delim rune) error {
+	del := string(delim)
+	builder := strings.Builder{}
+
+	builder.WriteString(fmt.Sprintf("node_id%snode_x%snode_y%s", del, del, del))
+	for i, col := range labelColumns {
+		builder.WriteString(col)
+		if i < len(labelColumns)-1 || len(layers) > 0 {
+			builder.WriteString(del)
+		}
+	}
+
+	for i, layer := range layers {
+		cols := layer.ColumnNames()
+		for j, col := range cols {
+			builder.WriteString(col)
+			if j < len(cols)-1 || i < len(layers)-1 {
+				builder.WriteString(del)
+			}
+		}
+	}
+
+	builder.WriteRune('\n')
+	_, err := writer.Write([]byte(builder.String()))
+	return err
+}
+
+func collectLayers(som *som.Som) []*layer.Layer {
+	layers := []*layer.Layer{}
+	for _, layer := range som.Layers() {
+		if layer.IsCategorical() {
+			continue
+		}
+
+		layer.DeNormalize()
+		layers = append(layers, &layer)
+	}
+
+	return layers
+}
+
+func collectLabels(som *som.Som) ([]string, [][]string) {
+	labelColumns := []string{}
+	labels := [][]string{}
+
+	for _, layer := range som.Layers() {
+		if !layer.IsCategorical() {
+			continue
+		}
+		classes, indices := conv.LayerToClasses(&layer)
+		labs := make([]string, len(indices))
+		for i := range indices {
+			labs[i] = classes[indices[i]]
+		}
+		labels = append(labels, labs)
+		labelColumns = append(labelColumns, layer.Name())
+	}
+
+	return labelColumns, labels
 }
