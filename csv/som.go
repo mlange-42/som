@@ -16,7 +16,7 @@ func SomToCsv(som *som.Som, writer io.Writer, delim rune, noData string) error {
 	layers := collectLayers(som)
 	labelColumns, labels := collectLabels(som)
 
-	err := writeHeaders(writer, labelColumns, layers, delim)
+	err := writeHeadersSom(writer, labelColumns, layers, delim)
 	if err != nil {
 		return err
 	}
@@ -59,11 +59,10 @@ func SomToCsv(som *som.Som, writer io.Writer, delim rune, noData string) error {
 		}
 		builder.Reset()
 	}
-
 	return nil
 }
 
-func writeHeaders(writer io.Writer, labelColumns []string, layers []*layer.Layer, delim rune) error {
+func writeHeadersSom(writer io.Writer, labelColumns []string, layers []*layer.Layer, delim rune) error {
 	del := string(delim)
 	builder := strings.Builder{}
 
@@ -92,13 +91,20 @@ func writeHeaders(writer io.Writer, labelColumns []string, layers []*layer.Layer
 
 func collectLayers(som *som.Som) []*layer.Layer {
 	layers := []*layer.Layer{}
-	for _, layer := range som.Layers() {
-		if layer.IsCategorical() {
+	for _, lay := range som.Layers() {
+		if lay.IsCategorical() {
 			continue
 		}
 
-		layer.DeNormalize()
-		layers = append(layers, &layer)
+		lay, err := layer.NewWithData(
+			lay.Name(), lay.ColumnNames(), lay.Normalizers(), *som.Size(),
+			lay.Metric(), lay.Weight(), lay.IsCategorical(), append([]float64{}, lay.Data()...))
+		if err != nil {
+			panic(err)
+		}
+
+		lay.DeNormalize()
+		layers = append(layers, &lay)
 	}
 
 	return layers

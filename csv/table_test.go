@@ -1,12 +1,15 @@
 package csv
 
 import (
+	"bytes"
+	"fmt"
 	"io"
 	"math"
 	"os"
 	"strings"
 	"testing"
 
+	"github.com/mlange-42/som/table"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -273,4 +276,56 @@ func TestFileReader_ReadClasses(t *testing.T) {
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "column \"non_existent\" not found")
 	})
+}
+
+func TestTableToCSV(t *testing.T) {
+	t.Run("Empty table", func(t *testing.T) {
+		tb := table.New([]string{"a", "b", "c"}, 0)
+		var buf bytes.Buffer
+		err := TableToCSV(tb, &buf, ',', "-")
+		assert.NoError(t, err)
+		expected := "a,b,c\n"
+		assert.Equal(t, expected, buf.String())
+	})
+
+	t.Run("Table with data", func(t *testing.T) {
+		tb := table.New([]string{"x", "y"}, 2)
+		tb.Set(0, 0, 1.5)
+		tb.Set(0, 1, 2.0)
+		tb.Set(1, 0, 3.5)
+		tb.Set(1, 1, 4.0)
+		var buf bytes.Buffer
+		err := TableToCSV(tb, &buf, ',', "-")
+		assert.NoError(t, err)
+		expected := "x,y\n1.5,2\n3.5,4"
+		assert.Equal(t, expected, buf.String())
+	})
+
+	t.Run("Custom separator", func(t *testing.T) {
+		tb := table.New([]string{"a", "b"}, 1)
+		tb.Set(0, 0, 1.0)
+		tb.Set(0, 1, 2.0)
+		var buf bytes.Buffer
+		err := TableToCSV(tb, &buf, ';', "-")
+		assert.NoError(t, err)
+		expected := "a;b\n1;2"
+		assert.Equal(t, expected, buf.String())
+	})
+
+	t.Run("Write error", func(t *testing.T) {
+		tb := table.New([]string{"a"}, 1)
+		tb.Set(0, 0, 1.0)
+		mockWriter := &mockErrorWriter{err: fmt.Errorf("write error")}
+		err := TableToCSV(tb, mockWriter, ',', "-")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "write error")
+	})
+}
+
+type mockErrorWriter struct {
+	err error
+}
+
+func (m *mockErrorWriter) Write(p []byte) (n int, err error) {
+	return 0, m.err
 }

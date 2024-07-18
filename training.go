@@ -1,7 +1,6 @@
 package som
 
 import (
-	"fmt"
 	"math/rand"
 
 	"github.com/mlange-42/som/decay"
@@ -21,51 +20,15 @@ type Trainer struct {
 }
 
 func NewTrainer(som *Som, tables []*table.Table, params *TrainingConfig, rng *rand.Rand) (*Trainer, error) {
-	t := &Trainer{
+	if err := checkTables(som, tables); err != nil {
+		return nil, err
+	}
+	return &Trainer{
 		som:    som,
 		tables: tables,
 		params: params,
 		rng:    rng,
-	}
-	if err := t.checkTable(); err != nil {
-		return nil, err
-	}
-	return t, nil
-}
-
-// checkTable checks that the table columns match the SOM layer columns.
-// It returns true if the table columns match the SOM layer columns, false otherwise.
-func (t *Trainer) checkTable() error {
-	if len(t.tables) == 0 {
-		return fmt.Errorf("no tables provided")
-	}
-
-	if len(t.som.layers) != len(t.tables) {
-		return fmt.Errorf("number of tables (%d) does not match number of layers (%d)", len(t.tables), len(t.som.layers))
-	}
-
-	rows := -1
-	for _, table := range t.tables {
-		if rows == -1 {
-			rows = table.Rows()
-		} else if rows != table.Rows() {
-			return fmt.Errorf("number of rows in table (%d) does not match number of rows in table (%d)", rows, table.Rows())
-		}
-	}
-
-	for i := range t.som.layers {
-		table := t.tables[i]
-		cols := t.som.layers[i].ColumnNames()
-		if table.Columns() != len(cols) {
-			return fmt.Errorf("number of columns in table (%d) does not match number of columns in layer (%d)", table.Columns(), len(cols))
-		}
-		for j, col := range cols {
-			if table.ColumnNames()[j] != col {
-				return fmt.Errorf("column %d in table (%s) does not match column %d in layer (%s)", j, table.ColumnNames()[j], j, col)
-			}
-		}
-	}
-	return nil
+	}, nil
 }
 
 func (t *Trainer) Train(maxEpoch int) {

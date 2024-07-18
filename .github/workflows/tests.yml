@@ -72,6 +72,7 @@ jobs:
       run: |
         go run ./cmd/som train _examples/data/countries.yml _examples/data/countries.csv -d=";" > test.yml
         go run ./cmd/som export test.yml
+        go run ./cmd/som bmu test.yml _examples/data/countries.csv -d=";" -p Country,code,continent
 
   examples:
     name: Run examples
