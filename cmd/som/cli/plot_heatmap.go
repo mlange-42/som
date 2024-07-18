@@ -41,6 +41,9 @@ func heatmapCommand() *cobra.Command {
 			if len(delim) != 1 {
 				return fmt.Errorf("delimiter must be a single character")
 			}
+			if len(size) != 2 {
+				return fmt.Errorf("size must be two integers")
+			}
 
 			config, s, err := readSom(somFile)
 			if err != nil {
@@ -119,13 +122,13 @@ func heatmapCommand() *cobra.Command {
 		},
 	}
 
-	command.Flags().StringSliceVarP(&columns, "columns", "c", nil, "Column names for the heatmap")
+	command.Flags().StringSliceVarP(&columns, "columns", "c", nil, "Columns to use for the heatmap (default all)")
 	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of individual heatmap panels")
-	command.Flags().IntVarP(&plotColumns, "plot-columns", "p", 0, "Number of plot columns on the image")
-	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file")
+	command.Flags().IntVarP(&plotColumns, "plot-columns", "p", 0, "Number of plot columns on the image (default sqrt(#cols))")
+	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required for --labels")
 	command.Flags().StringVarP(&labelsColumn, "labels", "l", "", "Labels column in the data file")
 	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")
-	command.Flags().StringVarP(&noData, "no-data", "n", "", "No-data value")
+	command.Flags().StringVarP(&noData, "no-data", "n", "", "No-data value (default \"\")")
 
 	return command
 }
