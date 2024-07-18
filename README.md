@@ -71,7 +71,8 @@ som bmu trained.yml _examples/countries/data.csv --preserve Country,code,contine
 
 The command line tool uses a YAML configuration file to specify the SOM parameters.
 
-Here is an example of a configuration file for the Iris dataset:
+Here is an example of a configuration file for the Iris dataset.
+The dataset has these columns: `species`, `sepal_length`, `sepal_width`, `petal_length`, and `petal_width`.
 
 ```yaml
 size: [8, 6]           # Size of the SOM
