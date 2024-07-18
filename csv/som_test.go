@@ -17,7 +17,7 @@ import (
 func TestSomToCsv(t *testing.T) {
 	mockSom := createMockSom()
 	var buf bytes.Buffer
-	err := SomToCsv(mockSom, &buf, ',')
+	err := SomToCsv(mockSom, &buf, ',', "-")
 	assert.NoError(t, err)
 
 	result := buf.String()

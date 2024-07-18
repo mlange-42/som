@@ -3,6 +3,7 @@ package csv
 import (
 	"fmt"
 	"io"
+	"math"
 	"strconv"
 	"strings"
 
@@ -11,7 +12,7 @@ import (
 	"github.com/mlange-42/som/layer"
 )
 
-func SomToCsv(som *som.Som, writer io.Writer, delim rune) error {
+func SomToCsv(som *som.Som, writer io.Writer, delim rune, noData string) error {
 	labels := [][]string{}
 	labelColumns := []string{}
 	layers := []*layer.Layer{}
@@ -28,6 +29,7 @@ func SomToCsv(som *som.Som, writer io.Writer, delim rune) error {
 			continue
 		}
 
+		layer.DeNormalize()
 		layers = append(layers, &layer)
 	}
 
@@ -75,7 +77,11 @@ func SomToCsv(som *som.Som, writer io.Writer, delim rune) error {
 		for j, layer := range layers {
 			row := layer.GetNodeAt(i)
 			for k, v := range row {
-				builder.WriteString(strconv.FormatFloat(v, 'f', -1, 64))
+				if math.IsNaN(v) {
+					builder.WriteString(noData)
+				} else {
+					builder.WriteString(strconv.FormatFloat(v, 'f', -1, 64))
+				}
 				if k < len(row)-1 || j < len(layers)-1 {
 					builder.WriteString(del)
 				}
