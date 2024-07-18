@@ -21,7 +21,7 @@ func trainCommand() *cobra.Command {
 	var seed int64
 
 	command := &cobra.Command{
-		Use:   "train",
+		Use:   "train [flags] <som-file> <data-file>",
 		Short: "Trains a SOM on the given dataset",
 		Long:  `Trains a SOM on the given dataset`,
 		Args:  cobra.ExactArgs(2),
