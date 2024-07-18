@@ -94,7 +94,7 @@ func trainCommand() *cobra.Command {
 	command.Flags().Int64VarP(&seed, "seed", "s", 42, "Random seed")
 
 	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")
-	command.Flags().StringVarP(&noData, "no-data", "n", "-", "No data string")
+	command.Flags().StringVarP(&noData, "no-data", "n", "", "No data string")
 
 	return command
 }

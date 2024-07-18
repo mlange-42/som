@@ -125,7 +125,7 @@ func heatmapCommand() *cobra.Command {
 	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file")
 	command.Flags().StringVarP(&labelsColumn, "labels", "l", "", "Labels column in the data file")
 	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")
-	command.Flags().StringVarP(&noData, "no-data", "n", "-", "No.data value")
+	command.Flags().StringVarP(&noData, "no-data", "n", "", "No-data value")
 
 	return command
 }
