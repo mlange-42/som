@@ -166,3 +166,89 @@ func TableToCSV(t *table.Table, writer io.Writer, sep rune, noData string) error
 	}
 	return nil
 }
+
+func TablesToCsv(tables []*table.Table, labelColumns []string, labels [][]string, writer io.Writer, delim rune, noData string) error {
+	err := writeHeadersTables(writer, labelColumns, tables, delim)
+	if err != nil {
+		return err
+	}
+
+	del := string(delim)
+	builder := strings.Builder{}
+
+	rows := -1
+	for _, t := range tables {
+		if rows == -1 {
+			rows = t.Rows()
+		} else if rows != t.Rows() {
+			return fmt.Errorf("all tables and labels must have the same number of rows")
+		}
+	}
+	for _, lab := range labels {
+		if rows == -1 {
+			rows = len(lab)
+		} else if len(lab) != rows {
+			return fmt.Errorf("all tables and labels must have the same number of rows")
+		}
+	}
+
+	for i := 0; i < rows; i++ {
+		for j := range labels {
+			builder.WriteString(labels[j][i])
+			if i < len(labels)-1 || len(tables) > 0 {
+				builder.WriteString(del)
+			}
+		}
+
+		for j, tab := range tables {
+			row := tab.GetRow(i)
+			for k, v := range row {
+				if math.IsNaN(v) {
+					builder.WriteString(noData)
+				} else {
+					builder.WriteString(strconv.FormatFloat(v, 'f', -1, 64))
+				}
+				if k < len(row)-1 || j < len(tables)-1 {
+					builder.WriteString(del)
+				}
+			}
+		}
+
+		if i < rows-1 {
+			builder.WriteRune('\n')
+		}
+		_, err := writer.Write([]byte(builder.String()))
+		if err != nil {
+			return err
+		}
+		builder.Reset()
+	}
+
+	return nil
+}
+
+func writeHeadersTables(writer io.Writer, labelColumns []string, tables []*table.Table, delim rune) error {
+	del := string(delim)
+	builder := strings.Builder{}
+
+	for i, col := range labelColumns {
+		builder.WriteString(col)
+		if i < len(labelColumns)-1 || len(tables) > 0 {
+			builder.WriteString(del)
+		}
+	}
+
+	for i, tab := range tables {
+		cols := tab.ColumnNames()
+		for j, col := range cols {
+			builder.WriteString(col)
+			if j < len(cols)-1 || i < len(tables)-1 {
+				builder.WriteString(del)
+			}
+		}
+	}
+
+	builder.WriteRune('\n')
+	_, err := writer.Write([]byte(builder.String()))
+	return err
+}

@@ -7,6 +7,7 @@ import (
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/csv"
+	"github.com/mlange-42/som/table"
 	"github.com/mlange-42/som/yml"
 	"github.com/spf13/cobra"
 )
@@ -14,6 +15,7 @@ import (
 func bmuCommand() *cobra.Command {
 	var delim string
 	var noData string
+	var preserve []string
 
 	command := &cobra.Command{
 		Use:   "bmu [flags] <som-file> <data-file>",
@@ -43,6 +45,15 @@ func bmuCommand() *cobra.Command {
 				return err
 			}
 
+			preserved := [][]string{}
+			for _, column := range preserve {
+				col, err := reader.ReadLabels(column)
+				if err != nil {
+					return err
+				}
+				preserved = append(preserved, col)
+			}
+
 			tables, err := config.PrepareTables(reader, false)
 			if err != nil {
 				return err
@@ -63,7 +74,7 @@ func bmuCommand() *cobra.Command {
 			}
 
 			writer := strings.Builder{}
-			err = csv.TableToCSV(bmu, &writer, del[0], noData)
+			err = csv.TablesToCsv([]*table.Table{bmu}, preserve, preserved, &writer, del[0], noData)
 			if err != nil {
 				return err
 			}
@@ -75,7 +86,8 @@ func bmuCommand() *cobra.Command {
 	}
 
 	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")
-	command.Flags().StringVarP(&noData, "no-data", "n", "-", "No data string")
+	command.Flags().StringVarP(&noData, "no-data", "n", "-", "No-data string")
+	command.Flags().StringSliceVarP(&preserve, "preserve", "p", nil, "Preserve columns and prepend them to the output table")
 
 	return command
 }

@@ -16,7 +16,7 @@ func SomToCsv(som *som.Som, writer io.Writer, delim rune, noData string) error {
 	layers := collectLayers(som)
 	labelColumns, labels := collectLabels(som)
 
-	err := writeHeaders(writer, labelColumns, layers, delim)
+	err := writeHeadersSom(writer, labelColumns, layers, delim)
 	if err != nil {
 		return err
 	}
@@ -59,11 +59,10 @@ func SomToCsv(som *som.Som, writer io.Writer, delim rune, noData string) error {
 		}
 		builder.Reset()
 	}
-
 	return nil
 }
 
-func writeHeaders(writer io.Writer, labelColumns []string, layers []*layer.Layer, delim rune) error {
+func writeHeadersSom(writer io.Writer, labelColumns []string, layers []*layer.Layer, delim rune) error {
 	del := string(delim)
 	builder := strings.Builder{}
 
