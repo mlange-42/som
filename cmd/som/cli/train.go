@@ -97,8 +97,13 @@ func trainCommand() *cobra.Command {
 		},
 	}
 
-	command.Flags().StringVarP(&alpha, "alpha", "a", "polynomial 0.9 0.01 2", "Learning rate function")
-	command.Flags().StringVarP(&radius, "radius", "r", "polynomial 10 0.7 2", "Radius function")
+	command.Flags().StringVarP(&alpha, "alpha", "a", "polynomial 0.9 0.01 2",
+		`Learning rate function. Options:
+  - linear <start> <end>
+  - power <start> <end>
+  - polynomial <start> <end> <exp>
+   `)
+	command.Flags().StringVarP(&radius, "radius", "r", "polynomial 10 0.7 2", "Radius function. Same options as alpha")
 
 	command.Flags().IntVarP(&epochs, "epochs", "e", 1000, "Number of epochs")
 	command.Flags().Int64VarP(&seed, "seed", "s", 42, "Random seed")
@@ -107,6 +112,8 @@ func trainCommand() *cobra.Command {
 	command.Flags().StringVarP(&noData, "no-data", "n", "", "No data string")
 
 	command.Flags().BoolVar(&cpuProfile, "profile", false, "Enable CPU profiling")
+
+	command.Flags().SortFlags = false
 
 	return command
 }
