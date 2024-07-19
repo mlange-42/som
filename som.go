@@ -134,39 +134,6 @@ func (s *Som) learn(data [][]float64, alpha, radius float64) float64 {
 	return dist
 }
 
-func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius float64) {
-	lim := s.neighborhood.MaxRadius(radius)
-	if lim < 0 {
-		lim = s.size.Width * s.size.Height
-	}
-
-	xBmu, yBmu := s.size.CoordsAt(bmuIdx)
-	xMin, yMin := max(xBmu-lim, 0), max(yBmu-lim, 0)
-	xMax, yMax := min(xBmu+lim, s.size.Width-1), min(yBmu+lim, s.size.Height-1)
-
-	for l, lay := range s.layers {
-		lData := data[l]
-		cols := lay.Columns()
-
-		for x := xMin; x <= xMax; x++ {
-			for y := yMin; y <= yMax; y++ {
-				r := s.neighborhood.Weight(x, y, xBmu, yBmu, radius)
-				if r <= 0 {
-					continue
-				}
-
-				node := lay.GetNode(x, y)
-				for i := 0; i < cols; i++ {
-					if math.IsNaN(lData[i]) {
-						continue
-					}
-					node[i] += alpha * r * (lData[i] - node[i])
-				}
-			}
-		}
-	}
-}
-
 func (s *Som) getBMU(data [][]float64) (int, float64) {
 	units := s.size.Width * s.size.Height
 
@@ -181,6 +148,36 @@ func (s *Som) getBMU(data [][]float64) (int, float64) {
 	}
 
 	return minIndex, minDist
+}
+
+func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius float64) {
+	lim := s.neighborhood.MaxRadius(radius)
+	if lim < 0 {
+		lim = s.size.Width * s.size.Height
+	}
+
+	xBmu, yBmu := s.size.CoordsAt(bmuIdx)
+	xMin, yMin := max(xBmu-lim, 0), max(yBmu-lim, 0)
+	xMax, yMax := min(xBmu+lim, s.size.Width-1), min(yBmu+lim, s.size.Height-1)
+
+	for x := xMin; x <= xMax; x++ {
+		for y := yMin; y <= yMax; y++ {
+			r := s.neighborhood.Weight(x, y, xBmu, yBmu, radius)
+			if r <= 0 {
+				continue
+			}
+			for l, lay := range s.layers {
+				node := lay.GetNode(x, y)
+				for i := 0; i < lay.Columns(); i++ {
+					d := data[l][i]
+					if math.IsNaN(d) {
+						continue
+					}
+					node[i] += alpha * r * (d - node[i])
+				}
+			}
+		}
+	}
 }
 
 func (s *Som) distances(data [][]float64, unit int) float64 {
@@ -202,6 +199,12 @@ func (s *Som) nodeDistances(unit1, unit2 int) float64 {
 		totalDist += layer.Weight() * dist
 	}
 	return totalDist
+}
+
+func (s *Som) nodeMapDistances(x1, y1, x2, y2 int) float64 {
+	dx := float64(x1 - x2)
+	dy := float64(y1 - y2)
+	return math.Sqrt(dx*dx + dy*dy)
 }
 
 func (s *Som) randomize(rng *rand.Rand) {
