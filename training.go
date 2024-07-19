@@ -32,26 +32,15 @@ func NewTrainer(som *Som, tables []*table.Table, params *TrainingConfig, rng *ra
 }
 
 func (t *Trainer) Train(maxEpoch int) {
-	t.randomize()
+	t.som.randomize(t.rng)
 	for epoch := 0; epoch < maxEpoch; epoch++ {
 		t.epoch(epoch, maxEpoch)
-	}
-}
-
-func (t *Trainer) randomize() {
-	for _, lay := range t.som.layers {
-		data := lay.Data()
-		for i := range data {
-			data[i] = t.rng.Float64()
-		}
 	}
 }
 
 func (t *Trainer) epoch(epoch, maxEpoch int) {
 	alpha := t.params.LearningRate.Decay(epoch, maxEpoch)
 	radius := t.params.NeighborhoodRadius.Decay(epoch, maxEpoch)
-
-	//fmt.Println("Epoch", epoch, "of", maxEpoch, "alpha", alpha, "radius", radius)
 
 	data := make([][]float64, len(t.tables))
 	rows := t.tables[0].Rows()

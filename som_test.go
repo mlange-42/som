@@ -1,7 +1,9 @@
 package som
 
 import (
+	"fmt"
 	"math"
+	"math/rand"
 	"testing"
 
 	"github.com/mlange-42/som/distance"
@@ -375,4 +377,115 @@ func TestLearnRadius(t *testing.T) {
 			}
 		}
 	})
+}
+
+func BenchmarkGetBMU_5x5x3(b *testing.B) {
+	b.StopTimer()
+	som := createBenchSom(5, 5, 3, &neighborhood.Gaussian{})
+	data := [][]float64{{1.0, 2.0, 3.0}}
+
+	var bmu int
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		bmu, _ = som.getBMU(data)
+	}
+	b.StopTimer()
+
+	assert.Less(b, bmu, 25)
+}
+
+func BenchmarkGetBMU_10x10x5(b *testing.B) {
+	b.StopTimer()
+	som := createBenchSom(10, 10, 5, &neighborhood.Gaussian{})
+	data := [][]float64{{1.0, 2.0, 3.0, 4.0, 5.0}}
+
+	var bmu int
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		bmu, _ = som.getBMU(data)
+	}
+	b.StopTimer()
+
+	assert.Less(b, bmu, 100)
+}
+
+func BenchmarkUpdateWeights_5x5x3_Gaussian2(b *testing.B) {
+	b.StopTimer()
+	som := createBenchSom(5, 5, 3, &neighborhood.Gaussian{})
+	data := [][]float64{{1.0, 2.0, 3.0}}
+
+	bmu, _ := som.getBMU(data)
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		som.updateWeights(bmu, data, 0.5, 2.0)
+	}
+}
+
+func BenchmarkUpdateWeights_10x10x5_Gaussian2(b *testing.B) {
+	b.StopTimer()
+	som := createBenchSom(10, 10, 5, &neighborhood.Gaussian{})
+	data := [][]float64{{1.0, 2.0, 3.0, 4.0, 5.0}}
+
+	bmu, _ := som.getBMU(data)
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		som.updateWeights(bmu, data, 0.5, 2.0)
+	}
+}
+
+func BenchmarkUpdateWeights_5x5x3_Linear2(b *testing.B) {
+	b.StopTimer()
+	som := createBenchSom(5, 5, 3, &neighborhood.Linear{})
+	data := [][]float64{{1.0, 2.0, 3.0}}
+
+	bmu, _ := som.getBMU(data)
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		som.updateWeights(bmu, data, 0.5, 2.0)
+	}
+}
+
+func BenchmarkUpdateWeights_10x10x5_Linear2(b *testing.B) {
+	b.StopTimer()
+	som := createBenchSom(10, 10, 5, &neighborhood.Linear{})
+	data := [][]float64{{1.0, 2.0, 3.0, 4.0, 5.0}}
+
+	bmu, _ := som.getBMU(data)
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		som.updateWeights(bmu, data, 0.5, 2.0)
+	}
+}
+
+func createBenchSom(width, height int, dims int, neigh neighborhood.Neighborhood) *Som {
+	cols := make([]string, dims)
+	for i := 0; i < dims; i++ {
+		cols[i] = fmt.Sprintf("x%d", i)
+	}
+
+	params := SomConfig{
+		Size: layer.Size{Width: width, Height: height},
+		Layers: []LayerDef{
+			{
+				Columns: cols,
+				Metric:  &distance.Euclidean{},
+			},
+		},
+		Neighborhood: neigh,
+	}
+
+	som, err := New(&params)
+	if err != nil {
+		panic(err)
+	}
+
+	som.randomize(rand.New(rand.NewSource(0)))
+
+	return som
 }
