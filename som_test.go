@@ -489,3 +489,46 @@ func createBenchSom(width, height int, dims int, neigh neighborhood.Neighborhood
 
 	return som
 }
+
+func TestUMatrix(t *testing.T) {
+	params := &SomConfig{
+		Size: layer.Size{Width: 2, Height: 2},
+		Layers: []LayerDef{
+			{
+				Name:    "Layer1",
+				Columns: []string{"x", "y"},
+				Weight:  1.0,
+				Metric:  &distance.Euclidean{},
+			},
+		},
+		Neighborhood: &neighborhood.Gaussian{},
+	}
+
+	som, err := New(params)
+	assert.NoError(t, err)
+
+	// Set known weights for testing
+	som.layers[0].Set(1, 0, 0, 1)
+	som.layers[0].Set(0, 1, 1, 2)
+	som.layers[0].Set(1, 1, 0, 1)
+	som.layers[0].Set(1, 1, 1, 2)
+
+	uMatrix := som.UMatrix()
+
+	assert.Equal(t, 3, len(uMatrix))
+	assert.Equal(t, 3, len(uMatrix[0]))
+
+	// Check horizontal distances
+	assert.InDelta(t, 1.0, uMatrix[0][1], 0.001)
+	assert.InDelta(t, 1.0, uMatrix[2][1], 0.001)
+
+	// Check vertical distances
+	assert.InDelta(t, 2.0, uMatrix[1][0], 0.001)
+	assert.InDelta(t, 2.0, uMatrix[1][2], 0.001)
+
+	// Node center (average of surrounding distances)
+	assert.InDelta(t, 1.5, uMatrix[0][0], 0.001)
+
+	// Check center (average of surrounding distances)
+	assert.InDelta(t, 1.5, uMatrix[1][1], 0.001)
+}
