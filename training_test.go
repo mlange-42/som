@@ -1,6 +1,7 @@
 package som
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 
@@ -91,7 +92,15 @@ func TestTrainerDecay(t *testing.T) {
 	trainer, err := NewTrainer(som, t1, &params, rng)
 	assert.Nil(t, err)
 
-	trainer.Train(10)
+	progress := make(chan int)
+
+	go func() {
+		trainer.Train(100, progress)
+	}()
+
+	for epoch := range progress {
+		fmt.Println(epoch)
+	}
 }
 
 func TestTrainerTrain(t *testing.T) {
@@ -126,7 +135,14 @@ func TestTrainerTrain(t *testing.T) {
 		trainer, err := NewTrainer(som, tables, &params, rng)
 		assert.Nil(t, err)
 
-		trainer.Train(0)
+		progress := make(chan int)
+
+		go func() {
+			trainer.Train(0, progress)
+		}()
+
+		for range progress {
+		}
 
 		for _, v := range som.layers[0].Data() {
 			assert.NotEqual(t, 0, v)
@@ -141,7 +157,14 @@ func TestTrainerTrain(t *testing.T) {
 		trainer, err := NewTrainer(som, tables, &params, rng)
 		assert.Nil(t, err)
 
-		trainer.Train(1)
+		progress := make(chan int)
+
+		go func() {
+			trainer.Train(1, progress)
+		}()
+
+		for range progress {
+		}
 	})
 
 	t.Run("Train with multiple epochs", func(t *testing.T) {
@@ -152,7 +175,14 @@ func TestTrainerTrain(t *testing.T) {
 		trainer, err := NewTrainer(som, tables, &params, rng)
 		assert.Nil(t, err)
 
-		trainer.Train(25)
+		progress := make(chan int)
+
+		go func() {
+			trainer.Train(25, progress)
+		}()
+
+		for range progress {
+		}
 
 		for _, v := range som.layers[0].Data() {
 			assert.InDelta(t, 0, v, 0.0001)
@@ -167,6 +197,13 @@ func TestTrainerTrain(t *testing.T) {
 		trainer, err := NewTrainer(som, tables, &params, rng)
 		assert.Nil(t, err)
 
-		trainer.Train(10)
+		progress := make(chan int)
+
+		go func() {
+			trainer.Train(25, progress)
+		}()
+
+		for range progress {
+		}
 	})
 }

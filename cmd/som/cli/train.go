@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"time"
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/csv"
@@ -85,7 +86,21 @@ func trainCommand() *cobra.Command {
 				return err
 			}
 
-			trainer.Train(epochs)
+			startTime := time.Now()
+
+			progress := make(chan int)
+			go func() {
+				trainer.Train(epochs, progress)
+			}()
+
+			samples := tables[0].Rows()
+
+			for epoch := range progress {
+				s := samples * epoch
+				samplesPerSec := float64(s) / time.Since(startTime).Seconds()
+				fmt.Fprintf(os.Stderr, "\rEpoch %6d / %6d, (avg. %6d samples/sec)", epoch, epochs, int(samplesPerSec))
+			}
+			fmt.Fprintf(os.Stderr, "\n")
 
 			outYaml, err := yml.ToYAML(s)
 			if err != nil {
