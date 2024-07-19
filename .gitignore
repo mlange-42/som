@@ -6,5 +6,6 @@
 *.txt
 *.pprof
 *.out
+*.xlsx
 /*.yml
 out/

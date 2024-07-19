@@ -13,6 +13,7 @@ func init() {
 	d := []func() Decay{
 		func() Decay { return &Linear{} },
 		func() Decay { return &Power{} },
+		func() Decay { return &Polynomial{} },
 	}
 	for _, v := range d {
 		vv := v()
@@ -98,5 +99,30 @@ func (p *Power) SetArgs(args ...float64) error {
 	}
 	p.Start = args[0]
 	p.End = args[1]
+	return nil
+}
+
+type Polynomial struct {
+	Start float64
+	End   float64
+	Exp   float64
+}
+
+func (p *Polynomial) Name() string {
+	return "polynomial"
+}
+
+func (p *Polynomial) Decay(epoch, total int) float64 {
+	d := float64(epoch) / float64(total)
+	return p.End + (p.Start-p.End)*math.Pow(1-d, p.Exp)
+}
+
+func (p *Polynomial) SetArgs(args ...float64) error {
+	if len(args) != 3 {
+		return fmt.Errorf("expected 3 args, got %d", len(args))
+	}
+	p.Start = args[0]
+	p.End = args[1]
+	p.Exp = args[2]
 	return nil
 }

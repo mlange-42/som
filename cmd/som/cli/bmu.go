@@ -84,10 +84,12 @@ func bmuCommand() *cobra.Command {
 			return nil
 		},
 	}
+	command.Flags().StringSliceVarP(&preserve, "preserve", "p", nil, "Preserve columns and prepend them to the output table")
 
 	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")
 	command.Flags().StringVarP(&noData, "no-data", "n", "", "No-data string")
-	command.Flags().StringSliceVarP(&preserve, "preserve", "p", nil, "Preserve columns and prepend them to the output table")
+
+	command.Flags().SortFlags = false
 
 	return command
 }
