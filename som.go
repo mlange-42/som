@@ -2,9 +2,9 @@ package som
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"math/rand"
-	"os"
 
 	"github.com/mlange-42/som/conv"
 	"github.com/mlange-42/som/distance"
@@ -202,38 +202,29 @@ func (s *Som) updateWeightsVI(bmuIdx int, data [][]float64, alpha, radius, lambd
 			if r <= 0 {
 				continue
 			}
+			nodeIdx := s.size.IndexAt(x, y)
 
 			scale := 0.0
 			if x != xBmu || y != yBmu {
-				dataDist := s.nodeDistance(bmuIdx, s.size.IndexAt(x, y))
-				mapDist := lambda * s.nodeMapDistance(xBmu, yBmu, x, y)
-				scale = dataDist/mapDist - 1
-				fmt.Fprintln(os.Stderr, "scale", scale, dataDist, mapDist, x, y)
-				if dataDist > 100 {
-					fmt.Fprintln(os.Stderr, "dataDist", dataDist, mapDist)
-					fmt.Fprintln(os.Stderr, "node", s.layers[0].GetNode(x, y))
-					panic("scale")
+				dataDist := s.nodeDistance(bmuIdx, nodeIdx)
+				mapDist := s.nodeMapDistance(xBmu, yBmu, x, y)
+				scale = dataDist/(lambda*mapDist) - 1
+				if math.IsInf(scale, 1) {
+					log.Fatal("Numeric instability in ViSOM algorithm. Decrease alpha (learning rate) or use a less extreme lambda value (ViSOM resolution parameter).")
 				}
 			}
 
 			for l, lay := range s.layers {
 				bmu := lay.GetNodeAt(bmuIdx)
-				node := lay.GetNode(x, y)
+				node := lay.GetNodeAt(nodeIdx)
 				for i := 0; i < lay.Columns(); i++ {
 					d := data[l][i]
 					if math.IsNaN(d) {
 						continue
 					}
-					//node[i] += alpha * r * (d - node[i])
-					//node[i] += alpha * r * ((d - bmu[i]) + (bmu[i] - node[i]))
-					node[i] += alpha * r * ((d - bmu[i]) + (bmu[i]-node[i])*scale)
+					delta := (d - bmu[i]) + (bmu[i]-node[i])*scale
 
-					if math.IsNaN(node[i]) || math.IsInf(node[i], 1) || math.IsInf(node[i], -1) {
-						fmt.Fprintln(os.Stderr, "node value", node[i])
-						fmt.Fprintln(os.Stderr, "bmu value", bmu[i], "node value", node[i], "data value", d, "scale", scale)
-						fmt.Fprintln(os.Stderr, node)
-						panic("NaN")
-					}
+					node[i] += alpha * r * delta
 				}
 			}
 		}
@@ -271,7 +262,7 @@ func (s *Som) randomize(rng *rand.Rand) {
 	for _, lay := range s.layers {
 		data := lay.Data()
 		for i := range data {
-			data[i] = rng.Float64()
+			data[i] = rng.Float64() * 0.25
 		}
 	}
 }
