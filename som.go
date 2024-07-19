@@ -127,9 +127,11 @@ func (s *Som) Neighborhood() neighborhood.Neighborhood {
 	return s.neighborhood
 }
 
-func (s *Som) learn(data [][]float64, alpha, radius float64) {
-	bmuIdx, _ := s.getBMU(data)
+func (s *Som) learn(data [][]float64, alpha, radius float64) float64 {
+	bmuIdx, dist := s.getBMU(data)
 	s.updateWeights(bmuIdx, data, alpha, radius)
+
+	return dist
 }
 
 func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius float64) {

@@ -92,7 +92,7 @@ func TestTrainerDecay(t *testing.T) {
 	trainer, err := NewTrainer(som, t1, &params, rng)
 	assert.Nil(t, err)
 
-	progress := make(chan int)
+	progress := make(chan float64)
 
 	go func() {
 		trainer.Train(100, progress)
@@ -135,7 +135,7 @@ func TestTrainerTrain(t *testing.T) {
 		trainer, err := NewTrainer(som, tables, &params, rng)
 		assert.Nil(t, err)
 
-		progress := make(chan int)
+		progress := make(chan float64)
 
 		go func() {
 			trainer.Train(0, progress)
@@ -157,7 +157,7 @@ func TestTrainerTrain(t *testing.T) {
 		trainer, err := NewTrainer(som, tables, &params, rng)
 		assert.Nil(t, err)
 
-		progress := make(chan int)
+		progress := make(chan float64)
 
 		go func() {
 			trainer.Train(1, progress)
@@ -175,7 +175,7 @@ func TestTrainerTrain(t *testing.T) {
 		trainer, err := NewTrainer(som, tables, &params, rng)
 		assert.Nil(t, err)
 
-		progress := make(chan int)
+		progress := make(chan float64)
 
 		go func() {
 			trainer.Train(25, progress)
@@ -197,7 +197,7 @@ func TestTrainerTrain(t *testing.T) {
 		trainer, err := NewTrainer(som, tables, &params, rng)
 		assert.Nil(t, err)
 
-		progress := make(chan int)
+		progress := make(chan float64)
 
 		go func() {
 			trainer.Train(25, progress)

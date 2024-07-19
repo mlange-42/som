@@ -2,7 +2,6 @@ package som
 
 import (
 	"math/rand"
-	"time"
 
 	"github.com/mlange-42/som/decay"
 	"github.com/mlange-42/som/table"
@@ -32,32 +31,33 @@ func NewTrainer(som *Som, tables []*table.Table, params *TrainingConfig, rng *ra
 	}, nil
 }
 
-func (t *Trainer) Train(maxEpoch int, progress chan int) {
+func (t *Trainer) Train(maxEpoch int, progress chan float64) {
 	t.som.randomize(t.rng)
-	update := time.Now()
+
+	var meanDist float64
 	for epoch := 0; epoch < maxEpoch; epoch++ {
-		t.epoch(epoch, maxEpoch)
-		if time.Since(update) > 100*time.Millisecond {
-			progress <- epoch
-			update = time.Now()
-		}
+		meanDist = t.epoch(epoch, maxEpoch)
+		progress <- meanDist
 	}
-	progress <- maxEpoch
+	progress <- meanDist
 
 	close(progress)
 }
 
-func (t *Trainer) epoch(epoch, maxEpoch int) {
+func (t *Trainer) epoch(epoch, maxEpoch int) float64 {
 	alpha := t.params.LearningRate.Decay(epoch, maxEpoch)
 	radius := t.params.NeighborhoodRadius.Decay(epoch, maxEpoch)
 
 	data := make([][]float64, len(t.tables))
 	rows := t.tables[0].Rows()
 
+	dist := 0.0
 	for i := 0; i < rows; i++ {
 		for j := 0; j < len(t.tables); j++ {
 			data[j] = t.tables[j].GetRow(i)
 		}
-		t.som.learn(data, alpha, radius)
+		dist += t.som.learn(data, alpha, radius)
 	}
+
+	return dist / float64(rows)
 }

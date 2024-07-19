@@ -14,6 +14,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const progressBarWidth = 36
+const empty = '░'
+const full = '█'
+
 // Profiling infos:
 // go tool pprof -http=":8000" -nodefraction="0.0001" som cpu.pprof
 
@@ -86,21 +90,18 @@ func trainCommand() *cobra.Command {
 				return err
 			}
 
-			startTime := time.Now()
+			tracker := newProgressTracker(epochs, tables[0].Rows())
 
-			progress := make(chan int)
+			progress := make(chan float64, 100)
 			go func() {
 				trainer.Train(epochs, progress)
 			}()
 
-			samples := tables[0].Rows()
-
-			for epoch := range progress {
-				s := samples * epoch
-				samplesPerSec := float64(s) / time.Since(startTime).Seconds()
-				fmt.Fprintf(os.Stderr, "\rEpoch %6d / %6d, (avg. %6d samples/sec)", epoch, epochs, int(samplesPerSec))
+			epoch := 0
+			for meanDist := range progress {
+				tracker.Update(epoch, meanDist)
+				epoch++
 			}
-			fmt.Fprintf(os.Stderr, "\n")
 
 			outYaml, err := yml.ToYAML(s)
 			if err != nil {
@@ -118,7 +119,7 @@ func trainCommand() *cobra.Command {
   - power <start> <end>
   - polynomial <start> <end> <exp>
    `)
-	command.Flags().StringVarP(&radius, "radius", "r", "polynomial 10 0.7 2", "Radius function. Same options as alpha")
+	command.Flags().StringVarP(&radius, "radius", "r", "polynomial 10 0.5 2", "Radius function. Same options as alpha")
 
 	command.Flags().IntVarP(&epochs, "epochs", "e", 1000, "Number of epochs")
 	command.Flags().Int64VarP(&seed, "seed", "s", 42, "Random seed")
@@ -131,4 +132,47 @@ func trainCommand() *cobra.Command {
 	command.Flags().SortFlags = false
 
 	return command
+}
+
+type progressTracker struct {
+	start   time.Time
+	update  time.Time
+	epochs  int
+	samples int
+	bar     []rune
+}
+
+func newProgressTracker(epochs int, samples int) *progressTracker {
+	return &progressTracker{
+		start:   time.Now(),
+		update:  time.Now(),
+		epochs:  epochs,
+		samples: samples,
+		bar:     make([]rune, progressBarWidth),
+	}
+}
+
+func (t *progressTracker) Update(epoch int, meanDist float64) {
+	if time.Since(t.update) < 100*time.Millisecond && epoch < t.epochs-1 {
+		return
+	}
+
+	s := t.samples * epoch
+	barWidth := (epoch * progressBarWidth) / t.epochs
+
+	for i := range t.bar {
+		if i < barWidth {
+			t.bar[i] = full
+		} else {
+			t.bar[i] = empty
+		}
+	}
+	samplesPerSec := float64(s) / time.Since(t.start).Seconds()
+	fmt.Fprintf(os.Stderr, "\r[%s] %6d samples/sec | δ %5.2f", string(t.bar), int(samplesPerSec), meanDist)
+
+	t.update = time.Now()
+}
+
+func (t *progressTracker) Finish() {
+	fmt.Fprintf(os.Stderr, "\n")
 }
