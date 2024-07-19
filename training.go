@@ -2,6 +2,7 @@ package som
 
 import (
 	"math/rand"
+	"time"
 
 	"github.com/mlange-42/som/decay"
 	"github.com/mlange-42/som/table"
@@ -31,11 +32,19 @@ func NewTrainer(som *Som, tables []*table.Table, params *TrainingConfig, rng *ra
 	}, nil
 }
 
-func (t *Trainer) Train(maxEpoch int) {
+func (t *Trainer) Train(maxEpoch int, progress chan int) {
 	t.som.randomize(t.rng)
+	update := time.Now()
 	for epoch := 0; epoch < maxEpoch; epoch++ {
 		t.epoch(epoch, maxEpoch)
+		if time.Since(update) > 100*time.Millisecond {
+			progress <- epoch
+			update = time.Now()
+		}
 	}
+	progress <- maxEpoch
+
+	close(progress)
 }
 
 func (t *Trainer) epoch(epoch, maxEpoch int) {
