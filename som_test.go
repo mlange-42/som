@@ -379,6 +379,63 @@ func TestLearnRadius(t *testing.T) {
 	})
 }
 
+func TestNodeDistance(t *testing.T) {
+	config := SomConfig{
+		Size: layer.Size{Width: 2, Height: 2},
+		Layers: []LayerDef{
+			{
+				Columns: []string{"x", "y"},
+				Weight:  1.0,
+				Metric:  &distance.Euclidean{},
+				Data: []float64{
+					0.0, 0.0,
+					0.0, 2.0,
+					2.0, 0.0,
+					2.0, 2.0,
+				},
+			},
+		},
+	}
+	som, err := New(&config)
+	if err != nil {
+		panic(err)
+	}
+
+	assert.InDelta(t, 0, som.nodeDistance(0, 0), 0.001)
+	assert.InDelta(t, 2, som.nodeDistance(0, 1), 0.001)
+	assert.InDelta(t, 2, som.nodeDistance(0, 2), 0.001)
+	assert.InDelta(t, math.Sqrt(8), som.nodeDistance(0, 3), 0.001)
+
+	assert.InDelta(t, math.Sqrt(8), som.nodeDistance(1, 2), 0.001)
+}
+
+func TestNodeMapDistance(t *testing.T) {
+	config := SomConfig{
+		Size: layer.Size{Width: 2, Height: 2},
+		Layers: []LayerDef{
+			{
+				Columns: []string{"x", "y"},
+				Weight:  1.0,
+				Metric:  &distance.Euclidean{},
+				Data: []float64{
+					0.0, 0.0,
+					0.0, 2.0,
+					2.0, 0.0,
+					2.0, 2.0,
+				},
+			},
+		},
+	}
+	som, err := New(&config)
+	if err != nil {
+		panic(err)
+	}
+
+	assert.InDelta(t, 1, som.nodeMapDistance(0, 0, 1, 0), 0.001)
+	assert.InDelta(t, 1, som.nodeMapDistance(0, 1, 1, 1), 0.001)
+	assert.InDelta(t, math.Sqrt(2), som.nodeMapDistance(0, 0, 1, 1), 0.001)
+}
+
 func BenchmarkGetBMU_5x5x3(b *testing.B) {
 	b.StopTimer()
 	som := createBenchSom(5, 5, 3, &neighborhood.Gaussian{})

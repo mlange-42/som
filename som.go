@@ -206,10 +206,15 @@ func (s *Som) updateWeightsVI(bmuIdx int, data [][]float64, alpha, radius, lambd
 			scale := 0.0
 			if x != xBmu || y != yBmu {
 				dataDist := s.nodeDistance(bmuIdx, s.size.IndexAt(x, y))
-				mapDist := s.nodeMapDistance(xBmu, yBmu, x, y)
-				scale = dataDist/(lambda*mapDist) - 1
+				mapDist := lambda * s.nodeMapDistance(xBmu, yBmu, x, y)
+				scale = dataDist/mapDist - 1
+				fmt.Fprintln(os.Stderr, "scale", scale, dataDist, mapDist, x, y)
+				if dataDist > 100 {
+					fmt.Fprintln(os.Stderr, "dataDist", dataDist, mapDist)
+					fmt.Fprintln(os.Stderr, "node", s.layers[0].GetNode(x, y))
+					panic("scale")
+				}
 			}
-			//fmt.Fprintln(os.Stderr, "dataDist", x, y, s.nodeDistances(bmuIdx, s.size.IndexAt(x, y)))
 
 			for l, lay := range s.layers {
 				bmu := lay.GetNodeAt(bmuIdx)
