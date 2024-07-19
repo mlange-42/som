@@ -148,8 +148,12 @@ func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius float64)
 
 		for x := xMin; x <= xMax; x++ {
 			for y := yMin; y <= yMax; y++ {
-				node := lay.GetNode(x, y)
 				r := s.neighborhood.Weight(x, y, xBmu, yBmu, radius)
+				if r <= 0 {
+					continue
+				}
+
+				node := lay.GetNode(x, y)
 				for i := 0; i < cols; i++ {
 					if math.IsNaN(lData[i]) {
 						continue
