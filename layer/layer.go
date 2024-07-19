@@ -20,6 +20,10 @@ func (s *Size) CoordsAt(idx int) (int, int) {
 	return idx / s.Height, idx % s.Height
 }
 
+func (s *Size) IndexAt(x, y int) int {
+	return y + x*s.Height
+}
+
 // Layer represents a layer of data in a Self-organizing Map.
 type Layer struct {
 	name        string            // The name of the layer
