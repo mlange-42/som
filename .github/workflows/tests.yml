@@ -88,9 +88,9 @@ jobs:
       run: |
         go run ./cmd/som train _examples/cluster2d/untrained.yml _examples/cluster2d/data.csv -v 0.1 > trained.yml
         go run ./cmd/som export trained.yml
-        go run ./cmd/som bmu trained.yml _examples/cluster2d/data.csv -p species
-        go run ./cmd/som plot heatmap trained.yml plots/heatmap-cluster2d.png --data-file _examples/cluster2d/data.csv --labels species
-        go run ./cmd/som plot u-matrix trained.yml plots/u-matrix-cluster2d.png --data-file _examples/cluster2d/data.csv --labels species
+        go run ./cmd/som bmu trained.yml _examples/cluster2d/data.csv -p class
+        go run ./cmd/som plot heatmap trained.yml plots/heatmap-cluster2d.png --data-file _examples/cluster2d/data.csv --labels class
+        go run ./cmd/som plot u-matrix trained.yml plots/u-matrix-cluster2d.png --data-file _examples/cluster2d/data.csv --labels class
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
       with:
