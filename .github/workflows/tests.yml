@@ -74,9 +74,11 @@ jobs:
         go run ./cmd/som export trained.yml
         go run ./cmd/som bmu trained.yml _examples/countries/data.csv -p Country,code,continent
         go run ./cmd/som plot heatmap trained.yml heatmap.png --data-file _examples/countries/data.csv --labels Country
+        go run ./cmd/som plot u-matrix trained.yml heatmap.png --data-file _examples/countries/data.csv --labels Country
     - name: Run Iris
       run: |
         go run ./cmd/som train _examples/iris/untrained.yml _examples/iris/data.csv > trained.yml
         go run ./cmd/som export trained.yml
         go run ./cmd/som bmu trained.yml _examples/iris/data.csv -p species
         go run ./cmd/som plot heatmap trained.yml heatmap.png --data-file _examples/iris/data.csv --labels species
+        go run ./cmd/som plot u-matrix trained.yml heatmap.png --data-file _examples/iris/data.csv --labels species
