@@ -44,3 +44,64 @@ func TestLayer(t *testing.T) {
 	assert.Equal(t, []float64{3.0, 4.0, 5.0}, l.GetNode(0, 1))
 	assert.Equal(t, []float64{15.0, 16.0, 17.0}, l.GetNode(2, 1))
 }
+
+func BenchmarkLayerGet(b *testing.B) {
+	b.StopTimer()
+
+	l, err := New("L1", []string{"a", "b", "c"}, nil, Size{3, 2}, &distance.Manhattan{}, 1.0, false)
+	if err != nil {
+		b.Fatal(err)
+	}
+	var v float64
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		v = l.Get(0, 1, 2)
+	}
+	b.StopTimer()
+
+	if v != 0.0 {
+		b.Fatal("unexpected value")
+	}
+}
+
+func BenchmarkLayerGetNode(b *testing.B) {
+	b.StopTimer()
+
+	l, err := New("L1", []string{"a", "b", "c"}, nil, Size{3, 2}, &distance.Manhattan{}, 1.0, false)
+	if err != nil {
+		b.Fatal(err)
+	}
+	var v []float64
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		v = l.GetNode(0, 1)
+	}
+	b.StopTimer()
+
+	if len(v) != 3 {
+		b.Fatal("unexpected value")
+	}
+}
+
+func BenchmarkLayerCoordsAt(b *testing.B) {
+	b.StopTimer()
+
+	l, err := New("L1", []string{"a", "b", "c"}, nil, Size{3, 2}, &distance.Manhattan{}, 1.0, false)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	var x, y int
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		x, y = l.CoordsAt(3)
+	}
+
+	b.StopTimer()
+	if x != 1 || y != 1 {
+		b.Fatal("unexpected value")
+	}
+}

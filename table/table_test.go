@@ -103,3 +103,37 @@ func TestNormalizeColumn(t *testing.T) {
 	assert.InDeltaSlice(t, expected, tb.data, 1e-6)
 
 }
+
+func BenchmarkTableGet(b *testing.B) {
+	b.StopTimer()
+
+	tb := New([]string{"a", "b", "c"}, 9)
+	var v float64
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		v = tb.Get(3, 1)
+	}
+	b.StopTimer()
+
+	if v != 0.0 {
+		b.Fatal("unexpected value")
+	}
+}
+
+func BenchmarkTableGetRow(b *testing.B) {
+	b.StopTimer()
+
+	tb := New([]string{"a", "b", "c"}, 9)
+	var v []float64
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		v = tb.GetRow(3)
+	}
+	b.StopTimer()
+
+	if len(v) != 3 {
+		b.Fatal("unexpected value")
+	}
+}
