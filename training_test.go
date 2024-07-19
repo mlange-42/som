@@ -135,7 +135,14 @@ func TestTrainerTrain(t *testing.T) {
 		trainer, err := NewTrainer(som, tables, &params, rng)
 		assert.Nil(t, err)
 
-		trainer.Train(0, make(chan int, 1))
+		progress := make(chan int)
+
+		go func() {
+			trainer.Train(0, progress)
+		}()
+
+		for range progress {
+		}
 
 		for _, v := range som.layers[0].Data() {
 			assert.NotEqual(t, 0, v)
@@ -150,7 +157,14 @@ func TestTrainerTrain(t *testing.T) {
 		trainer, err := NewTrainer(som, tables, &params, rng)
 		assert.Nil(t, err)
 
-		trainer.Train(1, make(chan int, 1))
+		progress := make(chan int)
+
+		go func() {
+			trainer.Train(1, progress)
+		}()
+
+		for range progress {
+		}
 	})
 
 	t.Run("Train with multiple epochs", func(t *testing.T) {
@@ -163,7 +177,9 @@ func TestTrainerTrain(t *testing.T) {
 
 		progress := make(chan int)
 
-		trainer.Train(25, progress)
+		go func() {
+			trainer.Train(25, progress)
+		}()
 
 		for range progress {
 		}
@@ -183,7 +199,9 @@ func TestTrainerTrain(t *testing.T) {
 
 		progress := make(chan int)
 
-		trainer.Train(25, progress)
+		go func() {
+			trainer.Train(25, progress)
+		}()
 
 		for range progress {
 		}
