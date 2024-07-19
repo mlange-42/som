@@ -243,30 +243,34 @@ func (s *Som) UMatrix() [][]float64 {
 		}
 	}
 
-	for x := 0; x < s.size.Width; x++ {
-		for y := 0; y < s.size.Height; y++ {
+	for x := 0; x < s.size.Width*2-1; x++ {
+		for y := 0; y < s.size.Height*2-1; y++ {
+			if x%2 != y%2 {
+				continue
+			}
+
 			sum := 0.0
 			cnt := 0
 
 			if x > 0 {
-				sum += u[y*2][x*2-1]
+				sum += u[y][x-1]
 				cnt++
 			}
-			if x < s.size.Width-1 {
-				sum += u[y*2][x*2+1]
+			if x < width-1 {
+				sum += u[y][x+1]
 				cnt++
 			}
 
 			if y > 0 {
-				sum += u[y*2-1][x*2]
+				sum += u[y-1][x]
 				cnt++
 			}
-			if y < s.size.Height-1 {
-				sum += u[y*2+1][x*2]
+			if y < height-1 {
+				sum += u[y+1][x]
 				cnt++
 			}
 
-			u[y*2][x*2] = sum / float64(cnt)
+			u[y][x] = sum / float64(cnt)
 		}
 	}
 
