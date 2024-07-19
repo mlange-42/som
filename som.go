@@ -3,6 +3,7 @@ package som
 import (
 	"fmt"
 	"math"
+	"math/rand"
 
 	"github.com/mlange-42/som/conv"
 	"github.com/mlange-42/som/distance"
@@ -127,12 +128,16 @@ func (s *Som) Neighborhood() neighborhood.Neighborhood {
 }
 
 func (s *Som) learn(data [][]float64, alpha, radius float64) {
+	bmuIdx, _ := s.getBMU(data)
+	s.updateWeights(bmuIdx, data, alpha, radius)
+}
+
+func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius float64) {
 	lim := s.neighborhood.MaxRadius(radius)
 	if lim < 0 {
 		lim = s.size.Width * s.size.Height
 	}
 
-	bmuIdx, _ := s.getBMU(data)
 	xBmu, yBmu := s.size.CoordsAt(bmuIdx)
 	xMin, yMin := max(xBmu-lim, 0), max(yBmu-lim, 0)
 	xMax, yMax := min(xBmu+lim, s.size.Width-1), min(yBmu+lim, s.size.Height-1)
@@ -175,6 +180,15 @@ func (s *Som) getBMU(data [][]float64) (int, float64) {
 	}
 
 	return minIndex, minDist
+}
+
+func (s *Som) randomize(rng *rand.Rand) {
+	for _, lay := range s.layers {
+		data := lay.Data()
+		for i := range data {
+			data[i] = rng.Float64()
+		}
+	}
 }
 
 func (s *Som) Layers() []layer.Layer {
