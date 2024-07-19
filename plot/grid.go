@@ -50,3 +50,23 @@ func (g *ClassesGrid) X(c int) float64 {
 func (g *ClassesGrid) Y(r int) float64 {
 	return float64(r)
 }
+
+type UMatrixGrid struct {
+	UMatrix [][]float64
+}
+
+func (g *UMatrixGrid) Dims() (c, r int) {
+	return len(g.UMatrix[0]), len(g.UMatrix)
+}
+
+func (g *UMatrixGrid) Z(c, r int) float64 {
+	return g.UMatrix[r][c]
+}
+
+func (g *UMatrixGrid) X(c int) float64 {
+	return float64(c) / 2
+}
+
+func (g *UMatrixGrid) Y(r int) float64 {
+	return float64(r) / 2
+}

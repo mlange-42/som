@@ -173,12 +173,7 @@ func (s *Som) getBMU(data [][]float64) (int, float64) {
 	minDist := math.MaxFloat64
 	minIndex := -1
 	for i := 0; i < units; i++ {
-		totalDist := 0.0
-		for l, layer := range s.layers {
-			node := layer.GetNodeAt(i)
-			dist := layer.Metric().Distance(node, data[l])
-			totalDist += layer.Weight() * dist
-		}
+		totalDist := s.distances(data, i)
 		if totalDist < minDist {
 			minDist = totalDist
 			minIndex = i
@@ -186,6 +181,27 @@ func (s *Som) getBMU(data [][]float64) (int, float64) {
 	}
 
 	return minIndex, minDist
+}
+
+func (s *Som) distances(data [][]float64, unit int) float64 {
+	totalDist := 0.0
+	for l, layer := range s.layers {
+		node := layer.GetNodeAt(unit)
+		dist := layer.Metric().Distance(node, data[l])
+		totalDist += layer.Weight() * dist
+	}
+	return totalDist
+}
+
+func (s *Som) nodeDistances(unit1, unit2 int) float64 {
+	totalDist := 0.0
+	for _, layer := range s.layers {
+		node1 := layer.GetNodeAt(unit1)
+		node2 := layer.GetNodeAt(unit2)
+		dist := layer.Metric().Distance(node1, node2)
+		totalDist += layer.Weight() * dist
+	}
+	return totalDist
 }
 
 func (s *Som) randomize(rng *rand.Rand) {
@@ -199,4 +215,60 @@ func (s *Som) randomize(rng *rand.Rand) {
 
 func (s *Som) Layers() []*layer.Layer {
 	return s.layers
+}
+
+func (s *Som) UMatrix() [][]float64 {
+	height := s.size.Height*2 - 1
+	width := s.size.Width*2 - 1
+	u := make([][]float64, height)
+
+	for y := range u {
+		u[y] = make([]float64, width)
+		for x := range u[y] {
+			u[y][x] = math.NaN()
+		}
+	}
+
+	for x := 0; x < s.size.Width; x++ {
+		for y := 0; y < s.size.Height; y++ {
+			nodeHere := s.size.IndexAt(x, y)
+			if x < s.size.Width-1 {
+				nodeRight := s.size.IndexAt(x+1, y)
+				u[y*2][x*2+1] = s.nodeDistances(nodeHere, nodeRight)
+			}
+			if y < s.size.Height-1 {
+				nodeDown := s.size.IndexAt(x, y+1)
+				u[y*2+1][x*2] = s.nodeDistances(nodeHere, nodeDown)
+			}
+		}
+	}
+
+	for x := 0; x < s.size.Width; x++ {
+		for y := 0; y < s.size.Height; y++ {
+			sum := 0.0
+			cnt := 0
+
+			if x > 0 {
+				sum += u[y*2][x*2-1]
+				cnt++
+			}
+			if x < s.size.Width-1 {
+				sum += u[y*2][x*2+1]
+				cnt++
+			}
+
+			if y > 0 {
+				sum += u[y*2-1][x*2]
+				cnt++
+			}
+			if y < s.size.Height-1 {
+				sum += u[y*2+1][x*2]
+				cnt++
+			}
+
+			u[y*2][x*2] = sum / float64(cnt)
+		}
+	}
+
+	return u
 }
