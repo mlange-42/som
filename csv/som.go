@@ -104,7 +104,7 @@ func collectLayers(som *som.Som) []*layer.Layer {
 		}
 
 		lay.DeNormalize()
-		layers = append(layers, &lay)
+		layers = append(layers, lay)
 	}
 
 	return layers
@@ -118,7 +118,7 @@ func collectLabels(som *som.Som) ([]string, [][]string) {
 		if !layer.IsCategorical() {
 			continue
 		}
-		classes, indices := conv.LayerToClasses(&layer)
+		classes, indices := conv.LayerToClasses(layer)
 		labs := make([]string, len(indices))
 		for i := range indices {
 			labs[i] = classes[indices[i]]

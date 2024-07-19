@@ -9,8 +9,12 @@ import (
 	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/decay"
 	"github.com/mlange-42/som/yml"
+	"github.com/pkg/profile"
 	"github.com/spf13/cobra"
 )
+
+// Profiling infos:
+// go tool pprof -http=":8000" -nodefraction="0.0001" som cpu.pprof
 
 func trainCommand() *cobra.Command {
 	var delim string
@@ -19,6 +23,7 @@ func trainCommand() *cobra.Command {
 	var radius string
 	var epochs int
 	var seed int64
+	var cpuProfile bool
 
 	command := &cobra.Command{
 		Use:   "train [flags] <som-file> <data-file>",
@@ -26,6 +31,11 @@ func trainCommand() *cobra.Command {
 		Long:  `Trains a SOM on the given dataset`,
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if cpuProfile {
+				stop := profile.Start(profile.CPUProfile, profile.ProfilePath("."))
+				defer stop.Stop()
+			}
+
 			somFile := args[0]
 			dataFile := args[1]
 
@@ -95,6 +105,8 @@ func trainCommand() *cobra.Command {
 
 	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")
 	command.Flags().StringVarP(&noData, "no-data", "n", "", "No data string")
+
+	command.Flags().BoolVar(&cpuProfile, "profile", false, "Enable CPU profiling")
 
 	return command
 }

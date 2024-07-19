@@ -79,12 +79,12 @@ type LayerDef struct {
 
 type Som struct {
 	size         layer.Size
-	layers       []layer.Layer
+	layers       []*layer.Layer
 	neighborhood neighborhood.Neighborhood
 }
 
 func New(params *SomConfig) (*Som, error) {
-	lay := make([]layer.Layer, len(params.Layers))
+	lay := make([]*layer.Layer, len(params.Layers))
 	for i, l := range params.Layers {
 		if len(l.Columns) == 0 {
 			return nil, fmt.Errorf("layer %s has no columns", l.Name)
@@ -148,8 +148,12 @@ func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius float64)
 
 		for x := xMin; x <= xMax; x++ {
 			for y := yMin; y <= yMax; y++ {
-				node := lay.GetNode(x, y)
 				r := s.neighborhood.Weight(x, y, xBmu, yBmu, radius)
+				if r <= 0 {
+					continue
+				}
+
+				node := lay.GetNode(x, y)
 				for i := 0; i < cols; i++ {
 					if math.IsNaN(lData[i]) {
 						continue
@@ -191,6 +195,6 @@ func (s *Som) randomize(rng *rand.Rand) {
 	}
 }
 
-func (s *Som) Layers() []layer.Layer {
+func (s *Som) Layers() []*layer.Layer {
 	return s.layers
 }

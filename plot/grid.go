@@ -16,7 +16,7 @@ func (g *SomLayerGrid) Dims() (c, r int) {
 }
 
 func (g *SomLayerGrid) Z(c, r int) float64 {
-	l := &g.Som.Layers()[g.Layer]
+	l := g.Som.Layers()[g.Layer]
 	v := l.Get(c, r, g.Column)
 	return l.Normalizers()[g.Column].DeNormalize(v)
 }

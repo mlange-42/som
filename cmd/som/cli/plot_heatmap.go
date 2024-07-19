@@ -99,7 +99,7 @@ func heatmapCommand() *cobra.Command {
 				var title string
 				var classes []string
 
-				l := &s.Layers()[layer]
+				l := s.Layers()[layer]
 				if col >= 0 {
 					grid = &plot.SomLayerGrid{Som: s, Layer: layer, Column: col}
 					title = fmt.Sprintf("%s: %s", l.Name(), l.ColumnNames()[col])
