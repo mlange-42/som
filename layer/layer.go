@@ -33,7 +33,7 @@ type Layer struct {
 }
 
 // New creates a new Layer with the given columns and size.
-func New(name string, columns []string, normalizers []norm.Normalizer, size Size, metric distance.Distance, weight float64, categorical bool) (Layer, error) {
+func New(name string, columns []string, normalizers []norm.Normalizer, size Size, metric distance.Distance, weight float64, categorical bool) (*Layer, error) {
 	return NewWithData(
 		name, columns, normalizers,
 		size, metric, weight, categorical,
@@ -41,9 +41,9 @@ func New(name string, columns []string, normalizers []norm.Normalizer, size Size
 	)
 }
 
-func NewWithData(name string, columns []string, normalizers []norm.Normalizer, size Size, metric distance.Distance, weight float64, categorical bool, data []float64) (Layer, error) {
+func NewWithData(name string, columns []string, normalizers []norm.Normalizer, size Size, metric distance.Distance, weight float64, categorical bool, data []float64) (*Layer, error) {
 	if len(data) != size.Width*size.Height*len(columns) {
-		return Layer{}, fmt.Errorf("data length (%d) does not match layer size (%d)", len(data), size.Width*size.Height*len(columns))
+		return nil, fmt.Errorf("data length (%d) does not match layer size (%d)", len(data), size.Width*size.Height*len(columns))
 	}
 	if len(normalizers) == 0 {
 		normalizers = make([]norm.Normalizer, len(columns))
@@ -54,7 +54,7 @@ func NewWithData(name string, columns []string, normalizers []norm.Normalizer, s
 	if len(normalizers) != len(columns) {
 		panic(fmt.Sprintf("invalid number of normalizers: expected %d, got %d", len(columns), len(normalizers)))
 	}
-	return Layer{
+	return &Layer{
 		name:        name,
 		columns:     columns,
 		norm:        normalizers,

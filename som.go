@@ -79,12 +79,12 @@ type LayerDef struct {
 
 type Som struct {
 	size         layer.Size
-	layers       []layer.Layer
+	layers       []*layer.Layer
 	neighborhood neighborhood.Neighborhood
 }
 
 func New(params *SomConfig) (*Som, error) {
-	lay := make([]layer.Layer, len(params.Layers))
+	lay := make([]*layer.Layer, len(params.Layers))
 	for i, l := range params.Layers {
 		if len(l.Columns) == 0 {
 			return nil, fmt.Errorf("layer %s has no columns", l.Name)
@@ -191,6 +191,6 @@ func (s *Som) randomize(rng *rand.Rand) {
 	}
 }
 
-func (s *Som) Layers() []layer.Layer {
+func (s *Som) Layers() []*layer.Layer {
 	return s.layers
 }
