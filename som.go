@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"os"
 
 	"github.com/mlange-42/som/conv"
 	"github.com/mlange-42/som/distance"
@@ -127,9 +128,14 @@ func (s *Som) Neighborhood() neighborhood.Neighborhood {
 	return s.neighborhood
 }
 
-func (s *Som) learn(data [][]float64, alpha, radius float64) float64 {
+func (s *Som) learn(data [][]float64, alpha, radius, lambda float64) float64 {
 	bmuIdx, dist := s.getBMU(data)
-	s.updateWeights(bmuIdx, data, alpha, radius)
+
+	if lambda > 0 {
+		s.updateWeightsVI(bmuIdx, data, alpha, radius, lambda)
+	} else {
+		s.updateWeights(bmuIdx, data, alpha, radius)
+	}
 
 	return dist
 }
@@ -140,7 +146,7 @@ func (s *Som) getBMU(data [][]float64) (int, float64) {
 	minDist := math.MaxFloat64
 	minIndex := -1
 	for i := 0; i < units; i++ {
-		totalDist := s.distances(data, i)
+		totalDist := s.distance(data, i)
 		if totalDist < minDist {
 			minDist = totalDist
 			minIndex = i
@@ -180,7 +186,56 @@ func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius float64)
 	}
 }
 
-func (s *Som) distances(data [][]float64, unit int) float64 {
+func (s *Som) updateWeightsVI(bmuIdx int, data [][]float64, alpha, radius, lambda float64) {
+	lim := s.neighborhood.MaxRadius(radius)
+	if lim < 0 {
+		lim = s.size.Width * s.size.Height
+	}
+
+	xBmu, yBmu := s.size.CoordsAt(bmuIdx)
+	xMin, yMin := max(xBmu-lim, 0), max(yBmu-lim, 0)
+	xMax, yMax := min(xBmu+lim, s.size.Width-1), min(yBmu+lim, s.size.Height-1)
+
+	for x := xMin; x <= xMax; x++ {
+		for y := yMin; y <= yMax; y++ {
+			r := s.neighborhood.Weight(x, y, xBmu, yBmu, radius)
+			if r <= 0 {
+				continue
+			}
+
+			scale := 0.0
+			if x != xBmu || y != yBmu {
+				dataDist := s.nodeDistance(bmuIdx, s.size.IndexAt(x, y))
+				mapDist := s.nodeMapDistance(xBmu, yBmu, x, y)
+				scale = dataDist/(lambda*mapDist) - 1
+			}
+			//fmt.Fprintln(os.Stderr, "dataDist", x, y, s.nodeDistances(bmuIdx, s.size.IndexAt(x, y)))
+
+			for l, lay := range s.layers {
+				bmu := lay.GetNodeAt(bmuIdx)
+				node := lay.GetNode(x, y)
+				for i := 0; i < lay.Columns(); i++ {
+					d := data[l][i]
+					if math.IsNaN(d) {
+						continue
+					}
+					//node[i] += alpha * r * (d - node[i])
+					//node[i] += alpha * r * ((d - bmu[i]) + (bmu[i] - node[i]))
+					node[i] += alpha * r * ((d - bmu[i]) + (bmu[i]-node[i])*scale)
+
+					if math.IsNaN(node[i]) || math.IsInf(node[i], 1) || math.IsInf(node[i], -1) {
+						fmt.Fprintln(os.Stderr, "node value", node[i])
+						fmt.Fprintln(os.Stderr, "bmu value", bmu[i], "node value", node[i], "data value", d, "scale", scale)
+						fmt.Fprintln(os.Stderr, node)
+						panic("NaN")
+					}
+				}
+			}
+		}
+	}
+}
+
+func (s *Som) distance(data [][]float64, unit int) float64 {
 	totalDist := 0.0
 	for l, layer := range s.layers {
 		node := layer.GetNodeAt(unit)
@@ -190,7 +245,7 @@ func (s *Som) distances(data [][]float64, unit int) float64 {
 	return totalDist
 }
 
-func (s *Som) nodeDistances(unit1, unit2 int) float64 {
+func (s *Som) nodeDistance(unit1, unit2 int) float64 {
 	totalDist := 0.0
 	for _, layer := range s.layers {
 		node1 := layer.GetNodeAt(unit1)
@@ -201,7 +256,7 @@ func (s *Som) nodeDistances(unit1, unit2 int) float64 {
 	return totalDist
 }
 
-func (s *Som) nodeMapDistances(x1, y1, x2, y2 int) float64 {
+func (s *Som) nodeMapDistance(x1, y1, x2, y2 int) float64 {
 	dx := float64(x1 - x2)
 	dy := float64(y1 - y2)
 	return math.Sqrt(dx*dx + dy*dy)
@@ -237,11 +292,11 @@ func (s *Som) UMatrix() [][]float64 {
 			nodeHere := s.size.IndexAt(x, y)
 			if x < s.size.Width-1 {
 				nodeRight := s.size.IndexAt(x+1, y)
-				u[y*2][x*2+1] = s.nodeDistances(nodeHere, nodeRight)
+				u[y*2][x*2+1] = s.nodeDistance(nodeHere, nodeRight)
 			}
 			if y < s.size.Height-1 {
 				nodeDown := s.size.IndexAt(x, y+1)
-				u[y*2+1][x*2] = s.nodeDistances(nodeHere, nodeDown)
+				u[y*2+1][x*2] = s.nodeDistance(nodeHere, nodeDown)
 			}
 		}
 	}

@@ -294,7 +294,7 @@ func TestLearnBasic(t *testing.T) {
 			}
 		}
 
-		som.learn(data, 0.5, 6.0)
+		som.learn(data, 0.5, 6.0, 0.0)
 
 		for l, layer := range som.layers {
 			for i := 0; i < som.size.Width*som.size.Height; i++ {
@@ -318,7 +318,7 @@ func TestLearnBasic(t *testing.T) {
 			}
 		}
 
-		som.learn(data, 0.0, 2.0)
+		som.learn(data, 0.0, 2.0, 0.0)
 
 		for l, layer := range som.layers {
 			for i := 0; i < som.size.Width*som.size.Height; i++ {
@@ -345,7 +345,7 @@ func TestLearnRadius(t *testing.T) {
 			}
 		}
 
-		som.learn(data, 0.5, 0.01)
+		som.learn(data, 0.5, 0.01, 0.0)
 
 		for l, layer := range som.layers {
 			changedCount := 0
@@ -365,7 +365,7 @@ func TestLearnRadius(t *testing.T) {
 
 	t.Run("Very large radius", func(t *testing.T) {
 		data := [][]float64{{1.0, 2.0}, {3.0, 4.0}}
-		som.learn(data, 1.0, 100.0)
+		som.learn(data, 1.0, 100.0, 0.0)
 
 		for l, layer := range som.layers {
 			lData := data[l]

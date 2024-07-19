@@ -29,6 +29,7 @@ func trainCommand() *cobra.Command {
 	var epochs int
 	var seed int64
 	var cpuProfile bool
+	var visualLambda float64
 
 	command := &cobra.Command{
 		Use:   "train [flags] <som-file> <data-file>",
@@ -79,6 +80,7 @@ func trainCommand() *cobra.Command {
 			trainingConfig := &som.TrainingConfig{
 				LearningRate:       learningDecay,
 				NeighborhoodRadius: radiusDecay,
+				VisualLambda:       visualLambda,
 			}
 
 			s, err := som.New(config)
@@ -120,6 +122,7 @@ func trainCommand() *cobra.Command {
   - polynomial <start> <end> <exp>
    `)
 	command.Flags().StringVarP(&radius, "radius", "r", "polynomial 10 0.5 2", "Radius function. Same options as alpha")
+	command.Flags().Float64VarP(&visualLambda, "visual-lambda", "v", 0.0, "ViSOM resolution. 0 = no ViSOM")
 
 	command.Flags().IntVarP(&epochs, "epochs", "e", 1000, "Number of epochs")
 	command.Flags().Int64VarP(&seed, "seed", "s", 42, "Random seed")
