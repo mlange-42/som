@@ -8,6 +8,7 @@ import (
 )
 
 func TestGaussianWeight(t *testing.T) {
+	metric := neighborhood.Euclidean{}
 	g := &neighborhood.Gaussian{}
 	g2 := &neighborhood.CutGaussian{}
 
@@ -57,14 +58,14 @@ func TestGaussianWeight(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run("Gaussian: "+tt.name, func(t *testing.T) {
-			got := g.Weight(tt.x1, tt.y1, tt.x2, tt.y2, tt.radius)
+			got := g.Weight(metric.Distance(tt.x1, tt.y1, tt.x2, tt.y2), tt.radius)
 			if math.Abs(got-tt.want) > 1e-9 {
 				t.Errorf("Weight(%d, %d, %d, %d, %f) = %v, want %v", tt.x1, tt.y1, tt.x2, tt.y2, tt.radius, got, tt.want)
 			}
 		})
 
 		t.Run("CutGaussian: "+tt.name, func(t *testing.T) {
-			got := g2.Weight(tt.x1, tt.y1, tt.x2, tt.y2, tt.radius)
+			got := g2.Weight(metric.Distance(tt.x1, tt.y1, tt.x2, tt.y2), tt.radius)
 			if math.Abs(got-tt.want) > 1e-9 {
 				t.Errorf("Weight(%d, %d, %d, %d, %f) = %v, want %v", tt.x1, tt.y1, tt.x2, tt.y2, tt.radius, got, tt.want)
 			}
@@ -72,6 +73,7 @@ func TestGaussianWeight(t *testing.T) {
 	}
 }
 func TestBoxWeight(t *testing.T) {
+	metric := neighborhood.Euclidean{}
 	b := &neighborhood.Box{}
 
 	tests := []struct {
@@ -134,7 +136,7 @@ func TestBoxWeight(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := b.Weight(tt.x1, tt.y1, tt.x2, tt.y2, tt.radius)
+			got := b.Weight(metric.Distance(tt.x1, tt.y1, tt.x2, tt.y2), tt.radius)
 			if got != tt.want {
 				t.Errorf("Weight(%d, %d, %d, %d, %f) = %v, want %v in %s", tt.x1, tt.y1, tt.x2, tt.y2, tt.radius, got, tt.want, tt.name)
 			}
@@ -142,6 +144,7 @@ func TestBoxWeight(t *testing.T) {
 	}
 }
 func TestLinearWeight(t *testing.T) {
+	metric := neighborhood.Euclidean{}
 	l := &neighborhood.Linear{}
 
 	tests := []struct {
@@ -204,7 +207,7 @@ func TestLinearWeight(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := l.Weight(tt.x1, tt.y1, tt.x2, tt.y2, tt.radius)
+			got := l.Weight(metric.Distance(tt.x1, tt.y1, tt.x2, tt.y2), tt.radius)
 			if math.Abs(got-tt.want) > 1e-9 {
 				t.Errorf("Weight(%d, %d, %d, %d, %f) = %v, want %v in %s", tt.x1, tt.y1, tt.x2, tt.y2, tt.radius, got, tt.want, tt.name)
 			}

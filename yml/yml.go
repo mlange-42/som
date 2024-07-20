@@ -26,6 +26,7 @@ type ymlLayer struct {
 type ymlSom struct {
 	Size         [2]int `yaml:",flow"`
 	Neighborhood string
+	Metric       string
 	Layers       []*ymlLayer
 }
 
@@ -56,11 +57,16 @@ func ToSomConfig(ymlData []byte) (*som.SomConfig, *som.TrainingConfig, error) {
 	if !ok {
 		return nil, nil, fmt.Errorf("unknown neighborhood: %s", yml.Som.Neighborhood)
 	}
+	metric, ok := neighborhood.GetMetric(yml.Som.Metric)
+	if !ok {
+		return nil, nil, fmt.Errorf("unknown neighborhood metric: %s", yml.Som.Metric)
+	}
 
 	conf := som.SomConfig{
 		Size:         layer.Size{Width: yml.Som.Size[0], Height: yml.Som.Size[1]},
 		Layers:       []*som.LayerDef{},
 		Neighborhood: neigh,
+		MapMetric:    metric,
 	}
 	for _, l := range yml.Som.Layers {
 		lay, err := createLayer(&yml.Som, l)
@@ -141,6 +147,7 @@ func ToYAML(som *som.Som) ([]byte, error) {
 		Size:         [2]int{som.Size().Width, som.Size().Height},
 		Layers:       []*ymlLayer{},
 		Neighborhood: som.Neighborhood().Name(),
+		Metric:       som.MapMetric().Name(),
 	}
 	for _, l := range som.Layers() {
 		norms := make([]string, len(l.Normalizers()))

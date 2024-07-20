@@ -80,6 +80,7 @@ func TestTrainerDecay(t *testing.T) {
 			},
 		},
 		Neighborhood: &neighborhood.Gaussian{},
+		MapMetric:    &neighborhood.Manhattan{},
 	}
 	som, err := New(&somParams)
 	assert.NoError(t, err)
@@ -123,6 +124,7 @@ func TestTrainerTrain(t *testing.T) {
 			},
 		},
 		Neighborhood: &neighborhood.Gaussian{},
+		MapMetric:    &neighborhood.Manhattan{},
 	}
 	som, err := New(&somParams)
 	assert.NoError(t, err)

@@ -18,6 +18,7 @@ type SomConfig struct {
 	Size         layer.Size
 	Layers       []*LayerDef
 	Neighborhood neighborhood.Neighborhood
+	MapMetric    neighborhood.Metric
 }
 
 // PrepareTables reads the CSV data and creates a table for each layer defined in the SomConfig.
@@ -82,6 +83,7 @@ type Som struct {
 	size         layer.Size
 	layers       []*layer.Layer
 	neighborhood neighborhood.Neighborhood
+	metric       neighborhood.Metric
 }
 
 func New(params *SomConfig) (*Som, error) {
@@ -117,6 +119,7 @@ func New(params *SomConfig) (*Som, error) {
 		size:         params.Size,
 		layers:       lay,
 		neighborhood: params.Neighborhood,
+		metric:       params.MapMetric,
 	}, nil
 }
 
@@ -126,6 +129,10 @@ func (s *Som) Size() *layer.Size {
 
 func (s *Som) Neighborhood() neighborhood.Neighborhood {
 	return s.neighborhood
+}
+
+func (s *Som) MapMetric() neighborhood.Metric {
+	return s.metric
 }
 
 func (s *Som) learn(data [][]float64, alpha, radius, lambda float64) float64 {
@@ -164,7 +171,8 @@ func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius, lambda 
 
 	for x := xMin; x <= xMax; x++ {
 		for y := yMin; y <= yMax; y++ {
-			r := s.neighborhood.Weight(x, y, xBmu, yBmu, radius)
+			dist := s.metric.Distance(xBmu, yBmu, x, y)
+			r := s.neighborhood.Weight(dist, radius)
 			if r <= 0 {
 				continue
 			}
@@ -189,7 +197,7 @@ func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius, lambda 
 			scale := 0.0
 			if x != xBmu || y != yBmu {
 				dataDist := s.nodeDistance(bmuIdx, nodeIdx)
-				mapDist := s.nodeMapDistance(xBmu, yBmu, x, y)
+				mapDist := s.metric.Distance(xBmu, yBmu, x, y)
 				scale = dataDist/(lambda*mapDist) - 1
 				if math.IsInf(scale, 1) {
 					log.Fatal("Numeric instability in ViSOM algorithm. Decrease alpha (learning rate) or use a less extreme lambda value (ViSOM resolution parameter).")
@@ -232,12 +240,6 @@ func (s *Som) nodeDistance(unit1, unit2 int) float64 {
 		totalDist += layer.Weight() * dist
 	}
 	return totalDist
-}
-
-func (s *Som) nodeMapDistance(x1, y1, x2, y2 int) float64 {
-	dx := float64(x1 - x2)
-	dy := float64(y1 - y2)
-	return math.Sqrt(dx*dx + dy*dy)
 }
 
 func (s *Som) randomize(rng *rand.Rand) {
