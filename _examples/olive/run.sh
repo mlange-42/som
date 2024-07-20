@@ -1,4 +1,9 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
 mkdir out
+set -e
+
 som train untrained.yml data.csv -v 0.0 > out/trained.yml
 som plot heatmap out/trained.yml out/heatmap.png --data-file data.csv --labels id
 som plot u-matrix out/trained.yml out/u-matrix.png --data-file data.csv --labels id

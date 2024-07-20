@@ -1,4 +1,9 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
 mkdir out
+set -e
+
 som train untrained.yml data.csv > out/trained.yml
 som export out/trained.yml > out/export.csv
 som bmu out/trained.yml data.csv -p Country,code,continent > out/bmu.csv
