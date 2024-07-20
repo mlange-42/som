@@ -63,6 +63,7 @@ func TestNewTrainer(t *testing.T) {
 
 func TestTrainerDecay(t *testing.T) {
 	params := TrainingConfig{
+		Epochs:             100,
 		LearningRate:       &decay.Linear{Start: 0.5, End: 0.01},
 		NeighborhoodRadius: &decay.Power{Start: 5, End: 0.5},
 	}
@@ -95,7 +96,7 @@ func TestTrainerDecay(t *testing.T) {
 	progress := make(chan float64)
 
 	go func() {
-		trainer.Train(100, progress)
+		trainer.Train(progress)
 	}()
 
 	for epoch := range progress {
@@ -105,6 +106,7 @@ func TestTrainerDecay(t *testing.T) {
 
 func TestTrainerTrain(t *testing.T) {
 	params := TrainingConfig{
+		Epochs:             0,
 		LearningRate:       &decay.Linear{Start: 0.5, End: 0.01},
 		NeighborhoodRadius: &decay.Power{Start: 3, End: 0.5},
 	}
@@ -138,7 +140,7 @@ func TestTrainerTrain(t *testing.T) {
 		progress := make(chan float64)
 
 		go func() {
-			trainer.Train(0, progress)
+			trainer.Train(progress)
 		}()
 
 		for range progress {
@@ -154,13 +156,15 @@ func TestTrainerTrain(t *testing.T) {
 			table.New([]string{"x", "y"}, 5),
 			table.New([]string{"a", "b", "c"}, 5),
 		}
-		trainer, err := NewTrainer(som, tables, &params, rng)
+		p := params
+		p.Epochs = 1
+		trainer, err := NewTrainer(som, tables, &p, rng)
 		assert.Nil(t, err)
 
 		progress := make(chan float64)
 
 		go func() {
-			trainer.Train(1, progress)
+			trainer.Train(progress)
 		}()
 
 		for range progress {
@@ -172,13 +176,15 @@ func TestTrainerTrain(t *testing.T) {
 			table.New([]string{"x", "y"}, 5),
 			table.New([]string{"a", "b", "c"}, 5),
 		}
-		trainer, err := NewTrainer(som, tables, &params, rng)
+		p := params
+		p.Epochs = 25
+		trainer, err := NewTrainer(som, tables, &p, rng)
 		assert.Nil(t, err)
 
 		progress := make(chan float64)
 
 		go func() {
-			trainer.Train(25, progress)
+			trainer.Train(progress)
 		}()
 
 		for range progress {
@@ -194,13 +200,15 @@ func TestTrainerTrain(t *testing.T) {
 			table.New([]string{"x", "y"}, 5),
 			table.New([]string{"a", "b", "c"}, 5),
 		}
-		trainer, err := NewTrainer(som, tables, &params, rng)
+		p := params
+		p.Epochs = 25
+		trainer, err := NewTrainer(som, tables, &p, rng)
 		assert.Nil(t, err)
 
 		progress := make(chan float64)
 
 		go func() {
-			trainer.Train(25, progress)
+			trainer.Train(progress)
 		}()
 
 		for range progress {

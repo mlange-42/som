@@ -1,16 +1,17 @@
-size: [8, 6]
-neighborhood: gaussian
-layers:
-  - name: Scalars
-    columns:
-      - sepal_length
-      - sepal_width
-      - petal_length
-      - petal_width
-    norm: [gaussian]
-    metric: euclidean
-    weight: 1
-  - name: species
-    metric: hamming
-    categorical: true
-    weight: 0.5
+som:
+  size: [8, 6]
+  neighborhood: gaussian
+  layers:
+    - name: Scalars
+      columns:
+        - sepal_length
+        - sepal_width
+        - petal_length
+        - petal_width
+      norm: [gaussian]
+      metric: euclidean
+      weight: 1
+    - name: species
+      metric: hamming
+      categorical: true
+      weight: 0.5

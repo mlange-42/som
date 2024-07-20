@@ -12,6 +12,7 @@ import (
 	"github.com/mlange-42/som/yml"
 	"github.com/pkg/profile"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 const progressBarWidth = 36
@@ -29,14 +30,20 @@ func trainCommand() *cobra.Command {
 	var epochs int
 	var seed int64
 	var cpuProfile bool
-	var visualLambda float64
+	var visomLambda float64
 
-	command := &cobra.Command{
+	var command *cobra.Command
+	command = &cobra.Command{
 		Use:   "train [flags] <som-file> <data-file>",
 		Short: "Trains a SOM on the given dataset",
 		Long:  `Trains a SOM on the given dataset`,
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			flagUsed := map[string]bool{}
+			command.Flags().Visit(func(f *pflag.Flag) {
+				flagUsed[f.Name] = true
+			})
+
 			if cpuProfile {
 				stop := profile.Start(profile.CPUProfile, profile.ProfilePath("."))
 				defer stop.Stop()
@@ -49,9 +56,18 @@ func trainCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			config, err := yml.ToSomConfig(somYaml)
+			config, trainingConfig, err := yml.ToSomConfig(somYaml)
 			if err != nil {
 				return err
+			}
+
+			if trainingConfig == nil {
+				trainingConfig = &som.TrainingConfig{
+					Epochs:             epochs,
+					LearningRate:       &decay.Polynomial{Start: 0.25, End: 0.01, Exp: 2},
+					NeighborhoodRadius: &decay.Polynomial{Start: 10, End: 0.7, Exp: 2},
+					ViSomLambda:        0,
+				}
 			}
 
 			del := []rune(delim)
@@ -68,19 +84,27 @@ func trainCommand() *cobra.Command {
 				return err
 			}
 
-			learningDecay, err := decay.FromString(alpha)
-			if err != nil {
-				return err
+			if _, ok := flagUsed["epochs"]; ok {
+				trainingConfig.Epochs = epochs
 			}
-			radiusDecay, err := decay.FromString(radius)
-			if err != nil {
-				return err
+			if _, ok := flagUsed["visom-lambda"]; ok {
+				trainingConfig.ViSomLambda = visomLambda
 			}
 
-			trainingConfig := &som.TrainingConfig{
-				LearningRate:       learningDecay,
-				NeighborhoodRadius: radiusDecay,
-				VisualLambda:       visualLambda,
+			if _, ok := flagUsed["alpha"]; ok {
+				learningDecay, err := decay.FromString(alpha)
+				if err != nil {
+					return err
+				}
+				trainingConfig.LearningRate = learningDecay
+			}
+
+			if _, ok := flagUsed["radius"]; ok {
+				radiusDecay, err := decay.FromString(radius)
+				if err != nil {
+					return err
+				}
+				trainingConfig.NeighborhoodRadius = radiusDecay
 			}
 
 			s, err := som.New(config)
@@ -92,11 +116,11 @@ func trainCommand() *cobra.Command {
 				return err
 			}
 
-			tracker := newProgressTracker(epochs, tables[0].Rows())
+			tracker := newProgressTracker(trainingConfig.Epochs, tables[0].Rows())
 
 			progress := make(chan float64, 100)
 			go func() {
-				trainer.Train(epochs, progress)
+				trainer.Train(progress)
 			}()
 
 			epoch := 0
@@ -126,7 +150,7 @@ func trainCommand() *cobra.Command {
 	command.Flags().IntVarP(&epochs, "epochs", "e", 1000, "Number of epochs")
 	command.Flags().Int64VarP(&seed, "seed", "s", 42, "Random seed")
 
-	command.Flags().Float64VarP(&visualLambda, "visom-lambda", "v", 0.0, "ViSOM resolution. 0 = no ViSOM")
+	command.Flags().Float64VarP(&visomLambda, "visom-lambda", "v", 0.0, "ViSOM resolution. 0 = no ViSOM")
 
 	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")
 	command.Flags().StringVarP(&noData, "no-data", "n", "", "No data string")

@@ -14,9 +14,10 @@ import (
 func TestToSomConfig(t *testing.T) {
 	t.Run("Valid YAML configuration", func(t *testing.T) {
 		ymlData := []byte(`
-size: [4, 3]
-neighborhood: gaussian
-layers:
+som:
+  size: [4, 3]
+  neighborhood: gaussian
+  layers:
   - name: layer1
     columns: [a, b, c]
     norm: [gaussian 0 1, uniform, none]
@@ -29,7 +30,7 @@ layers:
     data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 `)
 
-		config, err := ToSomConfig(ymlData)
+		config, _, err := ToSomConfig(ymlData)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, config)
@@ -55,11 +56,12 @@ layers:
 
 	t.Run("Invalid YAML syntax", func(t *testing.T) {
 		ymlData := []byte(`
-size: [10, 8
-neighborhood: gaussian
+som:
+  size: [10, 8
+  neighborhood: gaussian
 `)
 
-		config, err := ToSomConfig(ymlData)
+		config, _, err := ToSomConfig(ymlData)
 
 		assert.Error(t, err)
 		assert.Nil(t, config)
@@ -67,15 +69,16 @@ neighborhood: gaussian
 
 	t.Run("Unknown neighborhood", func(t *testing.T) {
 		ymlData := []byte(`
-size: [10, 8]
-neighborhood: unknown
-layers:
+som:
+  size: [10, 8]
+  neighborhood: unknown
+  layers:
   - columns: [a, b, c]
     metric: euclidean
     weight: 1.0
 `)
 
-		config, err := ToSomConfig(ymlData)
+		config, _, err := ToSomConfig(ymlData)
 
 		assert.Error(t, err)
 		assert.Nil(t, config)
@@ -84,15 +87,16 @@ layers:
 
 	t.Run("Unknown metric", func(t *testing.T) {
 		ymlData := []byte(`
-size: [10, 8]
-neighborhood: gaussian
-layers:
-  - columns: [a, b, c]
-    metric: unknown
-    weight: 1.0
+som:
+  size: [10, 8]
+  neighborhood: gaussian
+  layers:
+    - columns: [a, b, c]
+      metric: unknown
+      weight: 1.0
 `)
 
-		config, err := ToSomConfig(ymlData)
+		config, _, err := ToSomConfig(ymlData)
 
 		assert.Error(t, err)
 		assert.Nil(t, config)
@@ -101,17 +105,18 @@ layers:
 
 	t.Run("Invalid data size", func(t *testing.T) {
 		ymlData := []byte(`
-size: [4, 3]
-neighborhood: gaussian
-layers:
-  - name: Layer A
-    columns: [a, b, c]
-    weight: 1.0
-    metric: euclidean
-    data: [0, 0, 0, 0]
+som:
+  size: [4, 3]
+  neighborhood: gaussian
+  layers:
+    - name: Layer A
+      columns: [a, b, c]
+      weight: 1.0
+      metric: euclidean
+      data: [0, 0, 0, 0]
 `)
 
-		config, err := ToSomConfig(ymlData)
+		config, _, err := ToSomConfig(ymlData)
 
 		assert.Error(t, err)
 		assert.Nil(t, config)
@@ -121,7 +126,7 @@ layers:
 	t.Run("Empty configuration", func(t *testing.T) {
 		ymlData := []byte(``)
 
-		config, err := ToSomConfig(ymlData)
+		config, _, err := ToSomConfig(ymlData)
 
 		assert.Error(t, err)
 		assert.Nil(t, config)
@@ -129,21 +134,22 @@ layers:
 }
 func TestToYAML(t *testing.T) {
 	ymlData := []byte(`
-size: [4, 3]
-neighborhood: gaussian
-layers:
-- name: layer1
-  columns: [a, b, c]
-  metric: euclidean
-  weight: 1.0
-- name: layer2
-  columns: [d, e]
-  norm: [gaussian 0 1, uniform -0.01 0.01]
-  metric: manhattan
-  weight: 0.5
+som:
+  size: [4, 3]
+  neighborhood: gaussian
+  layers:
+  - name: layer1
+    columns: [a, b, c]
+    metric: euclidean
+    weight: 1.0
+  - name: layer2
+    columns: [d, e]
+    norm: [gaussian 0 1, uniform -0.01 0.01]
+    metric: manhattan
+    weight: 0.5
 `)
 
-	config, err := ToSomConfig(ymlData)
+	config, _, err := ToSomConfig(ymlData)
 	assert.NoError(t, err)
 
 	s, err := som.New(config)
@@ -152,20 +158,21 @@ layers:
 	result, err := ToYAML(s)
 	assert.NoError(t, err)
 
-	expected := `size: [4, 3]
-neighborhood: gaussian
-layers:
-  - name: layer1
-    columns: [a, b, c]
-    metric: euclidean
-    weight: 1
-    data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-  - name: layer2
-    columns: [d, e]
-    norm: [gaussian 0 1, uniform -0.01 0.01]
-    metric: manhattan
-    weight: 0.5
-    data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+	expected := `som:
+  size: [4, 3]
+  neighborhood: gaussian
+  layers:
+    - name: layer1
+      columns: [a, b, c]
+      metric: euclidean
+      weight: 1
+      data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    - name: layer2
+      columns: [d, e]
+      norm: [gaussian 0 1, uniform -0.01 0.01]
+      metric: manhattan
+      weight: 0.5
+      data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 `
 
 	assert.Equal(t, expected, string(result))

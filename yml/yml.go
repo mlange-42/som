@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/mlange-42/som"
+	"github.com/mlange-42/som/decay"
 	"github.com/mlange-42/som/distance"
 	"github.com/mlange-42/som/layer"
 	"github.com/mlange-42/som/neighborhood"
@@ -22,13 +23,25 @@ type ymlLayer struct {
 	Data        []float64 `yaml:",flow,omitempty"`
 }
 
-type ymlConfig struct {
+type ymlSom struct {
 	Size         [2]int `yaml:",flow"`
 	Neighborhood string
 	Layers       []ymlLayer
 }
 
-func ToSomConfig(ymlData []byte) (*som.SomConfig, error) {
+type ymlTraining struct {
+	Epochs int
+	Alpha  string `yaml:",omitempty"`
+	Radius string `yaml:",omitempty"`
+	Lambda float64
+}
+
+type ymlConfig struct {
+	Som      ymlSom
+	Training *ymlTraining `yaml:",omitempty"`
+}
+
+func ToSomConfig(ymlData []byte) (*som.SomConfig, *som.TrainingConfig, error) {
 	reader := bytes.NewReader(ymlData)
 	decoder := yaml.NewDecoder(reader)
 	decoder.KnownFields(true)
@@ -36,30 +49,30 @@ func ToSomConfig(ymlData []byte) (*som.SomConfig, error) {
 	var yml ymlConfig
 	err := decoder.Decode(&yml)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	neigh, ok := neighborhood.GetNeighborhood(yml.Neighborhood)
+	neigh, ok := neighborhood.GetNeighborhood(yml.Som.Neighborhood)
 	if !ok {
-		return nil, fmt.Errorf("unknown neighborhood: %s", yml.Neighborhood)
+		return nil, nil, fmt.Errorf("unknown neighborhood: %s", yml.Som.Neighborhood)
 	}
 
 	conf := som.SomConfig{
-		Size:         layer.Size{Width: yml.Size[0], Height: yml.Size[1]},
+		Size:         layer.Size{Width: yml.Som.Size[0], Height: yml.Som.Size[1]},
 		Layers:       []som.LayerDef{},
 		Neighborhood: neigh,
 	}
-	for _, l := range yml.Layers {
+	for _, l := range yml.Som.Layers {
 		metric, ok := distance.GetMetric(l.Metric)
 		if !ok {
-			return nil, fmt.Errorf("unknown metric: %s", l.Metric)
+			return nil, nil, fmt.Errorf("unknown metric: %s", l.Metric)
 		}
-		if len(l.Data) > 0 && len(l.Data) != len(l.Columns)*yml.Size[0]*yml.Size[1] {
-			return nil, fmt.Errorf("invalid data size for layer %s", l.Name)
+		if len(l.Data) > 0 && len(l.Data) != len(l.Columns)*yml.Som.Size[0]*yml.Som.Size[1] {
+			return nil, nil, fmt.Errorf("invalid data size for layer %s", l.Name)
 		}
 
 		if len(l.Norm) > 1 && len(l.Norm) != len(l.Columns) {
-			return nil, fmt.Errorf("invalid number of normalizers for layer %s; must be zero, one or number of columns", l.Name)
+			return nil, nil, fmt.Errorf("invalid number of normalizers for layer %s; must be zero, one or number of columns", l.Name)
 		}
 
 		norms := make([]norm.Normalizer, len(l.Columns))
@@ -72,13 +85,13 @@ func ToSomConfig(ymlData []byte) (*som.SomConfig, error) {
 				}
 				norms[i], err = norm.FromString(l.Norm[0])
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
 				continue
 			}
 			norms[i], err = norm.FromString(l.Norm[i])
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 		}
 
@@ -93,11 +106,30 @@ func ToSomConfig(ymlData []byte) (*som.SomConfig, error) {
 		})
 	}
 
-	return &conf, nil
+	var training *som.TrainingConfig
+
+	if yml.Training != nil {
+		alpha, err := decay.FromString(yml.Training.Alpha)
+		if err != nil {
+			return nil, nil, err
+		}
+		radius, err := decay.FromString(yml.Training.Radius)
+		if err != nil {
+			return nil, nil, err
+		}
+		training = &som.TrainingConfig{
+			Epochs:             yml.Training.Epochs,
+			LearningRate:       alpha,
+			NeighborhoodRadius: radius,
+			ViSomLambda:        yml.Training.Lambda,
+		}
+	}
+
+	return &conf, training, nil
 }
 
 func ToYAML(som *som.Som) ([]byte, error) {
-	yml := ymlConfig{
+	yml := ymlSom{
 		Size:         [2]int{som.Size().Width, som.Size().Height},
 		Layers:       []ymlLayer{},
 		Neighborhood: som.Neighborhood().Name(),
@@ -126,11 +158,16 @@ func ToYAML(som *som.Som) ([]byte, error) {
 		})
 	}
 
+	ymlConf := ymlConfig{
+		Som:      yml,
+		Training: nil,
+	}
+
 	writer := bytes.Buffer{}
 	encoder := yaml.NewEncoder(&writer)
 	encoder.SetIndent(2)
 
-	err := encoder.Encode(yml)
+	err := encoder.Encode(ymlConf)
 	if err != nil {
 		return nil, err
 	}

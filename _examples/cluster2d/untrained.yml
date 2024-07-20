@@ -1,8 +1,14 @@
-size: [12, 10]
-neighborhood: gaussian
-layers:
-  - name: Scalars
-    columns: ["x", "y"]
-    norm: [gaussian]
-    metric: euclidean
-    weight: 1
+som:
+  size: [12, 10]
+  neighborhood: gaussian
+  layers:
+    - name: Scalars
+      columns: ["x", "y"]
+      norm: [gaussian]
+      metric: euclidean
+      weight: 1
+training:
+  epochs: 1000
+  alpha: polynomial 0.25 0.01 2
+  radius: polynomial 10 1 2
+  lambda: 0.2
