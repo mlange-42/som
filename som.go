@@ -131,11 +131,7 @@ func (s *Som) Neighborhood() neighborhood.Neighborhood {
 func (s *Som) learn(data [][]float64, alpha, radius, lambda float64) float64 {
 	bmuIdx, dist := s.getBMU(data)
 
-	if lambda > 0 {
-		s.updateWeightsVI(bmuIdx, data, alpha, radius, lambda)
-	} else {
-		s.updateWeights(bmuIdx, data, alpha, radius)
-	}
+	s.updateWeights(bmuIdx, data, alpha, radius, lambda)
 
 	return dist
 }
@@ -156,7 +152,7 @@ func (s *Som) getBMU(data [][]float64) (int, float64) {
 	return minIndex, minDist
 }
 
-func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius float64) {
+func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius, lambda float64) {
 	lim := s.neighborhood.MaxRadius(radius)
 	if lim < 0 {
 		lim = s.size.Nodes()
@@ -172,38 +168,24 @@ func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius float64)
 			if r <= 0 {
 				continue
 			}
-			for l, lay := range s.layers {
-				node := lay.GetNode(x, y)
-				for i := 0; i < lay.Columns(); i++ {
-					d := data[l][i]
-					if math.IsNaN(d) {
-						continue
+			rate := r * alpha
+
+			if lambda <= 0 {
+				// Basic SOM
+				for l, lay := range s.layers {
+					node := lay.GetNode(x, y)
+					for i := 0; i < lay.Columns(); i++ {
+						d := data[l][i]
+						if math.IsNaN(d) {
+							continue
+						}
+						node[i] += rate * (d - node[i])
 					}
-					node[i] += alpha * r * (d - node[i])
 				}
-			}
-		}
-	}
-}
-
-func (s *Som) updateWeightsVI(bmuIdx int, data [][]float64, alpha, radius, lambda float64) {
-	lim := s.neighborhood.MaxRadius(radius)
-	if lim < 0 {
-		lim = s.size.Nodes()
-	}
-
-	xBmu, yBmu := s.size.Coords(bmuIdx)
-	xMin, yMin := max(xBmu-lim, 0), max(yBmu-lim, 0)
-	xMax, yMax := min(xBmu+lim, s.size.Width-1), min(yBmu+lim, s.size.Height-1)
-
-	for x := xMin; x <= xMax; x++ {
-		for y := yMin; y <= yMax; y++ {
-			r := s.neighborhood.Weight(x, y, xBmu, yBmu, radius)
-			if r <= 0 {
 				continue
 			}
+			// ViSOM
 			nodeIdx := s.size.Index(x, y)
-
 			scale := 0.0
 			if x != xBmu || y != yBmu {
 				dataDist := s.nodeDistance(bmuIdx, nodeIdx)
@@ -224,7 +206,7 @@ func (s *Som) updateWeightsVI(bmuIdx int, data [][]float64, alpha, radius, lambd
 					}
 					delta := (d - bmu[i]) + (bmu[i]-node[i])*scale
 
-					node[i] += alpha * r * delta
+					node[i] += rate * delta
 				}
 			}
 		}
