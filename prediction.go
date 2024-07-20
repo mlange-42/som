@@ -33,7 +33,7 @@ func (p *Predictor) GetBMU() (*table.Table, error) {
 			data[j] = p.tables[j].GetRow(i)
 		}
 		idx, _ := p.som.getBMU(data)
-		x, y := p.som.Size().CoordsAt(idx)
+		x, y := p.som.Size().Coords(idx)
 		bmu[i*cols] = float64(idx)
 		bmu[i*cols+1] = float64(x)
 		bmu[i*cols+2] = float64(y)

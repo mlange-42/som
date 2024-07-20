@@ -17,6 +17,7 @@ func xyCommand() *cobra.Command {
 	var xColumn string
 	var yColumn string
 	var color string
+	var noGrid bool
 	var dataFile string
 	var labelsColumn string
 	var delim string
@@ -98,7 +99,7 @@ func xyCommand() *cobra.Command {
 				classes, classIndices = conv.LayerToClasses(s.Layers()[indices[2][0]])
 			}
 
-			img, err := plot.XY(title, &xy, size[0], size[1], classes, classIndices, labels, positions)
+			img, err := plot.XY(title, &xy, *s.Size(), size[0], size[1], classes, classIndices, !noGrid, labels, positions)
 			if err != nil {
 				return err
 			}
@@ -110,6 +111,8 @@ func xyCommand() *cobra.Command {
 	command.Flags().StringVarP(&xColumn, "x-column", "x", "x", "Column for x axis")
 	command.Flags().StringVarP(&yColumn, "y-column", "y", "y", "Column for y axis")
 	command.Flags().StringVarP(&color, "color", "c", "", "Column for color")
+
+	command.Flags().BoolVarP(&noGrid, "no-grid", "G", false, "Don't draw SOM grid lines")
 
 	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of individual heatmap panels")
 	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required for --labels")

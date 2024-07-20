@@ -2,8 +2,10 @@ package plot
 
 import (
 	"image"
+	"image/color"
 
 	"github.com/mlange-42/som"
+	"github.com/mlange-42/som/layer"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/font"
 	"gonum.org/v1/plot/plotter"
@@ -12,7 +14,12 @@ import (
 	"gonum.org/v1/plot/vg/vgimg"
 )
 
-func XY(title string, g plotter.XYer, width, height int, categories []string, catIndices []int, labels []string, positions []plotter.XY) (image.Image, error) {
+func XY(
+	title string, g plotter.XYer, size layer.Size, width, height int,
+	categories []string, catIndices []int, drawGrid bool,
+	labels []string, positions []plotter.XY,
+) (image.Image, error) {
+
 	p := plot.New()
 	l := plot.NewLegend()
 	p.Title.TextStyle.Font.Size = 16
@@ -37,6 +44,13 @@ func XY(title string, g plotter.XYer, width, height int, categories []string, ca
 		h.GlyphStyle = draw.GlyphStyle{
 			Shape:  draw.CircleGlyph{},
 			Radius: vg.Length(3),
+		}
+	}
+
+	if drawGrid {
+		err := addMapGrid(size, p, g)
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -65,6 +79,45 @@ func XY(title string, g plotter.XYer, width, height int, categories []string, ca
 	return img.Image(), nil
 }
 
+func addMapGrid(size layer.Size, p *plot.Plot, g plotter.XYer) error {
+	ls := draw.LineStyle{
+		Color: color.NRGBA{R: 160, G: 160, B: 160, A: 255},
+		Width: vg.Length(0.5),
+	}
+
+	for row := 0; row < size.Height; row++ {
+		xy := SomRowColXY{
+			Xy:    g,
+			Size:  size,
+			Index: row,
+			IsRow: true,
+		}
+		line, err := plotter.NewLine(&xy)
+		if err != nil {
+			return err
+		}
+		line.LineStyle = ls
+		p.Add(line)
+	}
+
+	for col := 0; col < size.Width; col++ {
+		xy := SomRowColXY{
+			Xy:    g,
+			Size:  size,
+			Index: col,
+			IsRow: false,
+		}
+		line, err := plotter.NewLine(&xy)
+		if err != nil {
+			return err
+		}
+		line.LineStyle = ls
+		p.Add(line)
+	}
+
+	return nil
+}
+
 type SomXY struct {
 	Som     *som.Som
 	XLayer  int
@@ -79,4 +132,31 @@ func (s *SomXY) XY(i int) (x, y float64) {
 
 func (s *SomXY) Len() int {
 	return s.Som.Size().Nodes()
+}
+
+type SomRowColXY struct {
+	Xy    plotter.XYer
+	Size  layer.Size
+	Index int
+	IsRow bool
+}
+
+func (s *SomRowColXY) XY(i int) (x, y float64) {
+	var col, row int
+	if s.IsRow {
+		col = i
+		row = s.Index
+	} else {
+		col = s.Index
+		row = i
+	}
+	idx := s.Size.Index(col, row)
+	return s.Xy.XY(idx)
+}
+
+func (s *SomRowColXY) Len() int {
+	if s.IsRow {
+		return s.Size.Width
+	}
+	return s.Size.Height
 }
