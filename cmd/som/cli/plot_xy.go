@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/conv"
@@ -130,13 +131,23 @@ func xyCommand() *cobra.Command {
 	return command
 }
 
-func extractData(config *som.SomConfig, tables []*table.Table, indices [][2]int) plotter.XYer {
-	return &plot.TableXY{
-		XTable:  tables[indices[0][0]],
-		YTable:  tables[indices[1][0]],
-		XColumn: indices[0][1],
-		YColumn: indices[1][1],
-		XNorm:   config.Layers[indices[0][0]].Norm[indices[0][1]],
-		YNorm:   config.Layers[indices[1][0]].Norm[indices[1][1]],
+func extractData(conf *som.SomConfig, tables []*table.Table, indices [][2]int) plotter.XYer {
+	xy := make([]plotter.XY, 0, tables[0].Rows())
+	t1, t2 := tables[indices[0][0]], tables[indices[1][0]]
+	c1, c2 := indices[0][1], indices[1][1]
+
+	n1, n2 := conf.Layers[indices[0][0]].Norm[c1], conf.Layers[indices[1][0]].Norm[c2]
+
+	for i := 0; i < t1.Rows(); i++ {
+		x, y := n1.DeNormalize(t1.Get(i, c1)), n2.DeNormalize(t2.Get(i, c2))
+		if math.IsNaN(x) || math.IsNaN(y) || math.IsInf(x, 0) || math.IsInf(y, 0) {
+			continue
+		}
+		xy = append(xy, plotter.XY{
+			X: x,
+			Y: y,
+		})
 	}
+
+	return plotter.XYs(xy)
 }

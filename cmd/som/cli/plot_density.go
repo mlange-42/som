@@ -63,7 +63,7 @@ func densityCommand() *cobra.Command {
 			}
 
 			density := getDensity(predictor)
-			grid := &plot.FloatGrid{Size: *s.Size(), Values: density}
+			grid := &plot.IntGrid{Size: *s.Size(), Values: density}
 			title := "Density of data"
 
 			img, err := plot.Heatmap(title, grid, size[0], size[1], nil, labels, positions)
@@ -89,20 +89,11 @@ func densityCommand() *cobra.Command {
 	return command
 }
 
-func getDensity(predictor *som.Predictor) []float64 {
+func getDensity(predictor *som.Predictor) []int {
 	bmu := predictor.GetBMU()
-	counter := make([]float64, predictor.Som().Size().Nodes())
+	counter := make([]int, predictor.Som().Size().Nodes())
 	for _, idx := range bmu {
 		counter[idx]++
-	}
-	vMax := 0.0
-	for _, v := range counter {
-		if v > vMax {
-			vMax = v
-		}
-	}
-	for i, v := range counter {
-		counter[i] = v / vMax
 	}
 	return counter
 }
