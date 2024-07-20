@@ -477,7 +477,7 @@ func BenchmarkUpdateWeights_5x5x3_Gaussian2(b *testing.B) {
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		som.updateWeights(bmu, data, 0.5, 2.0)
+		som.updateWeights(bmu, data, 0.5, 2.0, 0.0)
 	}
 }
 
@@ -490,7 +490,7 @@ func BenchmarkUpdateWeights_10x10x5_Gaussian2(b *testing.B) {
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		som.updateWeights(bmu, data, 0.5, 2.0)
+		som.updateWeights(bmu, data, 0.5, 2.0, 0.0)
 	}
 }
 
@@ -503,7 +503,7 @@ func BenchmarkUpdateWeights_5x5x3_Linear2(b *testing.B) {
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		som.updateWeights(bmu, data, 0.5, 2.0)
+		som.updateWeights(bmu, data, 0.5, 2.0, 0.0)
 	}
 }
 
@@ -516,7 +516,7 @@ func BenchmarkUpdateWeights_10x10x5_Linear2(b *testing.B) {
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		som.updateWeights(bmu, data, 0.5, 2.0)
+		som.updateWeights(bmu, data, 0.5, 2.0, 0.0)
 	}
 }
 
