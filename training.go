@@ -8,9 +8,10 @@ import (
 )
 
 type TrainingConfig struct {
+	Epochs             int
 	LearningRate       decay.Decay
 	NeighborhoodRadius decay.Decay
-	VisualLambda       float64
+	ViSomLambda        float64
 }
 
 type Trainer struct {
@@ -32,12 +33,12 @@ func NewTrainer(som *Som, tables []*table.Table, params *TrainingConfig, rng *ra
 	}, nil
 }
 
-func (t *Trainer) Train(maxEpoch int, progress chan float64) {
+func (t *Trainer) Train(progress chan float64) {
 	t.som.randomize(t.rng)
 
 	var meanDist float64
-	for epoch := 0; epoch < maxEpoch; epoch++ {
-		meanDist = t.epoch(epoch, maxEpoch)
+	for epoch := 0; epoch < t.params.Epochs; epoch++ {
+		meanDist = t.epoch(epoch)
 		progress <- meanDist
 	}
 	progress <- meanDist
@@ -45,9 +46,9 @@ func (t *Trainer) Train(maxEpoch int, progress chan float64) {
 	close(progress)
 }
 
-func (t *Trainer) epoch(epoch, maxEpoch int) float64 {
-	alpha := t.params.LearningRate.Decay(epoch, maxEpoch)
-	radius := t.params.NeighborhoodRadius.Decay(epoch, maxEpoch)
+func (t *Trainer) epoch(epoch int) float64 {
+	alpha := t.params.LearningRate.Decay(epoch, t.params.Epochs)
+	radius := t.params.NeighborhoodRadius.Decay(epoch, t.params.Epochs)
 
 	data := make([][]float64, len(t.tables))
 	rows := t.tables[0].Rows()
@@ -57,9 +58,9 @@ func (t *Trainer) epoch(epoch, maxEpoch int) float64 {
 		for j := 0; j < len(t.tables); j++ {
 			data[j] = t.tables[j].GetRow(i)
 		}
-		dist += t.som.learn(data, alpha, radius, t.params.VisualLambda)
+		dist += t.som.learn(data, alpha, radius, t.params.ViSomLambda)
 
-		if t.params.VisualLambda == 0 || i%10 != 0 { // SOM
+		if t.params.ViSomLambda == 0 || i%10 != 0 { // SOM
 			continue
 		}
 		// ViSOM refresh: present random node as data
@@ -67,7 +68,7 @@ func (t *Trainer) epoch(epoch, maxEpoch int) float64 {
 		for j := 0; j < len(t.tables); j++ {
 			data[j] = t.som.layers[j].GetNodeAt(node)
 		}
-		t.som.learn(data, alpha, radius, t.params.VisualLambda)
+		t.som.learn(data, alpha, radius, t.params.ViSomLambda)
 	}
 
 	return dist / float64(rows)

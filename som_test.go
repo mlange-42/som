@@ -30,7 +30,7 @@ func TestNew(t *testing.T) {
 	t.Run("Valid configuration", func(t *testing.T) {
 		params := &SomConfig{
 			Size: layer.Size{Width: 3, Height: 3},
-			Layers: []LayerDef{
+			Layers: []*LayerDef{
 				{
 					Name:    "Layer1",
 					Columns: []string{"x", "y"},
@@ -64,7 +64,7 @@ func TestNew(t *testing.T) {
 	t.Run("Categorical with reader", func(t *testing.T) {
 		params := &SomConfig{
 			Size: layer.Size{Width: 3, Height: 3},
-			Layers: []LayerDef{
+			Layers: []*LayerDef{
 				{
 					Name:    "Layer1",
 					Columns: []string{"x", "y"},
@@ -110,7 +110,7 @@ func TestNew(t *testing.T) {
 	t.Run("Empty columns", func(t *testing.T) {
 		params := &SomConfig{
 			Size: layer.Size{Width: 2, Height: 2},
-			Layers: []LayerDef{
+			Layers: []*LayerDef{
 				{
 					Name:        "EmptyLayer",
 					Categorical: true,
@@ -126,7 +126,7 @@ func TestNew(t *testing.T) {
 	t.Run("Default weight and metric", func(t *testing.T) {
 		params := &SomConfig{
 			Size: layer.Size{Width: 2, Height: 2},
-			Layers: []LayerDef{
+			Layers: []*LayerDef{
 				{
 					Name:    "DefaultLayer",
 					Columns: []string{"x"},
@@ -142,7 +142,7 @@ func TestNew(t *testing.T) {
 	t.Run("Multiple layers with different configurations", func(t *testing.T) {
 		params := &SomConfig{
 			Size: layer.Size{Width: 4, Height: 4},
-			Layers: []LayerDef{
+			Layers: []*LayerDef{
 				{
 					Name:        "CategoricalLayer",
 					Categorical: true,
@@ -170,7 +170,7 @@ func TestNew(t *testing.T) {
 	t.Run("Invalid layer configuration", func(t *testing.T) {
 		params := &SomConfig{
 			Size: layer.Size{Width: 2, Height: 2},
-			Layers: []LayerDef{
+			Layers: []*LayerDef{
 				{
 					Name: "InvalidLayer",
 				},
@@ -186,7 +186,7 @@ func TestNew(t *testing.T) {
 func TestGetBMU(t *testing.T) {
 	params := SomConfig{
 		Size: layer.Size{Width: 2, Height: 2},
-		Layers: []LayerDef{
+		Layers: []*LayerDef{
 			{
 				Columns: []string{"x", "y"},
 				Weight:  0.5,
@@ -213,7 +213,7 @@ func TestGetBMU(t *testing.T) {
 	t.Run("Single layer", func(t *testing.T) {
 		singleLayerParams := SomConfig{
 			Size: layer.Size{Width: 1, Height: 1},
-			Layers: []LayerDef{
+			Layers: []*LayerDef{
 				{
 					Columns: []string{"x"},
 					Weight:  1.0,
@@ -232,7 +232,7 @@ func TestGetBMU(t *testing.T) {
 	t.Run("Large SOM", func(t *testing.T) {
 		largeParams := SomConfig{
 			Size: layer.Size{Width: 10, Height: 10},
-			Layers: []LayerDef{
+			Layers: []*LayerDef{
 				{
 					Columns: []string{"x", "y", "z"},
 					Weight:  0.5,
@@ -257,7 +257,7 @@ func TestGetBMU(t *testing.T) {
 func createSom() *Som {
 	params := SomConfig{
 		Size: layer.Size{Width: 3, Height: 3},
-		Layers: []LayerDef{
+		Layers: []*LayerDef{
 			{
 				Columns: []string{"x", "y"},
 				Weight:  0.5,
@@ -382,7 +382,7 @@ func TestLearnRadius(t *testing.T) {
 func TestNodeDistance(t *testing.T) {
 	config := SomConfig{
 		Size: layer.Size{Width: 2, Height: 2},
-		Layers: []LayerDef{
+		Layers: []*LayerDef{
 			{
 				Columns: []string{"x", "y"},
 				Weight:  1.0,
@@ -412,7 +412,7 @@ func TestNodeDistance(t *testing.T) {
 func TestNodeMapDistance(t *testing.T) {
 	config := SomConfig{
 		Size: layer.Size{Width: 2, Height: 2},
-		Layers: []LayerDef{
+		Layers: []*LayerDef{
 			{
 				Columns: []string{"x", "y"},
 				Weight:  1.0,
@@ -580,7 +580,7 @@ func createBenchSom(width, height int, dims int, neigh neighborhood.Neighborhood
 
 	params := SomConfig{
 		Size: layer.Size{Width: width, Height: height},
-		Layers: []LayerDef{
+		Layers: []*LayerDef{
 			{
 				Columns: cols,
 				Metric:  &distance.Euclidean{},
@@ -602,7 +602,7 @@ func createBenchSom(width, height int, dims int, neigh neighborhood.Neighborhood
 func TestUMatrix(t *testing.T) {
 	params := &SomConfig{
 		Size: layer.Size{Width: 2, Height: 2},
-		Layers: []LayerDef{
+		Layers: []*LayerDef{
 			{
 				Name:    "Layer1",
 				Columns: []string{"x", "y"},

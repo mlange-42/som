@@ -17,7 +17,7 @@ func TestPredictorGetBMU(t *testing.T) {
 			Height: 2,
 		},
 		Neighborhood: &neighborhood.Linear{},
-		Layers: []LayerDef{
+		Layers: []*LayerDef{
 			{
 				Name:    "L1",
 				Columns: []string{"x", "y"},

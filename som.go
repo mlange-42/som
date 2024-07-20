@@ -16,7 +16,7 @@ import (
 
 type SomConfig struct {
 	Size         layer.Size
-	Layers       []LayerDef
+	Layers       []*LayerDef
 	Neighborhood neighborhood.Neighborhood
 }
 
@@ -27,7 +27,7 @@ type SomConfig struct {
 func (c *SomConfig) PrepareTables(reader table.Reader, updateNormalizers bool) ([]*table.Table, error) {
 	tables := make([]*table.Table, len(c.Layers))
 	for i := range c.Layers {
-		layer := &c.Layers[i]
+		layer := c.Layers[i]
 
 		if layer.Categorical {
 			classes, err := reader.ReadLabels(layer.Name)

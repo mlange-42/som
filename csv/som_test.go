@@ -45,7 +45,7 @@ func TestSomToCsv(t *testing.T) {
 func createMockSom() *som.Som {
 	params := &som.SomConfig{
 		Size: layer.Size{Width: 2, Height: 2},
-		Layers: []som.LayerDef{
+		Layers: []*som.LayerDef{
 			{
 				Name:        "CategoricalLayer",
 				Columns:     []string{"A", "B"},

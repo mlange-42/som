@@ -1,12 +1,13 @@
-size: [12, 10]
-neighborhood: gaussian
-layers:
-  - name: Scalars
-    columns: ["x", "y"]
-    norm: [gaussian]
-    metric: euclidean
-    weight: 1
-  - name: class
-    metric: hamming
-    categorical: true
-    weight: 0.25
+som:
+  size: [12, 10]
+  neighborhood: gaussian
+  layers:
+    - name: Scalars
+      columns: ["x", "y"]
+      norm: [gaussian]
+      metric: euclidean
+      weight: 1
+    - name: class
+      metric: hamming
+      categorical: true
+      weight: 0.25

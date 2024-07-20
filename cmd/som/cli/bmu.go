@@ -30,7 +30,7 @@ func bmuCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			config, err := yml.ToSomConfig(somYaml)
+			config, _, err := yml.ToSomConfig(somYaml)
 			if err != nil {
 				return err
 			}

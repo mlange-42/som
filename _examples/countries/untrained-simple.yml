@@ -1,16 +1,22 @@
-size: [12, 10]
-neighborhood: gaussian
-layers:
-  - name: Scalars
-    columns:
-      - child_mort_2010
-      - birth_p_1000
-      - log_GNI
-      - LifeExpectancy
-      - PopGrowth
-      - PopUrbanized
-      - AdultLiteracy
-      - Income_low_40
-      - Income_high_20
-    norm: [gaussian]
-    metric: euclidean
+som:
+  size: [14, 10]
+  neighborhood: gaussian
+  layers:
+    - name: Scalars
+      columns:
+        - child_mort_2010
+        - birth_p_1000
+        - log_GNI
+        - LifeExpectancy
+        - PopGrowth
+        - PopUrbanized
+        - AdultLiteracy
+        - Income_low_40
+        - Income_high_20
+      norm: [gaussian]
+      metric: euclidean
+training:
+  epochs: 10000
+  alpha: polynomial 0.25 0.01 2
+  radius: polynomial 10 1.2 2
+  lambda: 0.3

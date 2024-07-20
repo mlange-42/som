@@ -154,7 +154,7 @@ func readSom(somFile string) (*som.SomConfig, *som.Som, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	config, err := yml.ToSomConfig(somYaml)
+	config, _, err := yml.ToSomConfig(somYaml)
 	if err != nil {
 		return nil, nil, err
 	}
