@@ -9,6 +9,7 @@ import (
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/decay"
+	"github.com/mlange-42/som/table"
 	"github.com/mlange-42/som/yml"
 	"github.com/pkg/profile"
 	"github.com/spf13/cobra"
@@ -52,34 +53,17 @@ func trainCommand() *cobra.Command {
 			somFile := args[0]
 			dataFile := args[1]
 
-			somYaml, err := os.ReadFile(somFile)
+			config, trainingConfig, err := readConfig(somFile)
 			if err != nil {
 				return err
-			}
-			config, trainingConfig, err := yml.ToSomConfig(somYaml)
-			if err != nil {
-				return err
-			}
-
-			if trainingConfig == nil {
-				trainingConfig = &som.TrainingConfig{
-					Epochs:             epochs,
-					LearningRate:       &decay.Polynomial{Start: 0.25, End: 0.01, Exp: 2},
-					NeighborhoodRadius: &decay.Polynomial{Start: 10, End: 0.7, Exp: 2},
-					ViSomLambda:        0,
-				}
 			}
 
 			del := []rune(delim)
 			if len(delim) != 1 {
 				return fmt.Errorf("delimiter must be a single character")
 			}
-			reader, err := csv.NewFileReader(dataFile, del[0], noData)
-			if err != nil {
-				return err
-			}
 
-			tables, err := config.PrepareTables(reader, true)
+			tables, err := prepareTables(config, dataFile, del[0], noData)
 			if err != nil {
 				return err
 			}
@@ -107,26 +91,9 @@ func trainCommand() *cobra.Command {
 				trainingConfig.NeighborhoodRadius = radiusDecay
 			}
 
-			s, err := som.New(config)
+			s, err := runTraining(config, trainingConfig, tables, seed)
 			if err != nil {
 				return err
-			}
-			trainer, err := som.NewTrainer(s, tables, trainingConfig, rand.New(rand.NewSource(seed)))
-			if err != nil {
-				return err
-			}
-
-			tracker := newProgressTracker(trainingConfig.Epochs, tables[0].Rows())
-
-			progress := make(chan float64, 100)
-			go func() {
-				trainer.Train(progress)
-			}()
-
-			epoch := 0
-			for meanDist := range progress {
-				tracker.Update(epoch, meanDist)
-				epoch++
 			}
 
 			outYaml, err := yml.ToYAML(s)
@@ -161,6 +128,66 @@ Options:
 	command.Flags().SortFlags = false
 
 	return command
+}
+
+func runTraining(config *som.SomConfig, trainingConfig *som.TrainingConfig, tables []*table.Table, seed int64) (*som.Som, error) {
+	s, err := som.New(config)
+	if err != nil {
+		return nil, err
+	}
+	trainer, err := som.NewTrainer(s, tables, trainingConfig, rand.New(rand.NewSource(seed)))
+	if err != nil {
+		return nil, err
+	}
+
+	tracker := newProgressTracker(trainingConfig.Epochs, tables[0].Rows())
+
+	progress := make(chan float64, 100)
+	go func() {
+		trainer.Train(progress)
+	}()
+
+	epoch := 0
+	for meanDist := range progress {
+		tracker.Update(epoch, meanDist)
+		epoch++
+	}
+
+	return s, nil
+}
+
+func defaultTrainingConfig() *som.TrainingConfig {
+	return &som.TrainingConfig{
+		Epochs:             1000,
+		LearningRate:       &decay.Polynomial{Start: 0.25, End: 0.01, Exp: 2},
+		NeighborhoodRadius: &decay.Polynomial{Start: 10, End: 0.7, Exp: 2},
+		ViSomLambda:        0,
+	}
+}
+
+func prepareTables(config *som.SomConfig, path string, delim rune, noData string) ([]*table.Table, error) {
+	reader, err := csv.NewFileReader(path, delim, noData)
+	if err != nil {
+		return nil, err
+	}
+	return config.PrepareTables(reader, true)
+}
+
+func readConfig(path string) (*som.SomConfig, *som.TrainingConfig, error) {
+	somYaml, err := os.ReadFile(path)
+	if err != nil {
+		return nil, nil, err
+	}
+	config, trainingConfig, err := yml.ToSomConfig(somYaml)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if trainingConfig == nil {
+		trainingConfig = defaultTrainingConfig()
+	}
+
+	return config, trainingConfig, nil
 }
 
 type progressTracker struct {
