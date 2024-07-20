@@ -141,7 +141,7 @@ func (s *Som) learn(data [][]float64, alpha, radius, lambda float64) float64 {
 }
 
 func (s *Som) getBMU(data [][]float64) (int, float64) {
-	units := s.size.Width * s.size.Height
+	units := s.size.Nodes()
 
 	minDist := math.MaxFloat64
 	minIndex := -1
@@ -159,7 +159,7 @@ func (s *Som) getBMU(data [][]float64) (int, float64) {
 func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius float64) {
 	lim := s.neighborhood.MaxRadius(radius)
 	if lim < 0 {
-		lim = s.size.Width * s.size.Height
+		lim = s.size.Nodes()
 	}
 
 	xBmu, yBmu := s.size.CoordsAt(bmuIdx)
@@ -189,7 +189,7 @@ func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius float64)
 func (s *Som) updateWeightsVI(bmuIdx int, data [][]float64, alpha, radius, lambda float64) {
 	lim := s.neighborhood.MaxRadius(radius)
 	if lim < 0 {
-		lim = s.size.Width * s.size.Height
+		lim = s.size.Nodes()
 	}
 
 	xBmu, yBmu := s.size.CoordsAt(bmuIdx)

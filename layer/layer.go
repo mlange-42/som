@@ -24,6 +24,10 @@ func (s *Size) IndexAt(x, y int) int {
 	return y + x*s.Height
 }
 
+func (s *Size) Nodes() int {
+	return s.Width * s.Height
+}
+
 // Layer represents a layer of data in a Self-organizing Map.
 type Layer struct {
 	name        string            // The name of the layer
@@ -117,7 +121,7 @@ func (l *Layer) Columns() int {
 }
 
 func (l *Layer) Nodes() int {
-	return l.size.Width * l.size.Height
+	return l.size.Nodes()
 }
 
 func (l *Layer) Normalizers() []norm.Normalizer {
