@@ -21,7 +21,7 @@ func (p *Predictor) Som() *Som {
 	return p.som
 }
 
-func (p *Predictor) GetBMU() (*table.Table, error) {
+func (p *Predictor) GetBMUTable() (*table.Table, error) {
 	data := make([][]float64, len(p.tables))
 	rows := p.tables[0].Rows()
 
@@ -40,4 +40,22 @@ func (p *Predictor) GetBMU() (*table.Table, error) {
 	}
 
 	return table.NewWithData([]string{"node_id", "node_x", "node_y"}, bmu)
+}
+
+func (p *Predictor) GetBMU() []int {
+
+	data := make([][]float64, len(p.tables))
+	rows := p.tables[0].Rows()
+
+	bmu := make([]int, rows)
+
+	for i := 0; i < rows; i++ {
+		for j := 0; j < len(p.tables); j++ {
+			data[j] = p.tables[j].GetRow(i)
+		}
+		idx, _ := p.som.getBMU(data)
+		bmu[i] = idx
+	}
+
+	return bmu
 }

@@ -125,6 +125,7 @@ func xyCommand() *cobra.Command {
 	command.Flags().StringVarP(&noData, "no-data", "n", "", "No-data value (default \"\")")
 
 	command.Flags().SortFlags = false
+	command.MarkFlagFilename("data-file", "csv")
 
 	return command
 }

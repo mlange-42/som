@@ -68,7 +68,7 @@ func bmuCommand() *cobra.Command {
 				return err
 			}
 
-			bmu, err := pred.GetBMU()
+			bmu, err := pred.GetBMUTable()
 			if err != nil {
 				return err
 			}
