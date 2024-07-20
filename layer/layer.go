@@ -15,13 +15,17 @@ type Size struct {
 	Height int
 }
 
-// CoordsAt returns the (x, y) coordinates of the node at the given index.
-func (s *Size) CoordsAt(idx int) (int, int) {
+// Coords returns the (x, y) coordinates of the node at the given index.
+func (s *Size) Coords(idx int) (int, int) {
 	return idx / s.Height, idx % s.Height
 }
 
-func (s *Size) IndexAt(x, y int) int {
+func (s *Size) Index(x, y int) int {
 	return y + x*s.Height
+}
+
+func (s *Size) Nodes() int {
+	return s.Width * s.Height
 }
 
 // Layer represents a layer of data in a Self-organizing Map.
@@ -117,7 +121,7 @@ func (l *Layer) Columns() int {
 }
 
 func (l *Layer) Nodes() int {
-	return l.size.Width * l.size.Height
+	return l.size.Nodes()
 }
 
 func (l *Layer) Normalizers() []norm.Normalizer {
@@ -159,7 +163,7 @@ func (l *Layer) GetNodeAt(idx int) []float64 {
 }
 
 func (l *Layer) CoordsAt(idx int) (int, int) {
-	return l.size.CoordsAt(idx)
+	return l.size.Coords(idx)
 }
 
 func (l *Layer) IsCategorical() bool {

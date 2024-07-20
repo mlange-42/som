@@ -24,9 +24,9 @@ func SomToCsv(som *som.Som, writer io.Writer, delim rune, noData string) error {
 	del := string(delim)
 	builder := strings.Builder{}
 
-	nodes := som.Size().Width * som.Size().Height
+	nodes := som.Size().Nodes()
 	for i := 0; i < nodes; i++ {
-		x, y := som.Size().CoordsAt(i)
+		x, y := som.Size().Coords(i)
 		builder.WriteString(fmt.Sprintf("%d%s%d%s%d%s", i, del, x, del, y, del))
 
 		for j := range labels {

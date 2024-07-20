@@ -240,7 +240,7 @@ func extractLabels(predictor *som.Predictor,
 		return nil, nil, err
 	}
 
-	nodes := predictor.Som().Size().Height * predictor.Som().Size().Width
+	nodes := predictor.Som().Size().Nodes()
 
 	perCell := make([]int, nodes)
 	for i := range labels {

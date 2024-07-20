@@ -63,7 +63,7 @@ func (t *Trainer) epoch(epoch, maxEpoch int) float64 {
 			continue
 		}
 		// ViSOM refresh: present random node as data
-		node := t.rng.Intn(t.som.size.Width * t.som.size.Height)
+		node := t.rng.Intn(t.som.size.Nodes())
 		for j := 0; j < len(t.tables); j++ {
 			data[j] = t.som.layers[j].GetNodeAt(node)
 		}

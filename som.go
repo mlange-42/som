@@ -141,7 +141,7 @@ func (s *Som) learn(data [][]float64, alpha, radius, lambda float64) float64 {
 }
 
 func (s *Som) getBMU(data [][]float64) (int, float64) {
-	units := s.size.Width * s.size.Height
+	units := s.size.Nodes()
 
 	minDist := math.MaxFloat64
 	minIndex := -1
@@ -159,10 +159,10 @@ func (s *Som) getBMU(data [][]float64) (int, float64) {
 func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius float64) {
 	lim := s.neighborhood.MaxRadius(radius)
 	if lim < 0 {
-		lim = s.size.Width * s.size.Height
+		lim = s.size.Nodes()
 	}
 
-	xBmu, yBmu := s.size.CoordsAt(bmuIdx)
+	xBmu, yBmu := s.size.Coords(bmuIdx)
 	xMin, yMin := max(xBmu-lim, 0), max(yBmu-lim, 0)
 	xMax, yMax := min(xBmu+lim, s.size.Width-1), min(yBmu+lim, s.size.Height-1)
 
@@ -189,10 +189,10 @@ func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius float64)
 func (s *Som) updateWeightsVI(bmuIdx int, data [][]float64, alpha, radius, lambda float64) {
 	lim := s.neighborhood.MaxRadius(radius)
 	if lim < 0 {
-		lim = s.size.Width * s.size.Height
+		lim = s.size.Nodes()
 	}
 
-	xBmu, yBmu := s.size.CoordsAt(bmuIdx)
+	xBmu, yBmu := s.size.Coords(bmuIdx)
 	xMin, yMin := max(xBmu-lim, 0), max(yBmu-lim, 0)
 	xMax, yMax := min(xBmu+lim, s.size.Width-1), min(yBmu+lim, s.size.Height-1)
 
@@ -202,7 +202,7 @@ func (s *Som) updateWeightsVI(bmuIdx int, data [][]float64, alpha, radius, lambd
 			if r <= 0 {
 				continue
 			}
-			nodeIdx := s.size.IndexAt(x, y)
+			nodeIdx := s.size.Index(x, y)
 
 			scale := 0.0
 			if x != xBmu || y != yBmu {
@@ -285,13 +285,13 @@ func (s *Som) UMatrix() [][]float64 {
 
 	for x := 0; x < s.size.Width; x++ {
 		for y := 0; y < s.size.Height; y++ {
-			nodeHere := s.size.IndexAt(x, y)
+			nodeHere := s.size.Index(x, y)
 			if x < s.size.Width-1 {
-				nodeRight := s.size.IndexAt(x+1, y)
+				nodeRight := s.size.Index(x+1, y)
 				u[y*2][x*2+1] = s.nodeDistance(nodeHere, nodeRight)
 			}
 			if y < s.size.Height-1 {
-				nodeDown := s.size.IndexAt(x, y+1)
+				nodeDown := s.size.Index(x, y+1)
 				u[y*2+1][x*2] = s.nodeDistance(nodeHere, nodeDown)
 			}
 		}
