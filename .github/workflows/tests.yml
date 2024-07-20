@@ -91,6 +91,13 @@ jobs:
         go run ./cmd/som bmu trained.yml _examples/cluster2d/data.csv -p class
         go run ./cmd/som plot heatmap trained.yml plots/heatmap-cluster2d.png --data-file _examples/cluster2d/data.csv --labels class
         go run ./cmd/som plot u-matrix trained.yml plots/u-matrix-cluster2d.png --data-file _examples/cluster2d/data.csv --labels class
+    - name: Run Olive Oils
+      run: |
+        go run ./cmd/som train _examples/olive/untrained.yml _examples/olive/data.csv -v 0.1 > trained.yml
+        go run ./cmd/som export trained.yml
+        go run ./cmd/som bmu trained.yml _examples/olive/data.csv -p area
+        go run ./cmd/som plot heatmap trained.yml plots/heatmap-olive.png --data-file _examples/olive/data.csv --labels id
+        go run ./cmd/som plot u-matrix trained.yml plots/u-matrix-olive.png --data-file _examples/olive/data.csv --labels id
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
       with:
