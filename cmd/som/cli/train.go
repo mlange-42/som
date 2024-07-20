@@ -35,8 +35,8 @@ func trainCommand() *cobra.Command {
 	var command *cobra.Command
 	command = &cobra.Command{
 		Use:   "train [flags] <som-file> <data-file>",
-		Short: "Trains a SOM on the given dataset",
-		Long:  `Trains a SOM on the given dataset`,
+		Short: "Trains an SOM on the given dataset",
+		Long:  `Trains an SOM on the given dataset`,
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			flagUsed := map[string]bool{}
@@ -140,17 +140,18 @@ func trainCommand() *cobra.Command {
 	}
 
 	command.Flags().StringVarP(&alpha, "alpha", "a", "polynomial 0.25 0.01 2",
-		`Learning rate function. Options:
+		`Overwrites the learning rate function of the SOM file.
+Options:
   - linear <start> <end>
   - power <start> <end>
   - polynomial <start> <end> <exp>
    `)
-	command.Flags().StringVarP(&radius, "radius", "r", "polynomial 10 0.7 2", "Radius function. Same options as alpha")
+	command.Flags().StringVarP(&radius, "radius", "r", "polynomial 10 0.7 2", "Overwrites the radius function of the SOM file.\nSame options as alpha\n   ")
 
-	command.Flags().IntVarP(&epochs, "epochs", "e", 1000, "Number of epochs")
+	command.Flags().IntVarP(&epochs, "epochs", "e", 1000, "Overwrites the number of epochs of the SOM file")
 	command.Flags().Int64VarP(&seed, "seed", "s", 42, "Random seed")
 
-	command.Flags().Float64VarP(&visomLambda, "visom-lambda", "v", 0.0, "ViSOM resolution. 0 = no ViSOM")
+	command.Flags().Float64VarP(&visomLambda, "visom-lambda", "v", 0.0, "Overwrites ViSOM resolution. 0 = no ViSOM")
 
 	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")
 	command.Flags().StringVarP(&noData, "no-data", "n", "", "No data string")
