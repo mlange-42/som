@@ -16,7 +16,7 @@ import (
 
 type SomConfig struct {
 	Size         layer.Size
-	Layers       []LayerDef
+	Layers       []LayerDef // TODO: make pointer
 	Neighborhood neighborhood.Neighborhood
 }
 

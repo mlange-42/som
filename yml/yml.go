@@ -63,47 +63,11 @@ func ToSomConfig(ymlData []byte) (*som.SomConfig, *som.TrainingConfig, error) {
 		Neighborhood: neigh,
 	}
 	for _, l := range yml.Som.Layers {
-		metric, ok := distance.GetMetric(l.Metric)
+		lay, err := createLayer(&yml.Som, &l)
 		if !ok {
-			return nil, nil, fmt.Errorf("unknown metric: %s", l.Metric)
+			return nil, nil, err
 		}
-		if len(l.Data) > 0 && len(l.Data) != len(l.Columns)*yml.Som.Size[0]*yml.Som.Size[1] {
-			return nil, nil, fmt.Errorf("invalid data size for layer %s", l.Name)
-		}
-
-		if len(l.Norm) > 1 && len(l.Norm) != len(l.Columns) {
-			return nil, nil, fmt.Errorf("invalid number of normalizers for layer %s; must be zero, one or number of columns", l.Name)
-		}
-
-		norms := make([]norm.Normalizer, len(l.Columns))
-		for i := range norms {
-			var err error
-			if i >= len(l.Norm) {
-				if len(l.Norm) == 0 {
-					norms[i] = &norm.None{}
-					continue
-				}
-				norms[i], err = norm.FromString(l.Norm[0])
-				if err != nil {
-					return nil, nil, err
-				}
-				continue
-			}
-			norms[i], err = norm.FromString(l.Norm[i])
-			if err != nil {
-				return nil, nil, err
-			}
-		}
-
-		conf.Layers = append(conf.Layers, som.LayerDef{
-			Name:        l.Name,
-			Columns:     l.Columns,
-			Norm:        norms,
-			Metric:      metric,
-			Weight:      l.Weight,
-			Data:        l.Data,
-			Categorical: l.Categorical,
-		})
+		conf.Layers = append(conf.Layers, *lay)
 	}
 
 	var training *som.TrainingConfig
@@ -126,6 +90,50 @@ func ToSomConfig(ymlData []byte) (*som.SomConfig, *som.TrainingConfig, error) {
 	}
 
 	return &conf, training, nil
+}
+
+func createLayer(s *ymlSom, l *ymlLayer) (*som.LayerDef, error) {
+	metric, ok := distance.GetMetric(l.Metric)
+	if !ok {
+		return nil, fmt.Errorf("unknown metric: %s", l.Metric)
+	}
+	if len(l.Data) > 0 && len(l.Data) != len(l.Columns)*s.Size[0]*s.Size[1] {
+		return nil, fmt.Errorf("invalid data size for layer %s", l.Name)
+	}
+
+	if len(l.Norm) > 1 && len(l.Norm) != len(l.Columns) {
+		return nil, fmt.Errorf("invalid number of normalizers for layer %s; must be zero, one or number of columns", l.Name)
+	}
+
+	norms := make([]norm.Normalizer, len(l.Columns))
+	for i := range norms {
+		var err error
+		if i >= len(l.Norm) {
+			if len(l.Norm) == 0 {
+				norms[i] = &norm.None{}
+				continue
+			}
+			norms[i], err = norm.FromString(l.Norm[0])
+			if err != nil {
+				return nil, err
+			}
+			continue
+		}
+		norms[i], err = norm.FromString(l.Norm[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &som.LayerDef{
+		Name:        l.Name,
+		Columns:     l.Columns,
+		Norm:        norms,
+		Metric:      metric,
+		Weight:      l.Weight,
+		Data:        l.Data,
+		Categorical: l.Categorical,
+	}, nil
 }
 
 func ToYAML(som *som.Som) ([]byte, error) {
