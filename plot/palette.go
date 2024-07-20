@@ -29,3 +29,9 @@ func NewRandomPalette(cols int) *RandomPalette {
 func (p *RandomPalette) Colors() []color.Color {
 	return p.colors
 }
+
+type WhitePalette struct{}
+
+func (p *WhitePalette) Colors() []color.Color {
+	return []color.Color{color.White}
+}

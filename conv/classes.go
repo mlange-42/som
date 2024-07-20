@@ -53,6 +53,23 @@ func ClassesToTable[T comparable](classes []T, columns []T) (*table.Table, error
 	return table, nil
 }
 
+func ClassesToIndices[T comparable](classes []T) (columns []T, indices []int) {
+	columns = []T{}
+	classMap := map[T]int{}
+	indices = make([]int, len(classes))
+
+	for i, c := range classes {
+		idx, ok := classMap[c]
+		if !ok {
+			idx = len(columns)
+			classMap[c] = idx
+			columns = append(columns, c)
+		}
+		indices[i] = idx
+	}
+	return columns, indices
+}
+
 // TableToClasses converts a table.Table into a slice of class labels and a slice of class indices.
 // For each row in the table, the function finds the column with the maximum value and returns the index of that column as the class label.
 // The function returns two slices: the first slice contains the column names (class labels), and the second slice contains the class indices for each row.

@@ -17,6 +17,7 @@ func xyCommand() *cobra.Command {
 	var xColumn string
 	var yColumn string
 	var color string
+	var dataColor string
 	var noGrid bool
 	var dataFile string
 	var labelsColumn string
@@ -56,7 +57,10 @@ func xyCommand() *cobra.Command {
 			}
 
 			var reader table.Reader
-			var predictor *som.Predictor
+			var tables []*table.Table
+			var data plotter.XYer
+			var dataCats []string
+			var dataIndices []int
 
 			if dataFile != "" {
 				var err error
@@ -64,23 +68,18 @@ func xyCommand() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				predictor, _, err = createPredictor(config, s, reader)
+				tables, err = config.PrepareTables(reader, false)
 				if err != nil {
 					return err
 				}
-			}
+				data = extractData(config, tables, indices)
 
-			var labels []string
-			var positions []plotter.XY
-
-			if labelsColumn != "" {
-				if dataFile == "" {
-					return fmt.Errorf("data file must be specified when labels column is specified")
-				}
-
-				labels, positions, err = extractLabels(predictor, labelsColumn, reader)
-				if err != nil {
-					return err
+				if dataColor != "" {
+					colorColumn, err := reader.ReadLabels(dataColor)
+					if err != nil {
+						return err
+					}
+					dataCats, dataIndices = conv.ClassesToIndices(colorColumn)
 				}
 			}
 
@@ -99,7 +98,10 @@ func xyCommand() *cobra.Command {
 				classes, classIndices = conv.LayerToClasses(s.Layers()[indices[2][0]])
 			}
 
-			img, err := plot.XY(title, &xy, *s.Size(), size[0], size[1], classes, classIndices, !noGrid, labels, positions)
+			img, err := plot.XY(
+				title, &xy, *s.Size(), size[0], size[1],
+				classes, classIndices, !noGrid,
+				data, dataCats, dataIndices, color != dataColor)
 			if err != nil {
 				return err
 			}
@@ -113,6 +115,7 @@ func xyCommand() *cobra.Command {
 	command.Flags().StringVarP(&color, "color", "c", "", "Column for color")
 
 	command.Flags().BoolVarP(&noGrid, "no-grid", "G", false, "Don't draw SOM grid lines")
+	command.Flags().StringVarP(&dataColor, "data-color", "C", "", "Column for data color")
 
 	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of individual heatmap panels")
 	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required for --labels")
@@ -124,4 +127,15 @@ func xyCommand() *cobra.Command {
 	command.Flags().SortFlags = false
 
 	return command
+}
+
+func extractData(config *som.SomConfig, tables []*table.Table, indices [][2]int) plotter.XYer {
+	return &plot.TableXY{
+		XTable:  tables[indices[0][0]],
+		YTable:  tables[indices[1][0]],
+		XColumn: indices[0][1],
+		YColumn: indices[1][1],
+		XNorm:   config.Layers[indices[0][0]].Norm[indices[0][1]],
+		YNorm:   config.Layers[indices[1][0]].Norm[indices[1][1]],
+	}
 }
