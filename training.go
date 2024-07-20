@@ -10,6 +10,7 @@ import (
 type TrainingConfig struct {
 	LearningRate       decay.Decay
 	NeighborhoodRadius decay.Decay
+	VisualLambda       float64
 }
 
 type Trainer struct {
@@ -56,7 +57,7 @@ func (t *Trainer) epoch(epoch, maxEpoch int) float64 {
 		for j := 0; j < len(t.tables); j++ {
 			data[j] = t.tables[j].GetRow(i)
 		}
-		dist += t.som.learn(data, alpha, radius)
+		dist += t.som.learn(data, alpha, radius, t.params.VisualLambda)
 	}
 
 	return dist / float64(rows)

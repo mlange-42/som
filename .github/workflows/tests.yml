@@ -68,17 +68,31 @@ jobs:
       uses: actions/checkout@v2
     - name: Install dependencies
       run: go get ./...
+    - name: Prepare
+      run: mkdir plots
     - name: Run Countries
       run: |
         go run ./cmd/som train _examples/countries/untrained.yml _examples/countries/data.csv > trained.yml
         go run ./cmd/som export trained.yml
         go run ./cmd/som bmu trained.yml _examples/countries/data.csv -p Country,code,continent
-        go run ./cmd/som plot heatmap trained.yml heatmap.png --data-file _examples/countries/data.csv --labels Country
-        go run ./cmd/som plot u-matrix trained.yml heatmap.png --data-file _examples/countries/data.csv --labels Country
+        go run ./cmd/som plot heatmap trained.yml plots/heatmap-countries.png --data-file _examples/countries/data.csv --labels Country
+        go run ./cmd/som plot u-matrix trained.yml plots/u-matrix-countries.png --data-file _examples/countries/data.csv --labels Country
     - name: Run Iris
       run: |
         go run ./cmd/som train _examples/iris/untrained.yml _examples/iris/data.csv > trained.yml
         go run ./cmd/som export trained.yml
         go run ./cmd/som bmu trained.yml _examples/iris/data.csv -p species
-        go run ./cmd/som plot heatmap trained.yml heatmap.png --data-file _examples/iris/data.csv --labels species
-        go run ./cmd/som plot u-matrix trained.yml heatmap.png --data-file _examples/iris/data.csv --labels species
+        go run ./cmd/som plot heatmap trained.yml plots/heatmap-iris.png --data-file _examples/iris/data.csv --labels species
+        go run ./cmd/som plot u-matrix trained.yml plots/u-matrix-iris.png --data-file _examples/iris/data.csv --labels species
+    - name: Run Cluster 2D ViSOM
+      run: |
+        go run ./cmd/som train _examples/cluster2d/untrained.yml _examples/cluster2d/data.csv -v 0.1 > trained.yml
+        go run ./cmd/som export trained.yml
+        go run ./cmd/som bmu trained.yml _examples/cluster2d/data.csv -p class
+        go run ./cmd/som plot heatmap trained.yml plots/heatmap-cluster2d.png --data-file _examples/cluster2d/data.csv --labels class
+        go run ./cmd/som plot u-matrix trained.yml plots/u-matrix-cluster2d.png --data-file _examples/cluster2d/data.csv --labels class
+    - name: Archive artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: plots
+        path: plots

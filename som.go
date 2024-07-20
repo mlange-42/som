@@ -2,6 +2,7 @@ package som
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"math/rand"
 
@@ -127,11 +128,32 @@ func (s *Som) Neighborhood() neighborhood.Neighborhood {
 	return s.neighborhood
 }
 
-func (s *Som) learn(data [][]float64, alpha, radius float64) float64 {
+func (s *Som) learn(data [][]float64, alpha, radius, lambda float64) float64 {
 	bmuIdx, dist := s.getBMU(data)
-	s.updateWeights(bmuIdx, data, alpha, radius)
+
+	if lambda > 0 {
+		s.updateWeightsVI(bmuIdx, data, alpha, radius, lambda)
+	} else {
+		s.updateWeights(bmuIdx, data, alpha, radius)
+	}
 
 	return dist
+}
+
+func (s *Som) getBMU(data [][]float64) (int, float64) {
+	units := s.size.Width * s.size.Height
+
+	minDist := math.MaxFloat64
+	minIndex := -1
+	for i := 0; i < units; i++ {
+		totalDist := s.distance(data, i)
+		if totalDist < minDist {
+			minDist = totalDist
+			minIndex = i
+		}
+	}
+
+	return minIndex, minDist
 }
 
 func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius float64) {
@@ -144,46 +166,72 @@ func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius float64)
 	xMin, yMin := max(xBmu-lim, 0), max(yBmu-lim, 0)
 	xMax, yMax := min(xBmu+lim, s.size.Width-1), min(yBmu+lim, s.size.Height-1)
 
-	for l, lay := range s.layers {
-		lData := data[l]
-		cols := lay.Columns()
-
-		for x := xMin; x <= xMax; x++ {
-			for y := yMin; y <= yMax; y++ {
-				r := s.neighborhood.Weight(x, y, xBmu, yBmu, radius)
-				if r <= 0 {
-					continue
-				}
-
+	for x := xMin; x <= xMax; x++ {
+		for y := yMin; y <= yMax; y++ {
+			r := s.neighborhood.Weight(x, y, xBmu, yBmu, radius)
+			if r <= 0 {
+				continue
+			}
+			for l, lay := range s.layers {
 				node := lay.GetNode(x, y)
-				for i := 0; i < cols; i++ {
-					if math.IsNaN(lData[i]) {
+				for i := 0; i < lay.Columns(); i++ {
+					d := data[l][i]
+					if math.IsNaN(d) {
 						continue
 					}
-					node[i] += alpha * r * (lData[i] - node[i])
+					node[i] += alpha * r * (d - node[i])
 				}
 			}
 		}
 	}
 }
 
-func (s *Som) getBMU(data [][]float64) (int, float64) {
-	units := s.size.Width * s.size.Height
-
-	minDist := math.MaxFloat64
-	minIndex := -1
-	for i := 0; i < units; i++ {
-		totalDist := s.distances(data, i)
-		if totalDist < minDist {
-			minDist = totalDist
-			minIndex = i
-		}
+func (s *Som) updateWeightsVI(bmuIdx int, data [][]float64, alpha, radius, lambda float64) {
+	lim := s.neighborhood.MaxRadius(radius)
+	if lim < 0 {
+		lim = s.size.Width * s.size.Height
 	}
 
-	return minIndex, minDist
+	xBmu, yBmu := s.size.CoordsAt(bmuIdx)
+	xMin, yMin := max(xBmu-lim, 0), max(yBmu-lim, 0)
+	xMax, yMax := min(xBmu+lim, s.size.Width-1), min(yBmu+lim, s.size.Height-1)
+
+	for x := xMin; x <= xMax; x++ {
+		for y := yMin; y <= yMax; y++ {
+			r := s.neighborhood.Weight(x, y, xBmu, yBmu, radius)
+			if r <= 0 {
+				continue
+			}
+			nodeIdx := s.size.IndexAt(x, y)
+
+			scale := 0.0
+			if x != xBmu || y != yBmu {
+				dataDist := s.nodeDistance(bmuIdx, nodeIdx)
+				mapDist := s.nodeMapDistance(xBmu, yBmu, x, y)
+				scale = dataDist/(lambda*mapDist) - 1
+				if math.IsInf(scale, 1) {
+					log.Fatal("Numeric instability in ViSOM algorithm. Decrease alpha (learning rate) or use a less extreme lambda value (ViSOM resolution parameter).")
+				}
+			}
+
+			for l, lay := range s.layers {
+				bmu := lay.GetNodeAt(bmuIdx)
+				node := lay.GetNodeAt(nodeIdx)
+				for i := 0; i < lay.Columns(); i++ {
+					d := data[l][i]
+					if math.IsNaN(d) {
+						continue
+					}
+					delta := (d - bmu[i]) + (bmu[i]-node[i])*scale
+
+					node[i] += alpha * r * delta
+				}
+			}
+		}
+	}
 }
 
-func (s *Som) distances(data [][]float64, unit int) float64 {
+func (s *Som) distance(data [][]float64, unit int) float64 {
 	totalDist := 0.0
 	for l, layer := range s.layers {
 		node := layer.GetNodeAt(unit)
@@ -193,7 +241,7 @@ func (s *Som) distances(data [][]float64, unit int) float64 {
 	return totalDist
 }
 
-func (s *Som) nodeDistances(unit1, unit2 int) float64 {
+func (s *Som) nodeDistance(unit1, unit2 int) float64 {
 	totalDist := 0.0
 	for _, layer := range s.layers {
 		node1 := layer.GetNodeAt(unit1)
@@ -204,11 +252,17 @@ func (s *Som) nodeDistances(unit1, unit2 int) float64 {
 	return totalDist
 }
 
+func (s *Som) nodeMapDistance(x1, y1, x2, y2 int) float64 {
+	dx := float64(x1 - x2)
+	dy := float64(y1 - y2)
+	return math.Sqrt(dx*dx + dy*dy)
+}
+
 func (s *Som) randomize(rng *rand.Rand) {
 	for _, lay := range s.layers {
 		data := lay.Data()
 		for i := range data {
-			data[i] = rng.Float64()
+			data[i] = rng.Float64() * 0.25
 		}
 	}
 }
@@ -234,11 +288,11 @@ func (s *Som) UMatrix() [][]float64 {
 			nodeHere := s.size.IndexAt(x, y)
 			if x < s.size.Width-1 {
 				nodeRight := s.size.IndexAt(x+1, y)
-				u[y*2][x*2+1] = s.nodeDistances(nodeHere, nodeRight)
+				u[y*2][x*2+1] = s.nodeDistance(nodeHere, nodeRight)
 			}
 			if y < s.size.Height-1 {
 				nodeDown := s.size.IndexAt(x, y+1)
-				u[y*2+1][x*2] = s.nodeDistances(nodeHere, nodeDown)
+				u[y*2+1][x*2] = s.nodeDistance(nodeHere, nodeDown)
 			}
 		}
 	}
