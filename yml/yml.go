@@ -26,7 +26,7 @@ type ymlLayer struct {
 type ymlSom struct {
 	Size         [2]int `yaml:",flow"`
 	Neighborhood string
-	Layers       []ymlLayer
+	Layers       []*ymlLayer
 }
 
 type ymlTraining struct {
@@ -59,15 +59,15 @@ func ToSomConfig(ymlData []byte) (*som.SomConfig, *som.TrainingConfig, error) {
 
 	conf := som.SomConfig{
 		Size:         layer.Size{Width: yml.Som.Size[0], Height: yml.Som.Size[1]},
-		Layers:       []som.LayerDef{},
+		Layers:       []*som.LayerDef{},
 		Neighborhood: neigh,
 	}
 	for _, l := range yml.Som.Layers {
-		lay, err := createLayer(&yml.Som, &l)
-		if !ok {
+		lay, err := createLayer(&yml.Som, l)
+		if err != nil {
 			return nil, nil, err
 		}
-		conf.Layers = append(conf.Layers, *lay)
+		conf.Layers = append(conf.Layers, lay)
 	}
 
 	var training *som.TrainingConfig
@@ -139,7 +139,7 @@ func createLayer(s *ymlSom, l *ymlLayer) (*som.LayerDef, error) {
 func ToYAML(som *som.Som) ([]byte, error) {
 	yml := ymlSom{
 		Size:         [2]int{som.Size().Width, som.Size().Height},
-		Layers:       []ymlLayer{},
+		Layers:       []*ymlLayer{},
 		Neighborhood: som.Neighborhood().Name(),
 	}
 	for _, l := range som.Layers() {
@@ -155,7 +155,7 @@ func ToYAML(som *som.Som) ([]byte, error) {
 			norms = nil
 		}
 
-		yml.Layers = append(yml.Layers, ymlLayer{
+		yml.Layers = append(yml.Layers, &ymlLayer{
 			Name:        l.Name(),
 			Columns:     l.ColumnNames(),
 			Norm:        norms,

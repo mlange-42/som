@@ -16,7 +16,7 @@ func TestNewTrainer(t *testing.T) {
 	params := TrainingConfig{}
 	somParams := SomConfig{
 		Size: layer.Size{Width: 2, Height: 3},
-		Layers: []LayerDef{
+		Layers: []*LayerDef{
 			{
 				Columns: []string{"x", "y"},
 				Weight:  0.5,
@@ -69,7 +69,7 @@ func TestTrainerDecay(t *testing.T) {
 	}
 	somParams := SomConfig{
 		Size: layer.Size{Width: 2, Height: 3},
-		Layers: []LayerDef{
+		Layers: []*LayerDef{
 			{
 				Columns: []string{"x", "y"},
 				Weight:  0.5,
@@ -112,7 +112,7 @@ func TestTrainerTrain(t *testing.T) {
 	}
 	somParams := SomConfig{
 		Size: layer.Size{Width: 2, Height: 3},
-		Layers: []LayerDef{
+		Layers: []*LayerDef{
 			{
 				Columns: []string{"x", "y"},
 				Weight:  0.5,
