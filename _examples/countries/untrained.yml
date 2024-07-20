@@ -1,5 +1,5 @@
 som:
-  size: [12, 10]
+  size: [12, 8]
   neighborhood: gaussian
   metric: manhattan
   layers:
@@ -23,3 +23,8 @@ som:
       metric: hamming
       categorical: true
       weight: 0.25
+training:
+  epochs: 2500
+  alpha: polynomial 0.25 0.01 2
+  radius: polynomial 10 0.8 2
+  lambda: 0.3

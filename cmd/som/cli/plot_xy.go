@@ -111,8 +111,8 @@ func xyCommand() *cobra.Command {
 		},
 	}
 
-	command.Flags().StringVarP(&xColumn, "x-column", "x", "x", "Column for x axis")
-	command.Flags().StringVarP(&yColumn, "y-column", "y", "y", "Column for y axis")
+	command.Flags().StringVarP(&xColumn, "x-column", "x", "", "Column for x axis")
+	command.Flags().StringVarP(&yColumn, "y-column", "y", "", "Column for y axis")
 	command.Flags().StringVarP(&color, "color", "c", "", "Column for color")
 
 	command.Flags().BoolVarP(&noGrid, "no-grid", "G", false, "Don't draw SOM grid lines")
@@ -127,6 +127,9 @@ func xyCommand() *cobra.Command {
 
 	command.Flags().SortFlags = false
 	command.MarkFlagFilename("data-file", "csv")
+
+	command.MarkFlagRequired("x-column")
+	command.MarkFlagRequired("y-column")
 
 	return command
 }
