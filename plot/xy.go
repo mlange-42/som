@@ -71,10 +71,9 @@ func XY(
 	l.YOffs = font.Length(-titleHeight) // Adjust the legend down a little.
 	l.XOffs = -2 * vg.Millimeter
 
+	dcPlot := draw.Crop(dc, 0, -legendWidth-vg.Millimeter, 0, 0) // Make space for the legend.
+	p.Draw(dcPlot)
 	l.Draw(dc)
-
-	dc = draw.Crop(dc, 0, -legendWidth-vg.Millimeter, 0, 0) // Make space for the legend.
-	p.Draw(dc)
 
 	return img.Image(), nil
 }
