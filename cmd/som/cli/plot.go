@@ -17,6 +17,7 @@ func plotCommand() *cobra.Command {
 	command.AddCommand(heatmapCommand())
 	command.AddCommand(uMatrixCommand())
 	command.AddCommand(xyCommand())
+	command.AddCommand(densityCommand())
 
 	return command
 }

@@ -11,7 +11,7 @@ import (
 	"gonum.org/v1/plot/plotter"
 )
 
-func uMatrixCommand() *cobra.Command {
+func densityCommand() *cobra.Command {
 	var size []int
 	var dataFile string
 	var labelsColumn string
@@ -19,9 +19,9 @@ func uMatrixCommand() *cobra.Command {
 	var noData string
 
 	command := &cobra.Command{
-		Use:   "u-matrix [flags] <som-file> <out-file>",
-		Short: "Plots the u-matrix of an SOM",
-		Long:  `Plots the u-matrix of an SOM`,
+		Use:   "density [flags] <som-file> <out-file>",
+		Short: "Plots the data density of an SOM as a heatmap",
+		Long:  `Plots the data density of an SOM as a heatmap`,
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]
@@ -43,35 +43,28 @@ func uMatrixCommand() *cobra.Command {
 			var reader table.Reader
 			var predictor *som.Predictor
 
-			if dataFile != "" {
-				var err error
-				reader, err = csv.NewFileReader(dataFile, del[0], noData)
-				if err != nil {
-					return err
-				}
-				predictor, _, err = createPredictor(config, s, reader)
-				if err != nil {
-					return err
-				}
+			reader, err = csv.NewFileReader(dataFile, del[0], noData)
+			if err != nil {
+				return err
+			}
+			predictor, _, err = createPredictor(config, s, reader)
+			if err != nil {
+				return err
 			}
 
 			var labels []string
 			var positions []plotter.XY
 
 			if labelsColumn != "" {
-				if dataFile == "" {
-					return fmt.Errorf("data file must be specified when labels column is specified")
-				}
-
 				labels, positions, err = extractLabels(predictor, labelsColumn, reader)
 				if err != nil {
 					return err
 				}
 			}
 
-			uMatrix := s.UMatrix()
-			grid := &plot.UMatrixGrid{UMatrix: uMatrix}
-			title := "U-Matrix"
+			density := getDensity(predictor)
+			grid := &plot.IntGrid{Size: *s.Size(), Values: density}
+			title := "Density of data"
 
 			img, err := plot.Heatmap(title, grid, size[0], size[1], nil, labels, positions)
 			if err != nil {
@@ -83,14 +76,24 @@ func uMatrixCommand() *cobra.Command {
 	}
 
 	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of individual heatmap panels")
-	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required for --labels")
+	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required")
 	command.Flags().StringVarP(&labelsColumn, "labels", "l", "", "Labels column in the data file")
 
 	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")
 	command.Flags().StringVarP(&noData, "no-data", "n", "", "No-data value (default \"\")")
 
 	command.Flags().SortFlags = false
+	command.MarkFlagRequired("data-file")
 	command.MarkFlagFilename("data-file", "csv")
 
 	return command
+}
+
+func getDensity(predictor *som.Predictor) []int {
+	bmu := predictor.GetBMU()
+	counter := make([]int, predictor.Som().Size().Nodes())
+	for _, idx := range bmu {
+		counter[idx]++
+	}
+	return counter
 }

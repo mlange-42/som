@@ -56,7 +56,7 @@ func TestPredictorGetBMU(t *testing.T) {
 	p, err := NewPredictor(som, tables)
 	assert.NoError(t, err)
 
-	bmu, err := p.GetBMU()
+	bmu, err := p.GetBMUTable()
 	assert.NoError(t, err)
 
 	assert.Equal(t, 6, bmu.Rows())

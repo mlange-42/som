@@ -29,25 +29,47 @@ func (g *SomLayerGrid) Y(r int) float64 {
 	return float64(r)
 }
 
-type ClassesGrid struct {
-	Size    layer.Size
-	Indices []int
+type IntGrid struct {
+	Size   layer.Size
+	Values []int
 }
 
-func (g *ClassesGrid) Dims() (c, r int) {
+func (g *IntGrid) Dims() (c, r int) {
 	return g.Size.Width, g.Size.Height
 }
 
-func (g *ClassesGrid) Z(c, r int) float64 {
+func (g *IntGrid) Z(c, r int) float64 {
 	idx := r + c*g.Size.Height
-	return float64(g.Indices[idx])
+	return float64(g.Values[idx])
 }
 
-func (g *ClassesGrid) X(c int) float64 {
+func (g *IntGrid) X(c int) float64 {
 	return float64(c)
 }
 
-func (g *ClassesGrid) Y(r int) float64 {
+func (g *IntGrid) Y(r int) float64 {
+	return float64(r)
+}
+
+type FloatGrid struct {
+	Size   layer.Size
+	Values []float64
+}
+
+func (g *FloatGrid) Dims() (c, r int) {
+	return g.Size.Width, g.Size.Height
+}
+
+func (g *FloatGrid) Z(c, r int) float64 {
+	idx := r + c*g.Size.Height
+	return g.Values[idx]
+}
+
+func (g *FloatGrid) X(c int) float64 {
+	return float64(c)
+}
+
+func (g *FloatGrid) Y(r int) float64 {
 	return float64(r)
 }
 

@@ -107,7 +107,7 @@ func heatmapCommand() *cobra.Command {
 					title = l.Name()
 					var classIndices []int
 					classes, classIndices = conv.LayerToClasses(l)
-					grid = &plot.ClassesGrid{Size: *s.Size(), Indices: classIndices}
+					grid = &plot.IntGrid{Size: *s.Size(), Values: classIndices}
 				}
 
 				subImg, err := plot.Heatmap(title, grid, size[0], size[1], classes, labels, positions)
@@ -132,6 +132,8 @@ func heatmapCommand() *cobra.Command {
 	command.Flags().StringVarP(&noData, "no-data", "n", "", "No-data value (default \"\")")
 
 	command.Flags().SortFlags = false
+
+	command.MarkFlagFilename("data-file", "csv")
 
 	return command
 }
@@ -235,7 +237,7 @@ func extractLabels(predictor *som.Predictor,
 		return nil, nil, err
 	}
 
-	bmu, err := predictor.GetBMU()
+	bmu, err := predictor.GetBMUTable()
 	if err != nil {
 		return nil, nil, err
 	}
