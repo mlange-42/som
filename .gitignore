@@ -9,3 +9,4 @@
 *.xlsx
 /*.yml
 out/
+/test/

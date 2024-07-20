@@ -6,8 +6,11 @@ import (
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/layer"
+	"github.com/mlange-42/som/norm"
+	"github.com/mlange-42/som/table"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/font"
+	"gonum.org/v1/plot/palette"
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/vg"
 	"gonum.org/v1/plot/vg/draw"
@@ -17,7 +20,8 @@ import (
 func XY(
 	title string, g plotter.XYer, size layer.Size, width, height int,
 	categories []string, catIndices []int, drawGrid bool,
-	labels []string, positions []plotter.XY,
+	data plotter.XYer, dataCats []string, dataIndices []int,
+	dataLegend bool,
 ) (image.Image, error) {
 
 	p := plot.New()
@@ -26,26 +30,21 @@ func XY(
 
 	titleHeight := p.Title.TextStyle.FontExtents().Height.Points()
 
-	pal := NewRandomPalette(len(categories))
-	h, err := plotter.NewScatter(g)
+	var dataPalette palette.Palette
+	if data != nil {
+		dataScatter, err := plotter.NewScatter(data)
+		if err != nil {
+			return nil, err
+		}
+		dataPalette = setMarkerStyle(dataScatter, dataCats, dataIndices, 1.2, color.NRGBA{R: 80, G: 100, B: 240, A: 255})
+		p.Add(dataScatter)
+	}
+
+	nodesScatter, err := plotter.NewScatter(g)
 	if err != nil {
 		return nil, err
 	}
-	if len(categories) > 0 {
-		h.GlyphStyleFunc = func(i int) draw.GlyphStyle {
-			cat := catIndices[i]
-			return draw.GlyphStyle{
-				Color:  pal.Colors()[cat],
-				Shape:  draw.CircleGlyph{},
-				Radius: vg.Length(3),
-			}
-		}
-	} else {
-		h.GlyphStyle = draw.GlyphStyle{
-			Shape:  draw.CircleGlyph{},
-			Radius: vg.Length(3),
-		}
-	}
+	nodePalette := setMarkerStyle(nodesScatter, categories, catIndices, 2.5, color.Black)
 
 	if drawGrid {
 		err := addMapGrid(size, p, g)
@@ -55,12 +54,23 @@ func XY(
 	}
 
 	p.Title.Text = title
-	p.Add(h)
+	p.Add(nodesScatter)
 
-	thumbs := plotter.PaletteThumbnailers(pal)
-	for i := len(thumbs) - 1; i >= 0; i-- {
-		t := thumbs[i]
-		l.Add(categories[i], t)
+	if len(categories) > 0 {
+		thumbs := plotter.PaletteThumbnailers(nodePalette)
+		for i := len(thumbs) - 1; i >= 0; i-- {
+			t := thumbs[i]
+			l.Add(categories[i], t)
+		}
+	}
+	if dataPalette != nil && (dataLegend || len(categories) == 0) {
+		filler := plotter.PaletteThumbnailers(&WhitePalette{})
+		l.Add("", filler[0])
+		thumbs := plotter.PaletteThumbnailers(dataPalette)
+		for i := len(thumbs) - 1; i >= 0; i-- {
+			t := thumbs[i]
+			l.Add(dataCats[i], t)
+		}
 	}
 
 	img := vgimg.NewWith(vgimg.UseWH(font.Length(width), font.Length(height)), vgimg.UseDPI(72))
@@ -71,12 +81,33 @@ func XY(
 	l.YOffs = font.Length(-titleHeight) // Adjust the legend down a little.
 	l.XOffs = -2 * vg.Millimeter
 
+	dcPlot := draw.Crop(dc, 0, -legendWidth-vg.Millimeter, 0, 0) // Make space for the legend.
+	p.Draw(dcPlot)
 	l.Draw(dc)
 
-	dc = draw.Crop(dc, 0, -legendWidth-vg.Millimeter, 0, 0) // Make space for the legend.
-	p.Draw(dc)
-
 	return img.Image(), nil
+}
+
+func setMarkerStyle(plot *plotter.Scatter, categories []string, catIndices []int, size float64, color color.Color) palette.Palette {
+	pal := NewRandomPalette(len(categories))
+	if len(catIndices) > 0 {
+		plot.GlyphStyleFunc = func(i int) draw.GlyphStyle {
+			cat := catIndices[i]
+			return draw.GlyphStyle{
+				Color:  pal.Colors()[cat],
+				Shape:  draw.CircleGlyph{},
+				Radius: vg.Length(size),
+			}
+		}
+	} else {
+		plot.GlyphStyle = draw.GlyphStyle{
+			Shape:  draw.CircleGlyph{},
+			Radius: vg.Length(size),
+			Color:  color,
+		}
+	}
+
+	return pal
 }
 
 func addMapGrid(size layer.Size, p *plot.Plot, g plotter.XYer) error {
@@ -162,4 +193,22 @@ func (s *SomRowColXY) Len() int {
 		return s.Size.Width
 	}
 	return s.Size.Height
+}
+
+type TableXY struct {
+	XTable  *table.Table
+	YTable  *table.Table
+	XColumn int
+	YColumn int
+	XNorm   norm.Normalizer
+	YNorm   norm.Normalizer
+}
+
+func (t *TableXY) XY(i int) (x, y float64) {
+	vx, vy := t.XTable.Get(i, t.XColumn), t.YTable.Get(i, t.YColumn)
+	return t.XNorm.DeNormalize(vx), t.YNorm.DeNormalize(vy)
+}
+
+func (t *TableXY) Len() int {
+	return t.XTable.Rows()
 }

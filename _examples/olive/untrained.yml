@@ -1,0 +1,27 @@
+som:
+  size: [20, 12]
+  neighborhood: gaussian
+  metric: manhattan
+  layers:
+    - name: Acids
+      columns:
+        - palmitic
+        - palmitoleic
+        - stearic
+        - oleic
+        - linoleic
+        - linolenic
+        - arachidic
+        - eicosenoic
+      norm: [gaussian]
+      metric: euclidean
+      weight: 1
+    - name: area
+      metric: hamming
+      categorical: true
+      weight: 0.1
+training:
+  epochs: 2500
+  alpha: polynomial 0.25 0.01 2
+  radius: polynomial 20 1.5 2
+  lambda: 0.2
