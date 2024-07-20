@@ -477,7 +477,7 @@ func BenchmarkUpdateWeights_5x5x3_Gaussian2(b *testing.B) {
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		som.updateWeights(bmu, data, 0.5, 2.0, 0.0)
+		som.updateWeights(bmu, data, 0.01, 2.0, 0.0)
 	}
 }
 
@@ -490,7 +490,7 @@ func BenchmarkUpdateWeights_10x10x5_Gaussian2(b *testing.B) {
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		som.updateWeights(bmu, data, 0.5, 2.0, 0.0)
+		som.updateWeights(bmu, data, 0.01, 2.0, 0.0)
 	}
 }
 
@@ -503,7 +503,7 @@ func BenchmarkUpdateWeights_5x5x3_Linear2(b *testing.B) {
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		som.updateWeights(bmu, data, 0.5, 2.0, 0.0)
+		som.updateWeights(bmu, data, 0.01, 2.0, 0.0)
 	}
 }
 
@@ -516,7 +516,59 @@ func BenchmarkUpdateWeights_10x10x5_Linear2(b *testing.B) {
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		som.updateWeights(bmu, data, 0.5, 2.0, 0.0)
+		som.updateWeights(bmu, data, 0.01, 2.0, 0.0)
+	}
+}
+
+func BenchmarkUpdateWeightsViSOM_5x5x3_Gaussian2(b *testing.B) {
+	b.StopTimer()
+	som := createBenchSom(5, 5, 3, &neighborhood.Gaussian{})
+	data := [][]float64{{1.0, 2.0, 3.0}}
+
+	bmu, _ := som.getBMU(data)
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		som.updateWeights(bmu, data, 0.01, 2.0, 0.1)
+	}
+}
+
+func BenchmarkUpdateWeightsViSOM_10x10x5_Gaussian2(b *testing.B) {
+	b.StopTimer()
+	som := createBenchSom(10, 10, 5, &neighborhood.Gaussian{})
+	data := [][]float64{{1.0, 2.0, 3.0, 4.0, 5.0}}
+
+	bmu, _ := som.getBMU(data)
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		som.updateWeights(bmu, data, 0.01, 2.0, 0.1)
+	}
+}
+
+func BenchmarkUpdateWeightsViSOM_5x5x3_Linear2(b *testing.B) {
+	b.StopTimer()
+	som := createBenchSom(5, 5, 3, &neighborhood.Linear{})
+	data := [][]float64{{1.0, 2.0, 3.0}}
+
+	bmu, _ := som.getBMU(data)
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		som.updateWeights(bmu, data, 0.01, 2.0, 0.1)
+	}
+}
+
+func BenchmarkUpdateWeightsViSOM_10x10x5_Linear2(b *testing.B) {
+	b.StopTimer()
+	som := createBenchSom(10, 10, 5, &neighborhood.Linear{})
+	data := [][]float64{{1.0, 2.0, 3.0, 4.0, 5.0}}
+
+	bmu, _ := som.getBMU(data)
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		som.updateWeights(bmu, data, 0.01, 2.0, 0.1)
 	}
 }
 
