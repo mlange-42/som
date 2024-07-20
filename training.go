@@ -58,6 +58,16 @@ func (t *Trainer) epoch(epoch, maxEpoch int) float64 {
 			data[j] = t.tables[j].GetRow(i)
 		}
 		dist += t.som.learn(data, alpha, radius, t.params.VisualLambda)
+
+		if t.params.VisualLambda == 0 || i%10 != 0 { // SOM
+			continue
+		}
+		// ViSOM refresh: present random node as data
+		node := t.rng.Intn(t.som.size.Width * t.som.size.Height)
+		for j := 0; j < len(t.tables); j++ {
+			data[j] = t.som.layers[j].GetNodeAt(node)
+		}
+		t.som.learn(data, alpha, radius, t.params.VisualLambda)
 	}
 
 	return dist / float64(rows)
