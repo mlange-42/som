@@ -127,7 +127,10 @@ type SomXY struct {
 }
 
 func (s *SomXY) XY(i int) (x, y float64) {
-	return s.Som.Layers()[s.XLayer].GetAt(i, s.XColumn), s.Som.Layers()[s.YLayer].GetAt(i, s.YColumn)
+	lx := s.Som.Layers()[s.XLayer]
+	ly := s.Som.Layers()[s.YLayer]
+	vx, vy := lx.GetAt(i, s.XColumn), ly.GetAt(i, s.YColumn)
+	return lx.Normalizers()[s.XColumn].DeNormalize(vx), ly.Normalizers()[s.YColumn].DeNormalize(vy)
 }
 
 func (s *SomXY) Len() int {
