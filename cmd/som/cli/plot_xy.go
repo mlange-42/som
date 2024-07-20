@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/mlange-42/som"
+	"github.com/mlange-42/som/conv"
 	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/plot"
 	"github.com/mlange-42/som/table"
@@ -13,7 +14,9 @@ import (
 
 func xyCommand() *cobra.Command {
 	var size []int
-	var columns []string
+	var xColumn string
+	var yColumn string
+	var color string
 	var dataFile string
 	var labelsColumn string
 	var delim string
@@ -39,6 +42,11 @@ func xyCommand() *cobra.Command {
 			config, s, err := readSom(somFile)
 			if err != nil {
 				return err
+			}
+
+			columns := []string{xColumn, yColumn}
+			if color != "" {
+				columns = append(columns, color)
 			}
 
 			_, indices, err := extractIndices(s, columns)
@@ -84,7 +92,13 @@ func xyCommand() *cobra.Command {
 				YColumn: indices[1][1],
 			}
 
-			img, err := plot.XY(title, &xy, size[0], size[1], nil, labels, positions)
+			var classes []string
+			var classIndices []int
+			if len(indices) > 2 {
+				classes, classIndices = conv.LayerToClasses(s.Layers()[indices[2][0]])
+			}
+
+			img, err := plot.XY(title, &xy, size[0], size[1], classes, classIndices, labels, positions)
 			if err != nil {
 				return err
 			}
@@ -93,7 +107,10 @@ func xyCommand() *cobra.Command {
 		},
 	}
 
-	command.Flags().StringSliceVarP(&columns, "columns", "c", nil, "Columns to use for the heatmap (default all)")
+	command.Flags().StringVarP(&xColumn, "x-column", "x", "x", "Column for x axis")
+	command.Flags().StringVarP(&yColumn, "y-column", "y", "y", "Column for y axis")
+	command.Flags().StringVarP(&color, "color", "c", "", "Column for color")
+
 	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of individual heatmap panels")
 	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required for --labels")
 	command.Flags().StringVarP(&labelsColumn, "labels", "l", "", "Labels column in the data file")

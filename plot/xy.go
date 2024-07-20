@@ -12,7 +12,7 @@ import (
 	"gonum.org/v1/plot/vg/vgimg"
 )
 
-func XY(title string, g plotter.XYer, width, height int, categories []string, labels []string, positions []plotter.XY) (image.Image, error) {
+func XY(title string, g plotter.XYer, width, height int, categories []string, catIndices []int, labels []string, positions []plotter.XY) (image.Image, error) {
 	p := plot.New()
 	l := plot.NewLegend()
 	p.Title.TextStyle.Font.Size = 16
@@ -24,9 +24,23 @@ func XY(title string, g plotter.XYer, width, height int, categories []string, la
 	if err != nil {
 		return nil, err
 	}
+	if len(categories) > 0 {
+		h.GlyphStyleFunc = func(i int) draw.GlyphStyle {
+			cat := catIndices[i]
+			return draw.GlyphStyle{
+				Color:  pal.Colors()[cat],
+				Shape:  draw.CircleGlyph{},
+				Radius: vg.Length(3),
+			}
+		}
+	} else {
+		h.GlyphStyle = draw.GlyphStyle{
+			Shape:  draw.CircleGlyph{},
+			Radius: vg.Length(3),
+		}
+	}
 
 	p.Title.Text = title
-	//p.HideAxes()
 	p.Add(h)
 
 	thumbs := plotter.PaletteThumbnailers(pal)
