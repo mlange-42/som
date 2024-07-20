@@ -1,6 +1,7 @@
 som:
   size: [8, 6]
   neighborhood: gaussian
+  metric: manhattan
   layers:
     - name: Scalars
       columns:

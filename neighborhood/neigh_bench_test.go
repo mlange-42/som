@@ -9,14 +9,14 @@ import (
 func benchmarkNeighborhood(b *testing.B, g neighborhood.Neighborhood) {
 	b.StopTimer()
 
-	x1, y1, x2, y2 := 1, 0, 0, -1
+	dist := 2.0
 	radius := 3.0
 
 	var w float64
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		w = g.Weight(x1, y1, x2, y2, radius)
+		w = g.Weight(dist, radius)
 	}
 	b.StopTimer()
 

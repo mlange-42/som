@@ -270,6 +270,7 @@ func createSom() *Som {
 			},
 		},
 		Neighborhood: &neighborhood.Linear{},
+		MapMetric:    &neighborhood.Manhattan{},
 	}
 
 	som, err := New(&params)
@@ -411,7 +412,8 @@ func TestNodeDistance(t *testing.T) {
 
 func TestNodeMapDistance(t *testing.T) {
 	config := SomConfig{
-		Size: layer.Size{Width: 2, Height: 2},
+		Size:      layer.Size{Width: 2, Height: 2},
+		MapMetric: &neighborhood.Euclidean{},
 		Layers: []*LayerDef{
 			{
 				Columns: []string{"x", "y"},
@@ -431,9 +433,9 @@ func TestNodeMapDistance(t *testing.T) {
 		panic(err)
 	}
 
-	assert.InDelta(t, 1, som.nodeMapDistance(0, 0, 1, 0), 0.001)
-	assert.InDelta(t, 1, som.nodeMapDistance(0, 1, 1, 1), 0.001)
-	assert.InDelta(t, math.Sqrt(2), som.nodeMapDistance(0, 0, 1, 1), 0.001)
+	assert.InDelta(t, 1, som.MapMetric().Distance(0, 0, 1, 0), 0.001)
+	assert.InDelta(t, 1, som.MapMetric().Distance(0, 1, 1, 1), 0.001)
+	assert.InDelta(t, math.Sqrt(2), som.MapMetric().Distance(0, 0, 1, 1), 0.001)
 }
 
 func BenchmarkGetBMU_5x5x3(b *testing.B) {
@@ -587,6 +589,7 @@ func createBenchSom(width, height int, dims int, neigh neighborhood.Neighborhood
 			},
 		},
 		Neighborhood: neigh,
+		MapMetric:    &neighborhood.Manhattan{},
 	}
 
 	som, err := New(&params)

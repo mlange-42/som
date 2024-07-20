@@ -17,6 +17,7 @@ func TestToSomConfig(t *testing.T) {
 som:
   size: [4, 3]
   neighborhood: gaussian
+  metric: manhattan
   layers:
   - name: layer1
     columns: [a, b, c]
@@ -72,6 +73,7 @@ som:
 som:
   size: [10, 8]
   neighborhood: unknown
+  metric: manhattan
   layers:
   - columns: [a, b, c]
     metric: euclidean
@@ -85,11 +87,31 @@ som:
 		assert.Contains(t, err.Error(), "unknown neighborhood: unknown")
 	})
 
-	t.Run("Unknown metric", func(t *testing.T) {
+	t.Run("Unknown neighborhood metric", func(t *testing.T) {
 		ymlData := []byte(`
 som:
   size: [10, 8]
   neighborhood: gaussian
+  metric: unknown
+  layers:
+  - columns: [a, b, c]
+    metric: euclidean
+    weight: 1.0
+`)
+
+		config, _, err := ToSomConfig(ymlData)
+
+		assert.Error(t, err)
+		assert.Nil(t, config)
+		assert.Contains(t, err.Error(), "unknown neighborhood metric: unknown")
+	})
+
+	t.Run("Unknown layer metric", func(t *testing.T) {
+		ymlData := []byte(`
+som:
+  size: [10, 8]
+  neighborhood: gaussian
+  metric: manhattan
   layers:
     - columns: [a, b, c]
       metric: unknown
@@ -108,6 +130,7 @@ som:
 som:
   size: [4, 3]
   neighborhood: gaussian
+  metric: manhattan
   layers:
     - name: Layer A
       columns: [a, b, c]
@@ -137,6 +160,7 @@ func TestToYAML(t *testing.T) {
 som:
   size: [4, 3]
   neighborhood: gaussian
+  metric: manhattan
   layers:
   - name: layer1
     columns: [a, b, c]
@@ -161,6 +185,7 @@ som:
 	expected := `som:
   size: [4, 3]
   neighborhood: gaussian
+  metric: manhattan
   layers:
     - name: layer1
       columns: [a, b, c]
