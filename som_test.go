@@ -270,7 +270,7 @@ func createSom() *Som {
 			},
 		},
 		Neighborhood: &neighborhood.Linear{},
-		MapMetric:    &neighborhood.Manhattan{},
+		MapMetric:    &neighborhood.ManhattanMetric{},
 	}
 
 	som, err := New(&params)
@@ -413,7 +413,7 @@ func TestNodeDistance(t *testing.T) {
 func TestNodeMapDistance(t *testing.T) {
 	config := SomConfig{
 		Size:      layer.Size{Width: 2, Height: 2},
-		MapMetric: &neighborhood.Euclidean{},
+		MapMetric: &neighborhood.EuclideanMetric{},
 		Layers: []*LayerDef{
 			{
 				Columns: []string{"x", "y"},
@@ -589,7 +589,7 @@ func createBenchSom(width, height int, dims int, neigh neighborhood.Neighborhood
 			},
 		},
 		Neighborhood: neigh,
-		MapMetric:    &neighborhood.Manhattan{},
+		MapMetric:    &neighborhood.ManhattanMetric{},
 	}
 
 	som, err := New(&params)
