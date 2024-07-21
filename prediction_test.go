@@ -38,12 +38,12 @@ func TestPredictorGetBMU(t *testing.T) {
 	assert.NoError(t, err)
 
 	tab, err := table.NewWithData([]string{"x", "y"}, []float64{
-		0, 0,
+		-2, 0,
 		0, 1,
 		1, 0,
 		1, 1,
 		2, 0,
-		2, 1,
+		2, 2,
 	})
 	assert.NoError(t, err)
 
@@ -60,13 +60,13 @@ func TestPredictorGetBMU(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, 6, bmu.Rows())
-	assert.Equal(t, 3, bmu.Columns())
+	assert.Equal(t, 4, bmu.Columns())
 	assert.Equal(t, []float64{
-		0, 0, 0,
-		1, 0, 1,
-		2, 1, 0,
-		3, 1, 1,
-		4, 2, 0,
-		5, 2, 1,
+		0, 0, 0, 2,
+		1, 0, 1, 0,
+		2, 1, 0, 0,
+		3, 1, 1, 0,
+		4, 2, 0, 0,
+		5, 2, 1, 1,
 	}, bmu.Data())
 }

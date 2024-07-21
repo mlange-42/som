@@ -1,7 +1,14 @@
 package cli
 
 import (
+	"fmt"
+
+	"github.com/mlange-42/som"
+	"github.com/mlange-42/som/csv"
+	"github.com/mlange-42/som/plot"
+	"github.com/mlange-42/som/table"
 	"github.com/spf13/cobra"
+	"gonum.org/v1/plot/plotter"
 )
 
 func plotCommand() *cobra.Command {
@@ -18,6 +25,64 @@ func plotCommand() *cobra.Command {
 	command.AddCommand(uMatrixCommand())
 	command.AddCommand(xyCommand())
 	command.AddCommand(densityCommand())
+	command.AddCommand(errorCommand())
 
 	return command
+}
+
+func plotHeatmap(size []int,
+	somFile, outFile, dataFile,
+	labelsColumn, delim, noData string,
+	title string,
+	getData func(s *som.Som, p *som.Predictor) plotter.GridXYZ) error {
+
+	del := []rune(delim)
+	if len(delim) != 1 {
+		return fmt.Errorf("delimiter must be a single character")
+	}
+	if len(size) != 2 {
+		return fmt.Errorf("size must be two integers")
+	}
+
+	config, s, err := readSom(somFile)
+	if err != nil {
+		return err
+	}
+
+	var reader table.Reader
+	var predictor *som.Predictor
+
+	if dataFile != "" {
+		var err error
+		reader, err = csv.NewFileReader(dataFile, del[0], noData)
+		if err != nil {
+			return err
+		}
+		predictor, _, err = createPredictor(config, s, reader)
+		if err != nil {
+			return err
+		}
+	}
+
+	var labels []string
+	var positions []plotter.XY
+
+	if labelsColumn != "" {
+		if dataFile == "" {
+			return fmt.Errorf("data file must be specified when labels column is specified")
+		}
+		labels, positions, err = extractLabels(predictor, labelsColumn, reader)
+		if err != nil {
+			return err
+		}
+	}
+
+	grid := getData(s, predictor)
+
+	img, err := plot.Heatmap(title, grid, size[0], size[1], nil, labels, positions)
+	if err != nil {
+		return err
+	}
+
+	return writeImage(img, outFile)
 }
