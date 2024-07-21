@@ -48,7 +48,7 @@ func NewTrainer(som *Som, tables []*table.Table, params *TrainingConfig, rng *ra
 // and sends the training progress information (epoch, learning rate, neighborhood radius, mean distance,
 // and quantization error) to the provided progress channel.
 // After all epochs are completed, the channel is closed.
-func (t *Trainer) Train(progress chan *TrainingProgress) {
+func (t *Trainer) Train(progress chan TrainingProgress) {
 	t.som.Randomize(t.rng)
 
 	var meanDist float64
@@ -65,7 +65,7 @@ func (t *Trainer) Train(progress chan *TrainingProgress) {
 		p.MeanDist = meanDist
 		p.Error = qError
 
-		progress <- &p
+		progress <- p
 	}
 
 	close(progress)

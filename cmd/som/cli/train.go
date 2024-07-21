@@ -165,12 +165,12 @@ func runTraining(config *som.SomConfig, trainingConfig *som.TrainingConfig,
 	}
 	tracker := newProgressTracker(trainingConfig.Epochs, tables[0].Rows(), writer, writeInterval, csvDelim)
 
-	progress := make(chan *som.TrainingProgress, 100)
+	progress := make(chan som.TrainingProgress, 100)
 	go trainer.Train(progress)
 
 	epoch := 0
 	for p := range progress {
-		tracker.Update(epoch, p)
+		tracker.Update(epoch, &p)
 		epoch++
 	}
 

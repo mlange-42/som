@@ -72,7 +72,7 @@ func Example() {
 	_ = trainer
 
 	// Create a channel for training progress updates
-	progress := make(chan *som.TrainingProgress)
+	progress := make(chan som.TrainingProgress)
 
 	// Run SOM training asynchronously
 	go trainer.Train(progress)
