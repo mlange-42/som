@@ -18,6 +18,7 @@ func plotCommand() *cobra.Command {
 	command.AddCommand(uMatrixCommand())
 	command.AddCommand(xyCommand())
 	command.AddCommand(densityCommand())
+	command.AddCommand(errorCommand())
 
 	return command
 }

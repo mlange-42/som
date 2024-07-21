@@ -60,7 +60,7 @@ func TestPredictorGetBMU(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, 6, bmu.Rows())
-	assert.Equal(t, 3, bmu.Columns())
+	assert.Equal(t, 4, bmu.Columns())
 	assert.Equal(t, []float64{
 		0, 0, 0,
 		1, 0, 1,

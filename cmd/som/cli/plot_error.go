@@ -11,17 +11,18 @@ import (
 	"gonum.org/v1/plot/plotter"
 )
 
-func densityCommand() *cobra.Command {
+func errorCommand() *cobra.Command {
 	var size []int
 	var dataFile string
 	var labelsColumn string
 	var delim string
 	var noData string
+	var rmse bool
 
 	command := &cobra.Command{
-		Use:   "density [flags] <som-file> <out-file>",
-		Short: "Plots the data density of an SOM as a heatmap",
-		Long:  `Plots the data density of an SOM as a heatmap`,
+		Use:   "error [flags] <som-file> <out-file>",
+		Short: "Plots mean-squared node error as a heatmap",
+		Long:  `Plots mean-squared node error as a heatmap`,
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]
@@ -62,9 +63,9 @@ func densityCommand() *cobra.Command {
 				}
 			}
 
-			density := predictor.GetDensity()
-			grid := &plot.IntGrid{Size: *s.Size(), Values: density}
-			title := "Density of data"
+			mse := predictor.GetError(rmse)
+			grid := &plot.FloatGrid{Size: *s.Size(), Values: mse}
+			title := "Mean squared error"
 
 			img, err := plot.Heatmap(title, grid, size[0], size[1], nil, labels, positions)
 			if err != nil {
@@ -74,6 +75,8 @@ func densityCommand() *cobra.Command {
 			return writeImage(img, outFile)
 		},
 	}
+
+	command.Flags().BoolVarP(&rmse, "rmse", "r", false, "Use root mean squared error instead of mean squared error")
 
 	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of individual heatmap panels")
 	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required")
