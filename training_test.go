@@ -94,11 +94,9 @@ func TestTrainerDecay(t *testing.T) {
 	trainer, err := NewTrainer(som, t1, &params, rng)
 	assert.Nil(t, err)
 
-	progress := make(chan *TrainingProgress)
+	progress := make(chan TrainingProgress)
 
-	go func() {
-		trainer.Train(progress)
-	}()
+	go trainer.Train(progress)
 
 	for epoch := range progress {
 		fmt.Println(epoch)
@@ -139,11 +137,9 @@ func TestTrainerTrain(t *testing.T) {
 		trainer, err := NewTrainer(som, tables, &params, rng)
 		assert.Nil(t, err)
 
-		progress := make(chan *TrainingProgress)
+		progress := make(chan TrainingProgress)
 
-		go func() {
-			trainer.Train(progress)
-		}()
+		go trainer.Train(progress)
 
 		for range progress {
 		}
@@ -163,11 +159,9 @@ func TestTrainerTrain(t *testing.T) {
 		trainer, err := NewTrainer(som, tables, &p, rng)
 		assert.Nil(t, err)
 
-		progress := make(chan *TrainingProgress)
+		progress := make(chan TrainingProgress)
 
-		go func() {
-			trainer.Train(progress)
-		}()
+		go trainer.Train(progress)
 
 		for range progress {
 		}
@@ -183,11 +177,9 @@ func TestTrainerTrain(t *testing.T) {
 		trainer, err := NewTrainer(som, tables, &p, rng)
 		assert.Nil(t, err)
 
-		progress := make(chan *TrainingProgress)
+		progress := make(chan TrainingProgress)
 
-		go func() {
-			trainer.Train(progress)
-		}()
+		go trainer.Train(progress)
 
 		for range progress {
 		}
@@ -207,11 +199,9 @@ func TestTrainerTrain(t *testing.T) {
 		trainer, err := NewTrainer(som, tables, &p, rng)
 		assert.Nil(t, err)
 
-		progress := make(chan *TrainingProgress)
+		progress := make(chan TrainingProgress)
 
-		go func() {
-			trainer.Train(progress)
-		}()
+		go trainer.Train(progress)
 
 		for range progress {
 		}
