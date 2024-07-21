@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"io"
 	"math/rand"
 	"os"
 	"time"
@@ -32,6 +33,8 @@ func trainCommand() *cobra.Command {
 	var seed int64
 	var cpuProfile bool
 	var visomLambda float64
+	var progressFile string
+	var progressInterval int
 
 	var command *cobra.Command
 	command = &cobra.Command{
@@ -91,7 +94,7 @@ func trainCommand() *cobra.Command {
 				trainingConfig.NeighborhoodRadius = radiusDecay
 			}
 
-			s, err := runTraining(config, trainingConfig, tables, seed)
+			s, err := runTraining(config, trainingConfig, tables, seed, progressFile, progressInterval, del[0])
 			if err != nil {
 				return err
 			}
@@ -123,14 +126,23 @@ Options:
 	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")
 	command.Flags().StringVarP(&noData, "no-data", "n", "", "No data string")
 
+	command.Flags().IntVarP(&progressInterval, "progress", "P", 100, "Interval for progress output.\nIgnored if no <progress-file> is given")
+	command.Flags().StringVarP(&progressFile, "progress-file", "p", "", "CSV file for training progress output")
+
 	command.Flags().BoolVar(&cpuProfile, "profile", false, "Enable CPU profiling")
 
 	command.Flags().SortFlags = false
 
+	command.MarkFlagFilename("progress-file", "csv")
+
 	return command
 }
 
-func runTraining(config *som.SomConfig, trainingConfig *som.TrainingConfig, tables []*table.Table, seed int64) (*som.Som, error) {
+func runTraining(config *som.SomConfig, trainingConfig *som.TrainingConfig,
+	tables []*table.Table, seed int64,
+	progressFile string, writeInterval int, csvDelim rune,
+) (*som.Som, error) {
+
 	s, err := som.New(config)
 	if err != nil {
 		return nil, err
@@ -140,16 +152,27 @@ func runTraining(config *som.SomConfig, trainingConfig *som.TrainingConfig, tabl
 		return nil, err
 	}
 
-	tracker := newProgressTracker(trainingConfig.Epochs, tables[0].Rows())
+	var writer io.Writer
+	if progressFile == "" {
+		writeInterval = 0
+	} else {
+		file, err := os.Create(progressFile)
+		if err != nil {
+			return nil, err
+		}
+		defer file.Close()
+		writer = file
+	}
+	tracker := newProgressTracker(trainingConfig.Epochs, tables[0].Rows(), writer, writeInterval, csvDelim)
 
-	progress := make(chan float64, 100)
+	progress := make(chan *som.TrainingProgress, 100)
 	go func() {
 		trainer.Train(progress)
 	}()
 
 	epoch := 0
-	for meanDist := range progress {
-		tracker.Update(epoch, meanDist)
+	for p := range progress {
+		tracker.Update(epoch, p)
 		epoch++
 	}
 
@@ -191,30 +214,43 @@ func readConfig(path string) (*som.SomConfig, *som.TrainingConfig, error) {
 }
 
 type progressTracker struct {
-	start   time.Time
-	update  time.Time
-	epochs  int
-	samples int
-	bar     []rune
+	start         time.Time
+	update        time.Time
+	epochs        int
+	samples       int
+	writer        io.Writer
+	writeInterval int
+	csvDelim      rune
+	bar           []rune
 }
 
-func newProgressTracker(epochs int, samples int) *progressTracker {
+func newProgressTracker(epochs int, samples int, writer io.Writer, writeInterval int, csvDelim rune) *progressTracker {
 	return &progressTracker{
-		start:   time.Now(),
-		update:  time.Now(),
-		epochs:  epochs,
-		samples: samples,
-		bar:     make([]rune, progressBarWidth),
+		start:         time.Now(),
+		update:        time.Now(),
+		epochs:        epochs,
+		samples:       samples,
+		writer:        writer,
+		writeInterval: writeInterval,
+		csvDelim:      csvDelim,
+		bar:           make([]rune, progressBarWidth),
 	}
 }
 
-func (t *progressTracker) Update(epoch int, meanDist float64) {
+func (t *progressTracker) Update(epoch int, progress *som.TrainingProgress) {
+	if t.writeInterval > 0 && epoch%t.writeInterval == 0 {
+		if epoch == 0 {
+			fmt.Fprintln(t.writer, progress.CsvHeader(t.csvDelim))
+		}
+		fmt.Fprintln(t.writer, progress.CsvRow(t.csvDelim))
+	}
+
 	if time.Since(t.update) < 100*time.Millisecond && epoch < t.epochs-1 {
 		return
 	}
 
-	s := t.samples * epoch
-	barWidth := (epoch * progressBarWidth) / t.epochs
+	s := t.samples * (epoch + 1)
+	barWidth := ((epoch + 1) * progressBarWidth) / t.epochs
 
 	for i := range t.bar {
 		if i < barWidth {
@@ -224,7 +260,7 @@ func (t *progressTracker) Update(epoch int, meanDist float64) {
 		}
 	}
 	samplesPerSec := float64(s) / time.Since(t.start).Seconds()
-	fmt.Fprintf(os.Stderr, "\r[%s] %6d samples/sec | δ %5.2f", string(t.bar), int(samplesPerSec), meanDist)
+	fmt.Fprintf(os.Stderr, "\r[%s] %6d samples/sec | δ %5.2f/%5.2f", string(t.bar), int(samplesPerSec), progress.MeanDist, progress.Error)
 
 	t.update = time.Now()
 }

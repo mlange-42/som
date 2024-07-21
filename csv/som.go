@@ -21,18 +21,17 @@ func SomToCsv(som *som.Som, writer io.Writer, delim rune, noData string) error {
 		return err
 	}
 
-	del := string(delim)
 	builder := strings.Builder{}
 
 	nodes := som.Size().Nodes()
 	for i := 0; i < nodes; i++ {
 		x, y := som.Size().Coords(i)
-		builder.WriteString(fmt.Sprintf("%d%s%d%s%d%s", i, del, x, del, y, del))
+		builder.WriteString(fmt.Sprintf("%d%c%d%c%d%c", i, delim, x, delim, y, delim))
 
 		for j := range labels {
 			builder.WriteString(labels[j][i])
 			if i < len(labels)-1 || len(layers) > 0 {
-				builder.WriteString(del)
+				builder.WriteRune(delim)
 			}
 		}
 
@@ -45,7 +44,7 @@ func SomToCsv(som *som.Som, writer io.Writer, delim rune, noData string) error {
 					builder.WriteString(strconv.FormatFloat(v, 'f', -1, 64))
 				}
 				if k < len(row)-1 || j < len(layers)-1 {
-					builder.WriteString(del)
+					builder.WriteRune(delim)
 				}
 			}
 		}
@@ -63,14 +62,13 @@ func SomToCsv(som *som.Som, writer io.Writer, delim rune, noData string) error {
 }
 
 func writeHeadersSom(writer io.Writer, labelColumns []string, layers []*layer.Layer, delim rune) error {
-	del := string(delim)
 	builder := strings.Builder{}
 
-	builder.WriteString(fmt.Sprintf("node_id%snode_x%snode_y%s", del, del, del))
+	builder.WriteString(fmt.Sprintf("node_id%cnode_x%cnode_y%c", delim, delim, delim))
 	for i, col := range labelColumns {
 		builder.WriteString(col)
 		if i < len(labelColumns)-1 || len(layers) > 0 {
-			builder.WriteString(del)
+			builder.WriteRune(delim)
 		}
 	}
 
@@ -79,7 +77,7 @@ func writeHeadersSom(writer io.Writer, labelColumns []string, layers []*layer.La
 		for j, col := range cols {
 			builder.WriteString(col)
 			if j < len(cols)-1 || i < len(layers)-1 {
-				builder.WriteString(del)
+				builder.WriteRune(delim)
 			}
 		}
 	}
