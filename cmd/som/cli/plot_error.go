@@ -24,9 +24,16 @@ func errorCommand() *cobra.Command {
 			somFile := args[0]
 			outFile := args[1]
 
+			var title string
+			if rmse {
+				title = "Root Mean Squared Error"
+			} else {
+				title = "Mean Squared Error"
+			}
+
 			return plotHeatmap(size,
 				somFile, outFile, dataFile,
-				labelsColumn, delim, noData, "U-Matrix",
+				labelsColumn, delim, noData, title,
 				func(s *som.Som, p *som.Predictor) plotter.GridXYZ {
 					mse := p.GetError(rmse)
 					return &plot.FloatGrid{Size: *s.Size(), Values: mse}
