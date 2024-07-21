@@ -31,11 +31,14 @@ Provides a command line tool and a library for training and visualizing SOMs.
 
 ## Installation
 
-As long as there are no official releases, you can install the latest version from GitHub with Go:
 
-```shell
-go install github.com/mlange-42/som/cmd/som@latest
-```
+Pre-compiled binaries for Linux, Windows and MacOS are available in the
+[Releases](https://github.com/mlange-42/som/releases).
+
+> Alternatively, install the latest version using [Go](https://go.dev):
+> ```shell
+> go install github.com/mlange-42/som/cmd/som@latest
+> ```
 
 ## Usage
 
