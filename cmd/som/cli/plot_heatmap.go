@@ -147,6 +147,7 @@ func writeImage(img image.Image, outFile string) error {
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
 	return png.Encode(file, img)
 }

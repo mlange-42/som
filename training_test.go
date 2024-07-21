@@ -96,9 +96,7 @@ func TestTrainerDecay(t *testing.T) {
 
 	progress := make(chan *TrainingProgress)
 
-	go func() {
-		trainer.Train(progress)
-	}()
+	go trainer.Train(progress)
 
 	for epoch := range progress {
 		fmt.Println(epoch)
@@ -141,9 +139,7 @@ func TestTrainerTrain(t *testing.T) {
 
 		progress := make(chan *TrainingProgress)
 
-		go func() {
-			trainer.Train(progress)
-		}()
+		go trainer.Train(progress)
 
 		for range progress {
 		}
@@ -165,9 +161,7 @@ func TestTrainerTrain(t *testing.T) {
 
 		progress := make(chan *TrainingProgress)
 
-		go func() {
-			trainer.Train(progress)
-		}()
+		go trainer.Train(progress)
 
 		for range progress {
 		}
@@ -185,9 +179,7 @@ func TestTrainerTrain(t *testing.T) {
 
 		progress := make(chan *TrainingProgress)
 
-		go func() {
-			trainer.Train(progress)
-		}()
+		go trainer.Train(progress)
 
 		for range progress {
 		}
@@ -209,9 +201,7 @@ func TestTrainerTrain(t *testing.T) {
 
 		progress := make(chan *TrainingProgress)
 
-		go func() {
-			trainer.Train(progress)
-		}()
+		go trainer.Train(progress)
 
 		for range progress {
 		}
