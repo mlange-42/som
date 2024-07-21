@@ -137,7 +137,7 @@ func createLayer(s *ymlSom, l *ymlLayer) (*som.LayerDef, error) {
 		Norm:        norms,
 		Metric:      metric,
 		Weight:      l.Weight,
-		Data:        l.Data,
+		Weights:     l.Data,
 		Categorical: l.Categorical,
 	}, nil
 }
@@ -169,7 +169,7 @@ func ToYAML(som *som.Som) ([]byte, error) {
 			Metric:      l.Metric().Name(),
 			Weight:      l.Weight(),
 			Categorical: l.IsCategorical(),
-			Data:        l.Data(),
+			Data:        l.Weights(),
 		})
 	}
 

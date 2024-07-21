@@ -8,7 +8,7 @@ import (
 )
 
 func TestGaussianWeight(t *testing.T) {
-	metric := neighborhood.Euclidean{}
+	metric := neighborhood.EuclideanMetric{}
 	g := &neighborhood.Gaussian{}
 	g2 := &neighborhood.CutGaussian{}
 
@@ -73,7 +73,7 @@ func TestGaussianWeight(t *testing.T) {
 	}
 }
 func TestBoxWeight(t *testing.T) {
-	metric := neighborhood.Euclidean{}
+	metric := neighborhood.EuclideanMetric{}
 	b := &neighborhood.Box{}
 
 	tests := []struct {
@@ -144,7 +144,7 @@ func TestBoxWeight(t *testing.T) {
 	}
 }
 func TestLinearWeight(t *testing.T) {
-	metric := neighborhood.Euclidean{}
+	metric := neighborhood.EuclideanMetric{}
 	l := &neighborhood.Linear{}
 
 	tests := []struct {

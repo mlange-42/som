@@ -53,6 +53,7 @@ func ClassesToTable[T comparable](classes []T, columns []T) (*table.Table, error
 	return table, nil
 }
 
+// ClassesToIndices converts a slice of class labels to a slice of class indices and a slice of unique class labels.
 func ClassesToIndices[T comparable](classes []T) (columns []T, indices []int) {
 	columns = []T{}
 	classMap := map[T]int{}

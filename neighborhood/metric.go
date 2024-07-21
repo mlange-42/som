@@ -6,9 +6,9 @@ var metrics = map[string]Metric{}
 
 func init() {
 	m := []Metric{
-		&Euclidean{},
-		&Manhattan{},
-		&Chebyshev{},
+		&EuclideanMetric{},
+		&ManhattanMetric{},
+		&ChebyshevMetric{},
 	}
 	for _, v := range m {
 		if _, ok := metrics[v.Name()]; ok {
@@ -23,42 +23,48 @@ func GetMetric(name string) (Metric, bool) {
 	return m, ok
 }
 
+// Metric is an interface that defines a distance metric in map space, i.e. between SOM nodes.
+// The Name method returns the name of the metric.
+// The Distance method calculates the distance between two points (x1, y1) and (x2, y2).
 type Metric interface {
 	Name() string
 	Distance(x1, y1, x2, y2 int) float64
 }
 
-type Euclidean struct{}
+// EuclideanMetric implements [Metric] for the Euclidean distance.
+type EuclideanMetric struct{}
 
-func (e *Euclidean) Name() string {
+func (e *EuclideanMetric) Name() string {
 	return "euclidean"
 }
 
-func (e *Euclidean) Distance(x1, y1, x2, y2 int) float64 {
+func (e *EuclideanMetric) Distance(x1, y1, x2, y2 int) float64 {
 	dx := float64(x1 - x2)
 	dy := float64(y1 - y2)
 	return math.Sqrt(dx*dx + dy*dy)
 }
 
-type Manhattan struct{}
+// ManhattanMetric implements [Metric] for the Manhattan distance.
+type ManhattanMetric struct{}
 
-func (m *Manhattan) Name() string {
+func (m *ManhattanMetric) Name() string {
 	return "manhattan"
 }
 
-func (m *Manhattan) Distance(x1, y1, x2, y2 int) float64 {
+func (m *ManhattanMetric) Distance(x1, y1, x2, y2 int) float64 {
 	dx := float64(x1 - x2)
 	dy := float64(y1 - y2)
 	return math.Abs(dx) + math.Abs(dy)
 }
 
-type Chebyshev struct{}
+// ChebyshevMetric implements [Metric] for the Chebyshev distance.
+type ChebyshevMetric struct{}
 
-func (c *Chebyshev) Name() string {
+func (c *ChebyshevMetric) Name() string {
 	return "chebyshev"
 }
 
-func (c *Chebyshev) Distance(x1, y1, x2, y2 int) float64 {
+func (c *ChebyshevMetric) Distance(x1, y1, x2, y2 int) float64 {
 	dx := float64(x1 - x2)
 	dy := float64(y1 - y2)
 	return math.Max(math.Abs(dx), math.Abs(dy))

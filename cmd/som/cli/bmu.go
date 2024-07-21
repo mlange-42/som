@@ -68,11 +68,7 @@ func bmuCommand() *cobra.Command {
 				return err
 			}
 
-			bmu, err := pred.GetBMUTable()
-			if err != nil {
-				return err
-			}
-
+			bmu := pred.GetBMUTable()
 			writer := strings.Builder{}
 			err = csv.TablesToCsv([]*table.Table{bmu}, preserve, preserved, &writer, del[0], noData)
 			if err != nil {

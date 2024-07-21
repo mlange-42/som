@@ -12,6 +12,8 @@ import (
 	"github.com/mlange-42/som/layer"
 )
 
+// SomToCsv writes the weights of the SOM's nodes to a CSV file.
+// Categorical layers are converted back to their string representations.
 func SomToCsv(som *som.Som, writer io.Writer, delim rune, noData string) error {
 	layers := collectLayers(som)
 	labelColumns, labels := collectLabels(som)
@@ -96,7 +98,7 @@ func collectLayers(som *som.Som) []*layer.Layer {
 
 		lay, err := layer.NewWithData(
 			lay.Name(), lay.ColumnNames(), lay.Normalizers(), *som.Size(),
-			lay.Metric(), lay.Weight(), lay.IsCategorical(), append([]float64{}, lay.Data()...))
+			lay.Metric(), lay.Weight(), lay.IsCategorical(), append([]float64{}, lay.Weights()...))
 		if err != nil {
 			panic(err)
 		}

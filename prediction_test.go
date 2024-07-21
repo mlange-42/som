@@ -22,7 +22,7 @@ func TestPredictorGetBMU(t *testing.T) {
 				Name:    "L1",
 				Columns: []string{"x", "y"},
 				Metric:  &distance.Euclidean{},
-				Data: []float64{
+				Weights: []float64{
 					0, 0, // 0, 0
 					0, 1, // 0, 1
 					1, 0, // 1, 0
@@ -56,8 +56,7 @@ func TestPredictorGetBMU(t *testing.T) {
 	p, err := NewPredictor(som, tables)
 	assert.NoError(t, err)
 
-	bmu, err := p.GetBMUTable()
-	assert.NoError(t, err)
+	bmu := p.GetBMUTable()
 
 	assert.Equal(t, 6, bmu.Rows())
 	assert.Equal(t, 4, bmu.Columns())

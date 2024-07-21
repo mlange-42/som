@@ -237,11 +237,7 @@ func extractLabels(predictor *som.Predictor,
 		return nil, nil, err
 	}
 
-	bmu, err := predictor.GetBMUTable()
-	if err != nil {
-		return nil, nil, err
-	}
-
+	bmu := predictor.GetBMUTable()
 	nodes := predictor.Som().Size().Nodes()
 
 	perCell := make([]int, nodes)

@@ -80,7 +80,7 @@ func TestTrainerDecay(t *testing.T) {
 			},
 		},
 		Neighborhood: &neighborhood.Gaussian{},
-		MapMetric:    &neighborhood.Manhattan{},
+		MapMetric:    &neighborhood.ManhattanMetric{},
 	}
 	som, err := New(&somParams)
 	assert.NoError(t, err)
@@ -124,7 +124,7 @@ func TestTrainerTrain(t *testing.T) {
 			},
 		},
 		Neighborhood: &neighborhood.Gaussian{},
-		MapMetric:    &neighborhood.Manhattan{},
+		MapMetric:    &neighborhood.ManhattanMetric{},
 	}
 	som, err := New(&somParams)
 	assert.NoError(t, err)
@@ -148,7 +148,7 @@ func TestTrainerTrain(t *testing.T) {
 		for range progress {
 		}
 
-		for _, v := range som.layers[0].Data() {
+		for _, v := range som.layers[0].Weights() {
 			assert.NotEqual(t, 0, v)
 		}
 	})
@@ -192,7 +192,7 @@ func TestTrainerTrain(t *testing.T) {
 		for range progress {
 		}
 
-		for _, v := range som.layers[0].Data() {
+		for _, v := range som.layers[0].Weights() {
 			assert.InDelta(t, 0, v, 0.0001)
 		}
 	})
