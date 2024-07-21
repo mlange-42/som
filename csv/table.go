@@ -173,7 +173,6 @@ func TablesToCsv(tables []*table.Table, labelColumns []string, labels [][]string
 		return err
 	}
 
-	del := string(delim)
 	builder := strings.Builder{}
 
 	rows, err := checkAndCountTables(tables, labels)
@@ -185,7 +184,7 @@ func TablesToCsv(tables []*table.Table, labelColumns []string, labels [][]string
 		for j := range labels {
 			builder.WriteString(labels[j][i])
 			if i < len(labels)-1 || len(tables) > 0 {
-				builder.WriteString(del)
+				builder.WriteRune(delim)
 			}
 		}
 
@@ -198,7 +197,7 @@ func TablesToCsv(tables []*table.Table, labelColumns []string, labels [][]string
 					builder.WriteString(strconv.FormatFloat(v, 'f', -1, 64))
 				}
 				if k < len(row)-1 || j < len(tables)-1 {
-					builder.WriteString(del)
+					builder.WriteRune(delim)
 				}
 			}
 		}
@@ -237,13 +236,12 @@ func checkAndCountTables(tables []*table.Table, labels [][]string) (int, error) 
 }
 
 func writeHeadersTables(writer io.Writer, labelColumns []string, tables []*table.Table, delim rune) error {
-	del := string(delim)
 	builder := strings.Builder{}
 
 	for i, col := range labelColumns {
 		builder.WriteString(col)
 		if i < len(labelColumns)-1 || len(tables) > 0 {
-			builder.WriteString(del)
+			builder.WriteRune(delim)
 		}
 	}
 
@@ -252,7 +250,7 @@ func writeHeadersTables(writer io.Writer, labelColumns []string, tables []*table
 		for j, col := range cols {
 			builder.WriteString(col)
 			if j < len(cols)-1 || i < len(tables)-1 {
-				builder.WriteString(del)
+				builder.WriteRune(delim)
 			}
 		}
 	}
