@@ -13,6 +13,8 @@ import (
 	"github.com/mlange-42/som/table"
 )
 
+// StringReader an implementation of [table.Reader]
+// that uses a CSV string as source.
 type StringReader struct {
 	text   string
 	delim  rune
@@ -31,6 +33,7 @@ func (s *StringReader) ReadLabels(column string) ([]string, error) {
 	return readLabels(strings.NewReader(s.text), column, s.delim)
 }
 
+// FileReader is an implementation of [table.Reader] that reads data from a CSV file.
 type FileReader struct {
 	path   string
 	text   string
@@ -130,6 +133,8 @@ func readLabels(reader io.Reader, column string, delim rune) ([]string, error) {
 	return data, nil
 }
 
+// TableToCSV writes the contents of the given table.Table to the provided io.Writer in CSV format,
+// using the specified separator rune and noData string to represent NaN values.
 func TableToCSV(t *table.Table, writer io.Writer, sep rune, noData string) error {
 	b := strings.Builder{}
 	cols := t.ColumnNames()
@@ -167,6 +172,12 @@ func TableToCSV(t *table.Table, writer io.Writer, sep rune, noData string) error
 	return nil
 }
 
+// TablesToCsv writes the contents of the given tables and labels to the provided io.Writer in CSV format,
+// using the specified delimiter rune and noData string to represent NaN values.
+// The labelColumns parameter specifies the column names for the label columns.
+// The labels parameter provides the label values for each label column.
+// The tables parameter provides the data tables to be written to the CSV.
+// Label columns are written first, followed by data table columns.
 func TablesToCsv(tables []*table.Table, labelColumns []string, labels [][]string, writer io.Writer, delim rune, noData string) error {
 	err := writeHeadersTables(writer, labelColumns, tables, delim)
 	if err != nil {

@@ -8,6 +8,13 @@ import (
 	"github.com/mlange-42/som/norm"
 )
 
+// Reader is an interface that provides methods for reading data into a Table.
+//
+// ReadColumns reads the data for the specified columns into a new Table.
+// If an error occurs during reading, it is returned.
+//
+// ReadLabels reads the labels for the specified column into a slice of strings.
+// If an error occurs during reading, it is returned.
 type Reader interface {
 	ReadColumns(columns []string) (*Table, error)
 	ReadLabels(column string) ([]string, error)
