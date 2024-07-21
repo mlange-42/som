@@ -11,14 +11,14 @@ func TestLayer(t *testing.T) {
 	l, err := New("L1", []string{"a", "b", "c"}, nil, Size{3, 2}, &distance.Manhattan{}, 1.0, false)
 	assert.NoError(t, err)
 
-	assert.Equal(t, 18, len(l.data))
+	assert.Equal(t, 18, len(l.weights))
 
 	assert.Equal(t, 0, l.Column("a"))
 	assert.Equal(t, 1, l.Column("b"))
 	assert.Equal(t, 2, l.Column("c"))
 
-	for i := range l.data {
-		l.data[i] = float64(i)
+	for i := range l.weights {
+		l.weights[i] = float64(i)
 	}
 
 	assert.Equal(t, 0.0, l.Get(0, 0, 0))

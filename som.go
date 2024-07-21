@@ -14,11 +14,14 @@ import (
 	"github.com/mlange-42/som/table"
 )
 
+// SomConfig represents the configuration for a Self-Organizing Map (SOM).
+// It defines the size of the map, the layers of data to be mapped, the neighborhood function,
+// and the metric used to calculate distances on the map.
 type SomConfig struct {
-	Size         layer.Size
-	Layers       []*LayerDef
-	Neighborhood neighborhood.Neighborhood
-	MapMetric    neighborhood.Metric
+	Size         layer.Size                // Size of the SOM
+	Layers       []*LayerDef               // Layer definitions
+	Neighborhood neighborhood.Neighborhood // Neighborhood function of the SOM
+	MapMetric    neighborhood.Metric       // Metric used to calculate distances on the map
 }
 
 // PrepareTables reads the CSV data and creates a table for each layer defined in the SomConfig.
@@ -69,16 +72,20 @@ func (c *SomConfig) PrepareTables(reader table.Reader, updateNormalizers bool) (
 	return tables, nil
 }
 
+// LayerDef represents the configuration for a single layer in a Self-Organizing Map (SOM).
+// It defines the name, columns, normalization, metric, weight, and whether the layer is categorical.
+// If the layer has weights, it can also be initialized with the provided data.
 type LayerDef struct {
-	Name        string
-	Columns     []string
-	Norm        []norm.Normalizer
-	Metric      distance.Distance
-	Weight      float64
-	Categorical bool
-	Data        []float64
+	Name        string            // Name of the layer
+	Columns     []string          // Columns to use from the data
+	Norm        []norm.Normalizer // Normalization functions for the columns
+	Metric      distance.Distance // Distance metric to use for this layer
+	Weight      float64           // Weight value for this layer (for multi-layer SOMs)
+	Categorical bool              // Whether the layer contains categorical data
+	Weights     []float64         // Pre-computed layer weights (if provided)
 }
 
+// Som represents a Self-Organizing Map (SOM) model.
 type Som struct {
 	size         layer.Size
 	layers       []*layer.Layer
@@ -86,6 +93,11 @@ type Som struct {
 	metric       neighborhood.Metric
 }
 
+// New creates a new Self-Organizing Map (SOM) instance based on the provided SomConfig.
+// It initializes the layers of the SOM with the specified configurations.
+// If the layer has pre-computed weights, they can be provided to initialize the layer.
+// The function returns the created SOM instance and an error if any issues occur during
+// the initialization.
 func New(params *SomConfig) (*Som, error) {
 	lay := make([]*layer.Layer, len(params.Layers))
 	for i, l := range params.Layers {
@@ -106,10 +118,10 @@ func New(params *SomConfig) (*Som, error) {
 		}
 
 		var err error
-		if len(l.Data) == 0 {
+		if len(l.Weights) == 0 {
 			lay[i], err = layer.New(l.Name, l.Columns, l.Norm, params.Size, metric, weight, l.Categorical)
 		} else {
-			lay[i], err = layer.NewWithData(l.Name, l.Columns, l.Norm, params.Size, metric, weight, l.Categorical, l.Data)
+			lay[i], err = layer.NewWithData(l.Name, l.Columns, l.Norm, params.Size, metric, weight, l.Categorical, l.Weights)
 		}
 		if err != nil {
 			return nil, err
@@ -123,27 +135,37 @@ func New(params *SomConfig) (*Som, error) {
 	}, nil
 }
 
+// Size returns the size of the Self-Organizing Map (SOM) instance.
 func (s *Som) Size() *layer.Size {
 	return &s.size
 }
 
+// Neighborhood returns the neighborhood function used by the Self-Organizing Map (SOM) instance.
 func (s *Som) Neighborhood() neighborhood.Neighborhood {
 	return s.neighborhood
 }
 
+// MapMetric returns the metric used to calculate distances between nodes in the Self-Organizing Map (SOM).
 func (s *Som) MapMetric() neighborhood.Metric {
 	return s.metric
 }
 
-func (s *Som) learn(data [][]float64, alpha, radius, lambda float64) float64 {
-	bmuIdx, dist := s.getBMU(data)
+// Learn updates the weights of the Self-Organizing Map (SOM) based on the given input data.
+// It calculates the Best Matching Unit (BMU) for the input data, then updates the weights
+// of the nodes in the SOM based on the neighborhood function and learning rate.
+// The function returns the distance between the input data and the BMU.
+func (s *Som) Learn(data [][]float64, alpha, radius, lambda float64) float64 {
+	bmuIdx, dist := s.GetBMU(data)
 
 	s.updateWeights(bmuIdx, data, alpha, radius, lambda)
 
 	return dist
 }
 
-func (s *Som) getBMU(data [][]float64) (int, float64) {
+// GetBMU finds the Best Matching Unit (BMU) for the given input data.
+// It calculates the total distance between the input data and each node in the SOM,
+// and returns the index of the node with the minimum total distance, along with that minimum distance.
+func (s *Som) GetBMU(data [][]float64) (int, float64) {
 	units := s.size.Nodes()
 
 	minDist := math.MaxFloat64
@@ -242,19 +264,28 @@ func (s *Som) nodeDistance(unit1, unit2 int) float64 {
 	return totalDist
 }
 
-func (s *Som) randomize(rng *rand.Rand) {
+func (s *Som) Randomize(rng *rand.Rand) {
 	for _, lay := range s.layers {
-		data := lay.Data()
+		data := lay.Weights()
 		for i := range data {
 			data[i] = rng.Float64() * 0.25
 		}
 	}
 }
 
+// Layers returns the layers of the Self-Organizing Map.
 func (s *Som) Layers() []*layer.Layer {
 	return s.layers
 }
 
+// UMatrix computes the U-Matrix for the Self-Organizing Map. The U-Matrix
+// visualizes the distances between neighboring nodes in the map, which can
+// be used to identify cluster boundaries. The returned matrix has double
+// the dimensions of the original map, with the values representing the
+// distances between nodes and their neighbors.
+//
+// Cells that don't correspond to a link, but to a node or an "empty space"
+// are filled with the average of the surrounding links.
 func (s *Som) UMatrix() [][]float64 {
 	height := s.size.Height*2 - 1
 	width := s.size.Width*2 - 1

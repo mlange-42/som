@@ -204,7 +204,7 @@ func TestGetBMU(t *testing.T) {
 
 	t.Run("Normal case", func(t *testing.T) {
 		data := [][]float64{{1.0, 2.0}, {3.0, 4.0}}
-		index, dist := som.getBMU(data)
+		index, dist := som.GetBMU(data)
 		assert.GreaterOrEqual(t, index, 0)
 		assert.Less(t, index, 4)
 		assert.GreaterOrEqual(t, dist, 0.0)
@@ -224,7 +224,7 @@ func TestGetBMU(t *testing.T) {
 		assert.NoError(t, err)
 
 		data := [][]float64{{1.0}}
-		index, dist := singleLayerSom.getBMU(data)
+		index, dist := singleLayerSom.GetBMU(data)
 		assert.Equal(t, 0, index)
 		assert.GreaterOrEqual(t, dist, 0.0)
 	})
@@ -247,7 +247,7 @@ func TestGetBMU(t *testing.T) {
 		assert.NoError(t, err)
 
 		data := [][]float64{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}}
-		index, dist := largeSom.getBMU(data)
+		index, dist := largeSom.GetBMU(data)
 		assert.GreaterOrEqual(t, index, 0)
 		assert.Less(t, index, 100)
 		assert.GreaterOrEqual(t, dist, 0.0)
@@ -295,7 +295,7 @@ func TestLearnBasic(t *testing.T) {
 			}
 		}
 
-		som.learn(data, 0.5, 6.0, 0.0)
+		som.Learn(data, 0.5, 6.0, 0.0)
 
 		for l, layer := range som.layers {
 			for i := 0; i < som.size.Width*som.size.Height; i++ {
@@ -319,7 +319,7 @@ func TestLearnBasic(t *testing.T) {
 			}
 		}
 
-		som.learn(data, 0.0, 2.0, 0.0)
+		som.Learn(data, 0.0, 2.0, 0.0)
 
 		for l, layer := range som.layers {
 			for i := 0; i < som.size.Width*som.size.Height; i++ {
@@ -346,7 +346,7 @@ func TestLearnRadius(t *testing.T) {
 			}
 		}
 
-		som.learn(data, 0.5, 0.01, 0.0)
+		som.Learn(data, 0.5, 0.01, 0.0)
 
 		for l, layer := range som.layers {
 			changedCount := 0
@@ -366,7 +366,7 @@ func TestLearnRadius(t *testing.T) {
 
 	t.Run("Very large radius", func(t *testing.T) {
 		data := [][]float64{{1.0, 2.0}, {3.0, 4.0}}
-		som.learn(data, 1.0, 100.0, 0.0)
+		som.Learn(data, 1.0, 100.0, 0.0)
 
 		for l, layer := range som.layers {
 			lData := data[l]
@@ -388,7 +388,7 @@ func TestNodeDistance(t *testing.T) {
 				Columns: []string{"x", "y"},
 				Weight:  1.0,
 				Metric:  &distance.Euclidean{},
-				Data: []float64{
+				Weights: []float64{
 					0.0, 0.0,
 					0.0, 2.0,
 					2.0, 0.0,
@@ -419,7 +419,7 @@ func TestNodeMapDistance(t *testing.T) {
 				Columns: []string{"x", "y"},
 				Weight:  1.0,
 				Metric:  &distance.Euclidean{},
-				Data: []float64{
+				Weights: []float64{
 					0.0, 0.0,
 					0.0, 2.0,
 					2.0, 0.0,
@@ -447,7 +447,7 @@ func BenchmarkGetBMU_5x5x3(b *testing.B) {
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		bmu, _ = som.getBMU(data)
+		bmu, _ = som.GetBMU(data)
 	}
 	b.StopTimer()
 
@@ -463,7 +463,7 @@ func BenchmarkGetBMU_10x10x5(b *testing.B) {
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		bmu, _ = som.getBMU(data)
+		bmu, _ = som.GetBMU(data)
 	}
 	b.StopTimer()
 
@@ -475,7 +475,7 @@ func BenchmarkUpdateWeights_5x5x3_Gaussian2(b *testing.B) {
 	som := createBenchSom(5, 5, 3, &neighborhood.Gaussian{})
 	data := [][]float64{{1.0, 2.0, 3.0}}
 
-	bmu, _ := som.getBMU(data)
+	bmu, _ := som.GetBMU(data)
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -488,7 +488,7 @@ func BenchmarkUpdateWeights_10x10x5_Gaussian2(b *testing.B) {
 	som := createBenchSom(10, 10, 5, &neighborhood.Gaussian{})
 	data := [][]float64{{1.0, 2.0, 3.0, 4.0, 5.0}}
 
-	bmu, _ := som.getBMU(data)
+	bmu, _ := som.GetBMU(data)
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -501,7 +501,7 @@ func BenchmarkUpdateWeights_5x5x3_Linear2(b *testing.B) {
 	som := createBenchSom(5, 5, 3, &neighborhood.Linear{})
 	data := [][]float64{{1.0, 2.0, 3.0}}
 
-	bmu, _ := som.getBMU(data)
+	bmu, _ := som.GetBMU(data)
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -514,7 +514,7 @@ func BenchmarkUpdateWeights_10x10x5_Linear2(b *testing.B) {
 	som := createBenchSom(10, 10, 5, &neighborhood.Linear{})
 	data := [][]float64{{1.0, 2.0, 3.0, 4.0, 5.0}}
 
-	bmu, _ := som.getBMU(data)
+	bmu, _ := som.GetBMU(data)
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -527,7 +527,7 @@ func BenchmarkUpdateWeightsViSOM_5x5x3_Gaussian2(b *testing.B) {
 	som := createBenchSom(5, 5, 3, &neighborhood.Gaussian{})
 	data := [][]float64{{1.0, 2.0, 3.0}}
 
-	bmu, _ := som.getBMU(data)
+	bmu, _ := som.GetBMU(data)
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -540,7 +540,7 @@ func BenchmarkUpdateWeightsViSOM_10x10x5_Gaussian2(b *testing.B) {
 	som := createBenchSom(10, 10, 5, &neighborhood.Gaussian{})
 	data := [][]float64{{1.0, 2.0, 3.0, 4.0, 5.0}}
 
-	bmu, _ := som.getBMU(data)
+	bmu, _ := som.GetBMU(data)
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -553,7 +553,7 @@ func BenchmarkUpdateWeightsViSOM_5x5x3_Linear2(b *testing.B) {
 	som := createBenchSom(5, 5, 3, &neighborhood.Linear{})
 	data := [][]float64{{1.0, 2.0, 3.0}}
 
-	bmu, _ := som.getBMU(data)
+	bmu, _ := som.GetBMU(data)
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -566,7 +566,7 @@ func BenchmarkUpdateWeightsViSOM_10x10x5_Linear2(b *testing.B) {
 	som := createBenchSom(10, 10, 5, &neighborhood.Linear{})
 	data := [][]float64{{1.0, 2.0, 3.0, 4.0, 5.0}}
 
-	bmu, _ := som.getBMU(data)
+	bmu, _ := som.GetBMU(data)
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
@@ -597,7 +597,7 @@ func createBenchSom(width, height int, dims int, neigh neighborhood.Neighborhood
 		panic(err)
 	}
 
-	som.randomize(rand.New(rand.NewSource(0)))
+	som.Randomize(rand.New(rand.NewSource(0)))
 
 	return som
 }

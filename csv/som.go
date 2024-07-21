@@ -96,7 +96,7 @@ func collectLayers(som *som.Som) []*layer.Layer {
 
 		lay, err := layer.NewWithData(
 			lay.Name(), lay.ColumnNames(), lay.Normalizers(), *som.Size(),
-			lay.Metric(), lay.Weight(), lay.IsCategorical(), append([]float64{}, lay.Data()...))
+			lay.Metric(), lay.Weight(), lay.IsCategorical(), append([]float64{}, lay.Weights()...))
 		if err != nil {
 			panic(err)
 		}

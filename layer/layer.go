@@ -36,7 +36,7 @@ type Layer struct {
 	size        Size              // The width and height of the layer
 	weight      float64           // The weight of the layer
 	metric      distance.Distance // The distance metric for the layer
-	data        []float64         // The data values for the layer
+	weights     []float64         // The weight values for the layer
 	categorical bool              // Whether the layer is categorical or continuous
 }
 
@@ -69,7 +69,7 @@ func NewWithData(name string, columns []string, normalizers []norm.Normalizer, s
 		metric:      metric,
 		weight:      weight,
 		size:        size,
-		data:        data,
+		weights:     data,
 		categorical: categorical,
 	}, nil
 }
@@ -78,8 +78,8 @@ func (l *Layer) Name() string {
 	return l.name
 }
 
-func (l *Layer) Data() []float64 {
-	return l.data
+func (l *Layer) Weights() []float64 {
+	return l.weights
 }
 
 func (l *Layer) Metric() distance.Distance {
@@ -130,20 +130,20 @@ func (l *Layer) Normalizers() []norm.Normalizer {
 
 // Get returns the value at the specified column and coordinate in the Layer.
 func (l *Layer) Get(x, y, col int) float64 {
-	return l.data[l.index(x, y, col)]
+	return l.weights[l.index(x, y, col)]
 }
 
 // GetAt returns the value at the specified column and node index in the Layer.
 func (l *Layer) GetAt(idx, col int) float64 {
-	return l.data[l.indexAt(idx, col)]
+	return l.weights[l.indexAt(idx, col)]
 }
 
 func (l *Layer) Set(x, y, col int, value float64) {
-	l.data[l.index(x, y, col)] = value
+	l.weights[l.index(x, y, col)] = value
 }
 
 func (l *Layer) SetAt(idx, col int, value float64) {
-	l.data[l.indexAt(idx, col)] = value
+	l.weights[l.indexAt(idx, col)] = value
 }
 
 // GetNode returns a slice of float64 values representing the data for the node
@@ -151,7 +151,7 @@ func (l *Layer) SetAt(idx, col int, value float64) {
 // values for each column in the Layer, in the same order as the columns slice.
 func (l *Layer) GetNode(x, y int) []float64 {
 	idx := l.nodeIndex(x, y)
-	return l.data[idx : idx+len(l.columns)]
+	return l.weights[idx : idx+len(l.columns)]
 }
 
 // GetNodeAt returns a slice of float64 values representing the data for the node
@@ -159,7 +159,7 @@ func (l *Layer) GetNode(x, y int) []float64 {
 // values for each column in the Layer, in the same order as the columns slice.
 func (l *Layer) GetNodeAt(idx int) []float64 {
 	idx2 := l.nodeIndexAt(idx)
-	return l.data[idx2 : idx2+len(l.columns)]
+	return l.weights[idx2 : idx2+len(l.columns)]
 }
 
 func (l *Layer) CoordsAt(idx int) (int, int) {
