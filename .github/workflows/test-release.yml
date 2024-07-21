@@ -25,7 +25,7 @@ jobs:
         run: |
           go get ./...
       - name: Build
-        run: GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" .
+        run: GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" ./cmd/som
       - name: Compress binaries
         run: |
           tar -czf som.tar.gz som
@@ -52,7 +52,7 @@ jobs:
         run: |
           go get ./...
       - name: Build
-        run: GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" .
+        run: GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" ./cmd/som
       - name: Compress binaries
         run: |
           zip -r som.zip som.exe
@@ -79,7 +79,7 @@ jobs:
         run: |
           go get ./...
       - name: Build
-        run: GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" .
+        run: GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" ./cmd/som
       - name: Compress binaries
         run: |
           zip -r som.zip som
@@ -106,7 +106,7 @@ jobs:
         run: |
           go get ./...
       - name: Build
-        run: GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" .
+        run: GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" ./cmd/som
       - name: Compress binaries
         run: |
           zip -r som.zip som
