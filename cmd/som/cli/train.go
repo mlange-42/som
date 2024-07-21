@@ -142,14 +142,14 @@ func runTraining(config *som.SomConfig, trainingConfig *som.TrainingConfig, tabl
 
 	tracker := newProgressTracker(trainingConfig.Epochs, tables[0].Rows())
 
-	progress := make(chan float64, 100)
+	progress := make(chan som.TrainingProgress, 100)
 	go func() {
 		trainer.Train(progress)
 	}()
 
 	epoch := 0
-	for meanDist := range progress {
-		tracker.Update(epoch, meanDist)
+	for p := range progress {
+		tracker.Update(epoch, p)
 		epoch++
 	}
 
@@ -208,7 +208,7 @@ func newProgressTracker(epochs int, samples int) *progressTracker {
 	}
 }
 
-func (t *progressTracker) Update(epoch int, meanDist float64) {
+func (t *progressTracker) Update(epoch int, progress som.TrainingProgress) {
 	if time.Since(t.update) < 100*time.Millisecond && epoch < t.epochs-1 {
 		return
 	}
@@ -224,7 +224,7 @@ func (t *progressTracker) Update(epoch int, meanDist float64) {
 		}
 	}
 	samplesPerSec := float64(s) / time.Since(t.start).Seconds()
-	fmt.Fprintf(os.Stderr, "\r[%s] %6d samples/sec | δ %5.2f", string(t.bar), int(samplesPerSec), meanDist)
+	fmt.Fprintf(os.Stderr, "\r[%s] %6d samples/sec | δ %5.2f/%5.2f", string(t.bar), int(samplesPerSec), progress.MeanDist, progress.Error)
 
 	t.update = time.Now()
 }

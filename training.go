@@ -21,6 +21,11 @@ type Trainer struct {
 	rng    *rand.Rand
 }
 
+type TrainingProgress struct {
+	MeanDist float64
+	Error    float64
+}
+
 func NewTrainer(som *Som, tables []*table.Table, params *TrainingConfig, rng *rand.Rand) (*Trainer, error) {
 	if err := checkTables(som, tables); err != nil {
 		return nil, err
@@ -33,32 +38,42 @@ func NewTrainer(som *Som, tables []*table.Table, params *TrainingConfig, rng *ra
 	}, nil
 }
 
-func (t *Trainer) Train(progress chan float64) {
+func (t *Trainer) Train(progress chan TrainingProgress) {
 	t.som.randomize(t.rng)
 
 	var meanDist float64
+	var qError float64
 	for epoch := 0; epoch < t.params.Epochs; epoch++ {
-		meanDist = t.epoch(epoch)
-		progress <- meanDist
+		meanDist, qError = t.epoch(epoch)
+		progress <- TrainingProgress{
+			MeanDist: meanDist,
+			Error:    qError,
+		}
 	}
-	progress <- meanDist
+	progress <- TrainingProgress{
+		MeanDist: meanDist,
+		Error:    qError,
+	}
 
 	close(progress)
 }
 
-func (t *Trainer) epoch(epoch int) float64 {
+func (t *Trainer) epoch(epoch int) (meanDist, quantError float64) {
 	alpha := t.params.LearningRate.Decay(epoch, t.params.Epochs)
 	radius := t.params.NeighborhoodRadius.Decay(epoch, t.params.Epochs)
 
 	data := make([][]float64, len(t.tables))
 	rows := t.tables[0].Rows()
 
-	dist := 0.0
+	sumDist := 0.0
+	sumDistSq := 0.0
 	for i := 0; i < rows; i++ {
 		for j := 0; j < len(t.tables); j++ {
 			data[j] = t.tables[j].GetRow(i)
 		}
-		dist += t.som.learn(data, alpha, radius, t.params.ViSomLambda)
+		dist := t.som.learn(data, alpha, radius, t.params.ViSomLambda)
+		sumDist += dist
+		sumDistSq += dist * dist
 
 		if t.params.ViSomLambda == 0 || i%10 != 0 { // SOM
 			continue
@@ -71,5 +86,5 @@ func (t *Trainer) epoch(epoch int) float64 {
 		t.som.learn(data, alpha, radius, t.params.ViSomLambda)
 	}
 
-	return dist / float64(rows)
+	return sumDist / float64(rows), sumDistSq / float64(rows)
 }
