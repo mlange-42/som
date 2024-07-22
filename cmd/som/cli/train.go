@@ -191,7 +191,7 @@ func prepareTables(config *som.SomConfig, path string, delim rune, noData string
 	if err != nil {
 		return nil, err
 	}
-	return config.PrepareTables(reader, true)
+	return config.PrepareTables(reader, nil, true)
 }
 
 func readConfig(path string) (*som.SomConfig, *som.TrainingConfig, error) {

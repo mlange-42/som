@@ -17,6 +17,7 @@ func labelCommand() *cobra.Command {
 	var noData string
 	var column string
 	var seed int64
+	var ignore []string
 
 	command := &cobra.Command{
 		Use:   "label [flags] <som-file> <data-file>",
@@ -45,7 +46,7 @@ func labelCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			tables, err := config.PrepareTables(reader, true)
+			tables, err := config.PrepareTables(reader, ignore, true)
 			if err != nil {
 				return err
 			}
@@ -80,6 +81,7 @@ func labelCommand() *cobra.Command {
 	}
 
 	command.Flags().StringVarP(&column, "column", "c", "", "Column to use for label propagation")
+	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
 	command.Flags().Int64VarP(&seed, "seed", "s", 42, "Random seed")
 
 	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")

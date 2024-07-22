@@ -27,6 +27,7 @@ func plotHeatmapCommand() *cobra.Command {
 	var labelsColumn string
 	var delim string
 	var noData string
+	var ignore []string
 
 	command := &cobra.Command{
 		Use:   "heatmap [flags] <som-file> <out-file>",
@@ -71,7 +72,7 @@ func plotHeatmapCommand() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				predictor, _, err = createPredictor(config, s, reader)
+				predictor, _, err = createPredictor(config, s, reader, ignore)
 				if err != nil {
 					return err
 				}
@@ -127,6 +128,7 @@ func plotHeatmapCommand() *cobra.Command {
 	command.Flags().IntVarP(&plotColumns, "plot-columns", "p", 0, "Number of plot columns on the image (default sqrt(#cols))")
 	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required for --labels")
 	command.Flags().StringVarP(&labelsColumn, "labels", "l", "", "Labels column in the data file")
+	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
 
 	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")
 	command.Flags().StringVarP(&noData, "no-data", "n", "", "No-data value (default \"\")")
@@ -215,9 +217,9 @@ func extractIndices(s *som.Som, columns []string) ([]string, [][2]int, error) {
 	return columns, indices, nil
 }
 
-func createPredictor(config *som.SomConfig, s *som.Som, reader table.Reader) (*som.Predictor, []*table.Table, error) {
+func createPredictor(config *som.SomConfig, s *som.Som, reader table.Reader, ignoreLayers []string) (*som.Predictor, []*table.Table, error) {
 
-	tables, err := config.PrepareTables(reader, false)
+	tables, err := config.PrepareTables(reader, ignoreLayers, false)
 	if err != nil {
 		return nil, nil, err
 	}

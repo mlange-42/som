@@ -16,6 +16,7 @@ func bmuCommand() *cobra.Command {
 	var delim string
 	var noData string
 	var preserve []string
+	var ignore []string
 
 	command := &cobra.Command{
 		Use:   "bmu [flags] <som-file> <data-file>",
@@ -54,7 +55,7 @@ func bmuCommand() *cobra.Command {
 				preserved = append(preserved, col)
 			}
 
-			tables, err := config.PrepareTables(reader, false)
+			tables, err := config.PrepareTables(reader, ignore, false)
 			if err != nil {
 				return err
 			}
@@ -81,6 +82,7 @@ func bmuCommand() *cobra.Command {
 		},
 	}
 	command.Flags().StringSliceVarP(&preserve, "preserve", "p", nil, "Preserve columns and prepend them to the output table")
+	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
 
 	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")
 	command.Flags().StringVarP(&noData, "no-data", "n", "", "No-data string")

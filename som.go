@@ -5,6 +5,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"slices"
 
 	"github.com/mlange-42/som/conv"
 	"github.com/mlange-42/som/distance"
@@ -28,10 +29,16 @@ type SomConfig struct {
 // If a categorical layer has no columns specified, it will attempt to read the class names for that layer
 // and create a table from the classes. The created tables are returned in the same order as
 // the layers in the SomConfig.
-func (c *SomConfig) PrepareTables(reader table.Reader, updateNormalizers bool) ([]*table.Table, error) {
+func (c *SomConfig) PrepareTables(reader table.Reader, ignoreLayers []string, updateNormalizers bool) ([]*table.Table, error) {
 	tables := make([]*table.Table, len(c.Layers))
+
+	ignoreFound := make([]bool, len(ignoreLayers))
 	for i := range c.Layers {
 		layer := c.Layers[i]
+		if idx := slices.Index(ignoreLayers, layer.Name); idx >= 0 {
+			ignoreFound[idx] = true
+			continue
+		}
 
 		if layer.Categorical {
 			classes, err := reader.ReadLabels(layer.Name)
@@ -69,6 +76,13 @@ func (c *SomConfig) PrepareTables(reader table.Reader, updateNormalizers bool) (
 
 		tables[i] = table
 	}
+
+	for i, f := range ignoreFound {
+		if !f {
+			return nil, fmt.Errorf("layer %s from ignore list not found in layers", ignoreLayers[i])
+		}
+	}
+
 	return tables, nil
 }
 
