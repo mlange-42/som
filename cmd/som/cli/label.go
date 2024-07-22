@@ -84,8 +84,8 @@ func labelCommand() *cobra.Command {
 	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
 	command.Flags().Int64VarP(&seed, "seed", "s", 42, "Random seed")
 
-	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")
-	command.Flags().StringVarP(&noData, "no-data", "n", "", "No-data string")
+	command.Flags().StringVarP(&delim, "delimiter", "D", ",", "CSV delimiter")
+	command.Flags().StringVarP(&noData, "no-data", "N", "", "No-data string")
 
 	command.Flags().SortFlags = false
 	command.MarkFlagRequired("column")

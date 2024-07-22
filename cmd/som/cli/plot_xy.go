@@ -124,8 +124,8 @@ func plotXyCommand() *cobra.Command {
 	command.Flags().StringVarP(&labelsColumn, "labels", "l", "", "Labels column in the data file")
 	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
 
-	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")
-	command.Flags().StringVarP(&noData, "no-data", "n", "", "No-data value (default \"\")")
+	command.Flags().StringVarP(&delim, "delimiter", "D", ",", "CSV delimiter")
+	command.Flags().StringVarP(&noData, "no-data", "N", "", "No-data value (default \"\")")
 
 	command.Flags().SortFlags = false
 	command.MarkFlagFilename("data-file", "csv")

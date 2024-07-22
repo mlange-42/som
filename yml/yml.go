@@ -31,10 +31,11 @@ type ymlSom struct {
 }
 
 type ymlTraining struct {
-	Epochs int
-	Alpha  string `yaml:",omitempty"`
-	Radius string `yaml:",omitempty"`
-	Lambda float64
+	Epochs      int
+	Alpha       string `yaml:",omitempty"`
+	Radius      string `yaml:",omitempty"`
+	WeightDecay string `yaml:"weight-decay,omitempty"`
+	Lambda      float64
 }
 
 type ymlConfig struct {
@@ -87,10 +88,20 @@ func ToSomConfig(ymlData []byte) (*som.SomConfig, *som.TrainingConfig, error) {
 		if err != nil {
 			return nil, nil, err
 		}
+
+		var wtDecay decay.Decay
+		if yml.Training.WeightDecay != "" {
+			wtDecay, err = decay.FromString(yml.Training.WeightDecay)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+
 		training = &som.TrainingConfig{
 			Epochs:             yml.Training.Epochs,
 			LearningRate:       alpha,
 			NeighborhoodRadius: radius,
+			WeightDecay:        wtDecay,
 			ViSomLambda:        yml.Training.Lambda,
 		}
 	}

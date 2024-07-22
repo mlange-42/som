@@ -19,6 +19,7 @@ type TrainingConfig struct {
 	Epochs             int         // Number of training epochs
 	LearningRate       decay.Decay // Learning rate decay function
 	NeighborhoodRadius decay.Decay // Neighborhood radius decay function
+	WeightDecay        decay.Decay // Weight decay coefficient decay function
 	ViSomLambda        float64     // ViSOM lambda resolution parameter
 }
 
@@ -30,6 +31,7 @@ type Trainer struct {
 	tables []*table.Table
 	params *TrainingConfig
 	rng    *rand.Rand
+	center [][]float64
 }
 
 // NewTrainer creates a new Trainer instance with the provided SOM, data tables, training configuration, and random number generator.
@@ -39,6 +41,7 @@ func NewTrainer(som *Som, tables []*table.Table, params *TrainingConfig, rng *ra
 	if err := checkTables(som, tables); err != nil {
 		return nil, err
 	}
+
 	return &Trainer{
 		som:    som,
 		tables: tables,
@@ -56,17 +59,28 @@ func NewTrainer(som *Som, tables []*table.Table, params *TrainingConfig, rng *ra
 func (t *Trainer) Train(progress chan TrainingProgress) {
 	t.som.Randomize(t.rng)
 
+	t.calcDataCenter()
+
 	var meanDist float64
 	var qError float64
 	var p TrainingProgress
 	for epoch := 0; epoch < t.params.Epochs; epoch++ {
 		alpha := t.params.LearningRate.Decay(epoch, t.params.Epochs)
 		radius := t.params.NeighborhoodRadius.Decay(epoch, t.params.Epochs)
+		decay := 0.0
+		if t.params.WeightDecay != nil {
+			decay = t.params.WeightDecay.Decay(epoch, t.params.Epochs)
+		}
+
+		if decay > 0 {
+			t.decayWeights(decay)
+		}
 		meanDist, qError = t.epoch(alpha, radius)
 
 		p.Epoch = epoch
 		p.Alpha = alpha
 		p.Radius = radius
+		p.WeightDecay = decay
 		p.MeanDist = meanDist
 		p.Error = qError
 
@@ -74,6 +88,34 @@ func (t *Trainer) Train(progress chan TrainingProgress) {
 	}
 
 	close(progress)
+}
+
+func (t *Trainer) calcDataCenter() {
+	if t.params.WeightDecay == nil {
+		return
+	}
+
+	t.center = make([][]float64, len(t.tables))
+	rows := t.tables[0].Rows()
+
+	for i, tab := range t.tables {
+		cols := tab.Columns()
+		t.center[i] = make([]float64, cols)
+		cnt := make([]int, cols)
+		for j := 0; j < rows; j++ {
+			for k := 0; k < cols; k++ {
+				v := tab.Get(j, k)
+				if math.IsNaN(v) {
+					continue
+				}
+				t.center[i][k] += v
+				cnt[k]++
+			}
+		}
+		for k := 0; k < cols; k++ {
+			t.center[i][k] /= float64(cnt[k])
+		}
+	}
 }
 
 func (t *Trainer) PropagateLabels(name string, classes []string, indices []int) error {
@@ -302,27 +344,33 @@ func (t *Trainer) epoch(alpha, radius float64) (meanDist, quantError float64) {
 	return sumDist / float64(rows), sumDistSq / float64(rows)
 }
 
+func (t *Trainer) decayWeights(beta float64) {
+	t.som.decayWeights(t.center, beta)
+}
+
 // TrainingProgress represents the progress of a training epoch.
 type TrainingProgress struct {
-	Epoch    int     // The current epoch number
-	Alpha    float64 // The current learning rate alpha
-	Radius   float64 // The current neighborhood radius
-	MeanDist float64 // The mean distance of the training data to the SOM
-	Error    float64 // The quantization error (MSE)
+	Epoch       int     // The current epoch number
+	Alpha       float64 // The current learning rate alpha
+	Radius      float64 // The current neighborhood radius
+	WeightDecay float64 // The weight decay factor
+	MeanDist    float64 // The mean distance of the training data to the SOM
+	Error       float64 // The quantization error (MSE)
 }
 
 // CsvHeader returns a CSV header row for the TrainingProgress struct fields, using the provided delimiter.
 func (p *TrainingProgress) CsvHeader(delim rune) string {
-	return fmt.Sprintf("Epoch%cAlpha%cRadius%cMeanDist%cError", delim, delim, delim, delim)
+	return fmt.Sprintf("Epoch%cAlpha%cRadius%cDecay%cMeanDist%cError", delim, delim, delim, delim, delim)
 }
 
 // CsvRow returns a comma-separated string representation of the TrainingProgress struct fields.
 // The values are formatted using the provided delimiter character.
 func (p *TrainingProgress) CsvRow(delim rune) string {
-	return fmt.Sprintf("%d%c%s%c%s%c%s%c%s",
+	return fmt.Sprintf("%d%c%s%c%s%c%s%c%s%c%s",
 		p.Epoch, delim,
 		strconv.FormatFloat(p.Alpha, 'f', -1, 64), delim,
 		strconv.FormatFloat(p.Radius, 'f', -1, 64), delim,
+		strconv.FormatFloat(p.WeightDecay, 'f', -1, 64), delim,
 		strconv.FormatFloat(p.MeanDist, 'f', -1, 64), delim,
 		strconv.FormatFloat(p.Error, 'f', -1, 64))
 }

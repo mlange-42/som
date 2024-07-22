@@ -11,6 +11,7 @@ var decays = map[string]func() Decay{}
 
 func init() {
 	d := []func() Decay{
+		func() Decay { return &Constant{} },
 		func() Decay { return &Linear{} },
 		func() Decay { return &Power{} },
 		func() Decay { return &Polynomial{} },
@@ -54,6 +55,26 @@ type Decay interface {
 	Name() string
 	Decay(epoch, total int) float64
 	SetArgs(args ...float64) error
+}
+
+type Constant struct {
+	Value float64
+}
+
+func (c *Constant) Name() string {
+	return "constant"
+}
+
+func (c *Constant) Decay(epoch, total int) float64 {
+	return c.Value
+}
+
+func (c *Constant) SetArgs(args ...float64) error {
+	if len(args) != 1 {
+		return fmt.Errorf("expected 1 arg, got %d", len(args))
+	}
+	c.Value = args[0]
+	return nil
 }
 
 type Linear struct {
