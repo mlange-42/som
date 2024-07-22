@@ -29,6 +29,7 @@ func trainCommand() *cobra.Command {
 	var noData string
 	var alpha string
 	var radius string
+	var decayFunc string
 	var epochs int
 	var seed int64
 	var cpuProfile bool
@@ -79,19 +80,26 @@ func trainCommand() *cobra.Command {
 			}
 
 			if _, ok := flagUsed["alpha"]; ok {
-				learningDecay, err := decay.FromString(alpha)
+				trainingConfig.LearningRate, err = decay.FromString(alpha)
 				if err != nil {
 					return err
 				}
-				trainingConfig.LearningRate = learningDecay
 			}
-
 			if _, ok := flagUsed["radius"]; ok {
-				radiusDecay, err := decay.FromString(radius)
+				trainingConfig.NeighborhoodRadius, err = decay.FromString(radius)
 				if err != nil {
 					return err
 				}
-				trainingConfig.NeighborhoodRadius = radiusDecay
+			}
+			if _, ok := flagUsed["decay"]; ok {
+				if decayFunc == "" {
+					trainingConfig.WeightDecay = nil
+				} else {
+					trainingConfig.WeightDecay, err = decay.FromString(decayFunc)
+					if err != nil {
+						return err
+					}
+				}
 			}
 
 			s, err := runTraining(config, trainingConfig, tables, seed, progressFile, progressInterval, del[0])
@@ -116,15 +124,16 @@ Options:
   - power <start> <end>
   - polynomial <start> <end> <exp>
    `)
-	command.Flags().StringVarP(&radius, "radius", "r", "polynomial 10 0.7 2", "Overwrites the radius function of the SOM file.\nSame options as alpha\n   ")
+	command.Flags().StringVarP(&radius, "radius", "r", "polynomial 10 0.7 2", "Overwrites the radius function of the SOM file.\nSame options as alpha")
+	command.Flags().StringVarP(&decayFunc, "decay", "d", "", "Overwrites the weight decay function of the SOM file.\nSame options as alpha (default no decay)")
 
 	command.Flags().IntVarP(&epochs, "epochs", "e", 1000, "Overwrites the number of epochs of the SOM file")
 	command.Flags().Int64VarP(&seed, "seed", "s", 42, "Random seed")
 
 	command.Flags().Float64VarP(&visomLambda, "visom-lambda", "v", 0.0, "Overwrites ViSOM resolution. 0 = no ViSOM")
 
-	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")
-	command.Flags().StringVarP(&noData, "no-data", "n", "", "No data string")
+	command.Flags().StringVarP(&delim, "delimiter", "D", ",", "CSV delimiter")
+	command.Flags().StringVarP(&noData, "no-data", "N", "", "No data string")
 
 	command.Flags().IntVarP(&progressInterval, "progress", "P", 100, "Interval for progress output.\nIgnored if no <progress-file> is given")
 	command.Flags().StringVarP(&progressFile, "progress-file", "p", "", "CSV file for training progress output")

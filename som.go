@@ -270,6 +270,22 @@ func (s *Som) updateNode(x, y int, data [][]float64, rate float64) {
 	}
 }
 
+func (s *Som) decayWeights(center [][]float64, rate float64) {
+	nodes := s.Size().Nodes()
+	fac := 1.0 - rate
+
+	for i := 0; i < nodes; i++ {
+		for j, lay := range s.layers {
+			node := lay.GetNodeAt(i)
+			data := center[j]
+			for k := 0; k < lay.Columns(); k++ {
+				delta := node[k] - data[k]
+				node[k] = data[k] + fac*delta
+			}
+		}
+	}
+}
+
 func (s *Som) distance(data [][]float64, unit int) float64 {
 	totalDist := 0.0
 	for l, layer := range s.layers {

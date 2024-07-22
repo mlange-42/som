@@ -54,8 +54,8 @@ func exportCommand() *cobra.Command {
 		},
 	}
 
-	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")
-	command.Flags().StringVarP(&noData, "no-data", "n", "", "No data string")
+	command.Flags().StringVarP(&delim, "delimiter", "D", ",", "CSV delimiter")
+	command.Flags().StringVarP(&noData, "no-data", "N", "", "No data string")
 
 	return command
 }

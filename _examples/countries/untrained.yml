@@ -22,9 +22,10 @@ som:
     - name: continent
       metric: hamming
       categorical: true
-      weight: 0.25
+      weight: 0.1
 training:
   epochs: 2500
-  alpha: polynomial 0.25 0.01 2
+  alpha: polynomial 0.25 0.002 2
   radius: polynomial 10 0.8 2
+  weight-decay: polynomial 0.5 0.0 3
   lambda: 0.3
