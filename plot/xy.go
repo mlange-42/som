@@ -88,13 +88,17 @@ func XY(
 	return img.Image(), nil
 }
 
-func setMarkerStyle(plot *plotter.Scatter, categories []string, catIndices []int, size float64, color color.Color) palette.Palette {
+func setMarkerStyle(plot *plotter.Scatter, categories []string, catIndices []int, size float64, defaultColor color.Color) palette.Palette {
 	pal := NewRandomPalette(len(categories))
 	if len(catIndices) > 0 {
 		plot.GlyphStyleFunc = func(i int) draw.GlyphStyle {
 			cat := catIndices[i]
+			var col color.Color = color.RGBA{R: 100, G: 100, B: 100, A: 255}
+			if cat >= 0 {
+				col = pal.Colors()[cat]
+			}
 			return draw.GlyphStyle{
-				Color:  pal.Colors()[cat],
+				Color:  col,
 				Shape:  draw.CircleGlyph{},
 				Radius: vg.Length(size),
 			}
@@ -103,7 +107,7 @@ func setMarkerStyle(plot *plotter.Scatter, categories []string, catIndices []int
 		plot.GlyphStyle = draw.GlyphStyle{
 			Shape:  draw.CircleGlyph{},
 			Radius: vg.Length(size),
-			Color:  color,
+			Color:  defaultColor,
 		}
 	}
 

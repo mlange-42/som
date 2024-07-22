@@ -46,7 +46,7 @@ func labelCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			tables, err := config.PrepareTables(reader, ignore, true)
+			tables, err := config.PrepareTables(reader, ignore, false)
 			if err != nil {
 				return err
 			}
@@ -54,7 +54,7 @@ func labelCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			classes, indices := conv.ClassesToIndices(labels)
+			classes, indices := conv.ClassesToIndices(labels, noData)
 
 			s, err := som.New(config)
 			if err != nil {

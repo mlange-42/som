@@ -46,7 +46,7 @@ func (c *SomConfig) PrepareTables(reader table.Reader, ignoreLayers []string, up
 				return nil, err
 			}
 
-			table, err := conv.ClassesToTable(classes, layer.Columns)
+			table, err := conv.ClassesToTable(classes, layer.Columns, reader.NoData())
 			if err != nil {
 				return nil, err
 			}

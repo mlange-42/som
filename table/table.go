@@ -18,6 +18,7 @@ import (
 type Reader interface {
 	ReadColumns(columns []string) (*Table, error)
 	ReadLabels(column string) ([]string, error)
+	NoData() string
 }
 
 // Table represents a table of data with columns and rows.

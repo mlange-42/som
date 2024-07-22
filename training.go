@@ -301,7 +301,11 @@ func (t *Trainer) findLabels(classes []string, indices []int) ([]float64, []int,
 	classCounter := make([]float64, rows*cols)
 	totalCounter := make([]int, rows)
 	for i, v := range bmu {
-		classCounter[v*cols+indices[i]]++
+		idx := indices[i]
+		if idx < 0 { // missing data
+			continue
+		}
+		classCounter[v*cols+idx]++
 		totalCounter[v]++
 	}
 	for i := 0; i < rows; i++ {
