@@ -72,11 +72,10 @@ func (t *Trainer) Train(progress chan TrainingProgress) {
 			decay = t.params.WeightDecay.Decay(epoch, t.params.Epochs)
 		}
 
-		meanDist, qError = t.epoch(alpha, radius)
-
 		if decay > 0 {
 			t.decayWeights(decay)
 		}
+		meanDist, qError = t.epoch(alpha, radius)
 
 		p.Epoch = epoch
 		p.Alpha = alpha
