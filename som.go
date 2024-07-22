@@ -75,6 +75,9 @@ func (c *SomConfig) PrepareTables(reader table.Reader, updateNormalizers bool) (
 // LayerDef represents the configuration for a single layer in a Self-Organizing Map (SOM).
 // It defines the name, columns, normalization, metric, weight, and whether the layer is categorical.
 // If the layer has weights, it can also be initialized with the provided data.
+//
+// A weight value of 0.0 is interpreted as standard weight of 1.0.
+// To get a weight of 0.0, give the weight field a negative value.
 type LayerDef struct {
 	Name        string            // Name of the layer
 	Columns     []string          // Columns to use from the data
@@ -107,6 +110,8 @@ func New(params *SomConfig) (*Som, error) {
 		weight := l.Weight
 		if weight == 0 {
 			weight = 1
+		} else if weight < 0 {
+			weight = 0
 		}
 		metric := l.Metric
 		if metric == nil {
@@ -254,6 +259,9 @@ func (s *Som) updateNode(x, y int, data [][]float64, rate float64) {
 func (s *Som) distance(data [][]float64, unit int) float64 {
 	totalDist := 0.0
 	for l, layer := range s.layers {
+		if layer.Weight() == 0 || data[l] == nil {
+			continue
+		}
 		node := layer.GetNodeAt(unit)
 		dist := layer.Metric().Distance(node, data[l])
 		totalDist += layer.Weight() * dist
@@ -264,6 +272,9 @@ func (s *Som) distance(data [][]float64, unit int) float64 {
 func (s *Som) nodeDistance(unit1, unit2 int) float64 {
 	totalDist := 0.0
 	for _, layer := range s.layers {
+		if layer.Weight() == 0 {
+			continue
+		}
 		node1 := layer.GetNodeAt(unit1)
 		node2 := layer.GetNodeAt(unit2)
 		dist := layer.Metric().Distance(node1, node2)

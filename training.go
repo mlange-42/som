@@ -191,11 +191,11 @@ func (t *Trainer) updateLabels(self, other []float64, weight float64) float64 {
 }
 
 func (t *Trainer) createLabelLayers(name string, classes []string, probabilities []float64) (*layer.Layer, *layer.Layer, error) {
-	lay1, err := layer.NewWithData(name, classes, nil, *t.som.Size(), &distance.Hamming{}, 0.00001, true, probabilities)
+	lay1, err := layer.NewWithData(name, classes, nil, *t.som.Size(), &distance.Hamming{}, 0.0, true, probabilities)
 	if err != nil {
 		return nil, nil, err
 	}
-	lay2, err := layer.NewWithData(name, classes, nil, *t.som.Size(), &distance.Hamming{}, 0.00001, true, append(make([]float64, 0, len(probabilities)), probabilities...))
+	lay2, err := layer.NewWithData(name, classes, nil, *t.som.Size(), &distance.Hamming{}, 0.0, true, append(make([]float64, 0, len(probabilities)), probabilities...))
 	if err != nil {
 		return nil, nil, err
 	}

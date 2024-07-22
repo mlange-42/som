@@ -18,7 +18,7 @@ type ymlLayer struct {
 	Columns     []string `yaml:",flow,omitempty"`
 	Norm        []string `yaml:",flow,omitempty"`
 	Metric      string
-	Weight      float64
+	Weight      float64   `yaml:",omitempty"`
 	Categorical bool      `yaml:",omitempty"`
 	Data        []float64 `yaml:",flow,omitempty"`
 }
@@ -162,12 +162,19 @@ func ToYAML(som *som.Som) ([]byte, error) {
 			norms = nil
 		}
 
+		weight := l.Weight()
+		if weight == 0.0 {
+			weight = -1
+		} else if weight == 1.0 {
+			weight = 0
+		}
+
 		yml.Layers = append(yml.Layers, &ymlLayer{
 			Name:        l.Name(),
 			Columns:     l.ColumnNames(),
 			Norm:        norms,
 			Metric:      l.Metric().Name(),
-			Weight:      l.Weight(),
+			Weight:      weight,
 			Categorical: l.IsCategorical(),
 			Data:        l.Weights(),
 		})
