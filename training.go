@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
-	"os"
+	"slices"
 	"strconv"
 
 	"github.com/mlange-42/som/decay"
@@ -75,7 +75,7 @@ func (t *Trainer) Train(progress chan TrainingProgress) {
 	close(progress)
 }
 
-func (t *Trainer) PropagateLabels(name string, classes []string, indices []int, sigma float64) error {
+func (t *Trainer) PropagateLabels(name string, classes []string, indices []int) error {
 	if len(indices) != t.tables[0].Rows() {
 		return fmt.Errorf("length of indices (%d) does not match number of data rows (%d)", len(indices), t.tables[0].Rows())
 	}
@@ -84,7 +84,7 @@ func (t *Trainer) PropagateLabels(name string, classes []string, indices []int, 
 	if err != nil {
 		return err
 	}
-	lay, err := t.propagateLabels(name, probabilities, counts, classes, sigma)
+	lay, err := t.propagateLabels(name, probabilities, counts, classes)
 	if err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func (t *Trainer) PropagateLabels(name string, classes []string, indices []int, 
 	return nil
 }
 
-func (t *Trainer) propagateLabels(name string, probabilities []float64, counts []int, classes []string, sigma float64) (*layer.Layer, error) {
+func (t *Trainer) propagateLabels(name string, probabilities []float64, counts []int, classes []string) (*layer.Layer, error) {
 	rows := len(counts)
 	cols := len(classes)
 	if len(probabilities) != rows*cols {
@@ -112,6 +112,7 @@ func (t *Trainer) propagateLabels(name string, probabilities []float64, counts [
 	}
 
 	uMatrix := t.som.UMatrix(false)
+	sigma := t.calcPropagationSigma(uMatrix)
 
 	w, h := t.som.Size().Width, t.som.Size().Height
 
@@ -129,6 +130,7 @@ func (t *Trainer) propagateLabels(name string, probabilities []float64, counts [
 				for i := 0; i < cols; i++ {
 					diff := self[i] - selfPrev[i]
 					totalDiff += math.Abs(diff)
+					self[i] = 0
 				}
 
 				sumWeights := 0.0
@@ -164,7 +166,7 @@ func (t *Trainer) propagateLabels(name string, probabilities []float64, counts [
 				}
 			}
 		}
-		fmt.Fprintln(os.Stderr, totalDiff)
+		//fmt.Fprintln(os.Stderr, totalDiff)
 
 		lay1, lay2 = lay2, lay1
 		if iter > 0 && totalDiff < 0.001 {
@@ -173,6 +175,49 @@ func (t *Trainer) propagateLabels(name string, probabilities []float64, counts [
 	}
 
 	return lay1, nil
+}
+
+func (t *Trainer) calcPropagationSigma(uMatrix [][]float64) float64 {
+	w, h := t.som.Size().Width, t.som.Size().Height
+	values := make([]float64, (w-1)*h+w*(h-1))
+	idx := 0
+	for x := 0; x < w; x++ {
+		for y := 0; y < h; y++ {
+			if x < w-1 {
+				values[idx] = uMatrix[y*2][x*2+1]
+				idx++
+			}
+			if y < h-1 {
+				values[idx] = uMatrix[y*2+1][x*2]
+				idx++
+			}
+		}
+	}
+	slices.Sort(values)
+
+	sMin := values[0]
+	sMax := values[len(values)-1]
+
+	urpMin := math.Inf(1)
+	urpMinIndex := -1
+	for i := range values {
+		urp := calcSquaredURP(sMin, sMax, values, i)
+		if urp < urpMin {
+			urpMin = urp
+			urpMinIndex = i
+		}
+	}
+
+	return values[urpMinIndex]
+}
+
+func calcSquaredURP(sMin, sMax float64, distribution []float64, index int) float64 {
+	sigma := distribution[index]
+	v1 := (sigma - sMin) / (sMax - sMin)
+	v2 := 1 - (float64(index) / float64(len(distribution)))
+
+	d2 := v1*v1 + v2*v2
+	return d2
 }
 
 func (t *Trainer) findLabels(classes []string, indices []int) ([]float64, []int, error) {
