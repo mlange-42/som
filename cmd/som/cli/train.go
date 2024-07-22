@@ -44,11 +44,6 @@ func trainCommand() *cobra.Command {
 		Long:  `Trains an SOM on the given dataset`,
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			flagUsed := map[string]bool{}
-			command.Flags().Visit(func(f *pflag.Flag) {
-				flagUsed[f.Name] = true
-			})
-
 			if cpuProfile {
 				stop := profile.Start(profile.CPUProfile, profile.ProfilePath("."))
 				defer stop.Stop()
@@ -72,34 +67,10 @@ func trainCommand() *cobra.Command {
 				return err
 			}
 
-			if _, ok := flagUsed["epochs"]; ok {
-				trainingConfig.Epochs = epochs
-			}
-			if _, ok := flagUsed["visom-lambda"]; ok {
-				trainingConfig.ViSomLambda = visomLambda
-			}
-
-			if _, ok := flagUsed["alpha"]; ok {
-				trainingConfig.LearningRate, err = decay.FromString(alpha)
-				if err != nil {
-					return err
-				}
-			}
-			if _, ok := flagUsed["radius"]; ok {
-				trainingConfig.NeighborhoodRadius, err = decay.FromString(radius)
-				if err != nil {
-					return err
-				}
-			}
-			if _, ok := flagUsed["decay"]; ok {
-				if decayFunc == "" {
-					trainingConfig.WeightDecay = nil
-				} else {
-					trainingConfig.WeightDecay, err = decay.FromString(decayFunc)
-					if err != nil {
-						return err
-					}
-				}
+			err = overwriteParameters(command, trainingConfig,
+				epochs, visomLambda, alpha, radius, decayFunc)
+			if err != nil {
+				return err
 			}
 
 			s, err := runTraining(config, trainingConfig, tables, seed, progressFile, progressInterval, del[0])
@@ -145,6 +116,46 @@ Options:
 	command.MarkFlagFilename("progress-file", "csv")
 
 	return command
+}
+
+func overwriteParameters(command *cobra.Command, conf *som.TrainingConfig,
+	epochs int, visomLambda float64, alpha, radius, decayFunc string) error {
+	flagUsed := map[string]bool{}
+	command.Flags().Visit(func(f *pflag.Flag) {
+		flagUsed[f.Name] = true
+	})
+
+	if _, ok := flagUsed["epochs"]; ok {
+		conf.Epochs = epochs
+	}
+	if _, ok := flagUsed["visom-lambda"]; ok {
+		conf.ViSomLambda = visomLambda
+	}
+
+	var err error
+	if _, ok := flagUsed["alpha"]; ok {
+		conf.LearningRate, err = decay.FromString(alpha)
+		if err != nil {
+			return err
+		}
+	}
+	if _, ok := flagUsed["radius"]; ok {
+		conf.NeighborhoodRadius, err = decay.FromString(radius)
+		if err != nil {
+			return err
+		}
+	}
+	if _, ok := flagUsed["decay"]; ok {
+		if decayFunc == "" {
+			conf.WeightDecay = nil
+		} else {
+			conf.WeightDecay, err = decay.FromString(decayFunc)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func runTraining(config *som.SomConfig, trainingConfig *som.TrainingConfig,
