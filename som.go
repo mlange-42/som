@@ -191,8 +191,15 @@ func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius, lambda 
 	xMin, yMin := max(xBmu-lim, 0), max(yBmu-lim, 0)
 	xMax, yMax := min(xBmu+lim, s.size.Width-1), min(yBmu+lim, s.size.Height-1)
 
+	s.updateNode(xBmu, yBmu, data, alpha) // update BMU directly
+
 	for x := xMin; x <= xMax; x++ {
 		for y := yMin; y <= yMax; y++ {
+			if x == xBmu && y == yBmu {
+				// Skip BMU
+				continue
+			}
+
 			dist := s.metric.Distance(xBmu, yBmu, x, y)
 			r := s.neighborhood.Weight(dist, radius)
 			if r <= 0 {
@@ -202,28 +209,16 @@ func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius, lambda 
 
 			if lambda <= 0 {
 				// Basic SOM
-				for l, lay := range s.layers {
-					node := lay.GetNode(x, y)
-					for i := 0; i < lay.Columns(); i++ {
-						d := data[l][i]
-						if math.IsNaN(d) {
-							continue
-						}
-						node[i] += rate * (d - node[i])
-					}
-				}
+				s.updateNode(x, y, data, rate)
 				continue
 			}
 			// ViSOM
 			nodeIdx := s.size.Index(x, y)
-			scale := 0.0
-			if x != xBmu || y != yBmu {
-				dataDist := s.nodeDistance(bmuIdx, nodeIdx)
-				mapDist := s.metric.Distance(xBmu, yBmu, x, y)
-				scale = dataDist/(lambda*mapDist) - 1
-				if math.IsInf(scale, 1) {
-					log.Fatal("Numeric instability in ViSOM algorithm. Decrease alpha (learning rate) or use a less extreme lambda value (ViSOM resolution parameter).")
-				}
+			dataDist := s.nodeDistance(bmuIdx, nodeIdx)
+			mapDist := s.metric.Distance(xBmu, yBmu, x, y)
+			scale := dataDist/(lambda*mapDist) - 1
+			if math.IsInf(scale, 1) {
+				log.Fatal("Numeric instability in ViSOM algorithm. Decrease alpha (learning rate) or use a less extreme lambda value (ViSOM resolution parameter).")
 			}
 
 			for l, lay := range s.layers {
@@ -239,6 +234,19 @@ func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius, lambda 
 					node[i] += rate * delta
 				}
 			}
+		}
+	}
+}
+
+func (s *Som) updateNode(x, y int, data [][]float64, rate float64) {
+	for l, lay := range s.layers {
+		node := lay.GetNode(x, y)
+		for i := 0; i < lay.Columns(); i++ {
+			d := data[l][i]
+			if math.IsNaN(d) {
+				continue
+			}
+			node[i] += rate * (d - node[i])
 		}
 	}
 }
