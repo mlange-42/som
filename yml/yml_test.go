@@ -165,12 +165,12 @@ som:
   - name: layer1
     columns: [a, b, c]
     metric: euclidean
-    weight: 1.0
+    weight: 0.5
   - name: layer2
     columns: [d, e]
     norm: [gaussian 0 1, uniform -0.01 0.01]
     metric: manhattan
-    weight: 0.5
+    weight: -1
 `)
 
 	config, _, err := ToSomConfig(ymlData)
@@ -190,13 +190,13 @@ som:
     - name: layer1
       columns: [a, b, c]
       metric: euclidean
-      weight: 1
+      weight: 0.5
       data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     - name: layer2
       columns: [d, e]
       norm: [gaussian 0 1, uniform -0.01 0.01]
       metric: manhattan
-      weight: 0.5
+      weight: -1
       data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 `
 
