@@ -13,7 +13,7 @@ import (
 	"gonum.org/v1/plot/plotter"
 )
 
-func xyCommand() *cobra.Command {
+func plotXyCommand() *cobra.Command {
 	var size []int
 	var xColumn string
 	var yColumn string

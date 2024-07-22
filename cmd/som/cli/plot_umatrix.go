@@ -3,11 +3,12 @@ package cli
 import (
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/plot"
+	"github.com/mlange-42/som/table"
 	"github.com/spf13/cobra"
 	"gonum.org/v1/plot/plotter"
 )
 
-func uMatrixCommand() *cobra.Command {
+func plotUMatrixCommand() *cobra.Command {
 	var size []int
 	var dataFile string
 	var labelsColumn string
@@ -26,9 +27,9 @@ func uMatrixCommand() *cobra.Command {
 			return plotHeatmap(size,
 				somFile, outFile, dataFile,
 				labelsColumn, delim, noData, "U-Matrix",
-				func(s *som.Som, p *som.Predictor) plotter.GridXYZ {
+				func(s *som.Som, p *som.Predictor, r table.Reader) (plotter.GridXYZ, []string, error) {
 					uMatrix := s.UMatrix()
-					return &plot.UMatrixGrid{UMatrix: uMatrix}
+					return &plot.UMatrixGrid{UMatrix: uMatrix}, nil, nil
 				},
 			)
 		},

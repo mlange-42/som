@@ -19,7 +19,7 @@ import (
 	"gonum.org/v1/plot/plotter"
 )
 
-func heatmapCommand() *cobra.Command {
+func plotHeatmapCommand() *cobra.Command {
 	var size []int
 	var columns []string
 	var plotColumns int
