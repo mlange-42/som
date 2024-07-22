@@ -6,6 +6,8 @@ import (
 	"strconv"
 
 	"github.com/mlange-42/som/decay"
+	"github.com/mlange-42/som/distance"
+	"github.com/mlange-42/som/layer"
 	"github.com/mlange-42/som/table"
 )
 
@@ -69,6 +71,52 @@ func (t *Trainer) Train(progress chan TrainingProgress) {
 	}
 
 	close(progress)
+}
+
+func (t *Trainer) PropagateLabels(name string, classes []string, indices []int) error {
+	if len(indices) != t.tables[0].Rows() {
+		return fmt.Errorf("length of indices (%d) does not match number of data rows (%d)", len(indices), t.tables[0].Rows())
+	}
+
+	classCounter, _, err := t.findLabels(classes, indices)
+	if err != nil {
+		return err
+	}
+
+	lay, err := layer.NewWithData(name, classes, nil, *t.som.Size(), &distance.Hamming{}, 0.00001, true, classCounter)
+	if err != nil {
+		return err
+	}
+
+	t.som.layers = append(t.som.layers, lay)
+
+	return nil
+}
+
+func (t *Trainer) findLabels(classes []string, indices []int) ([]float64, []int, error) {
+	pred, err := NewPredictor(t.som, t.tables)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	bmu := pred.GetBMU()
+
+	rows := t.som.Size().Nodes()
+	cols := len(classes)
+
+	classCounter := make([]float64, rows*cols)
+	totalCounter := make([]int, rows)
+	for i, v := range bmu {
+		classCounter[v*cols+indices[i]]++
+		totalCounter[v]++
+	}
+	for i := 0; i < rows; i++ {
+		for j := 0; j < cols; j++ {
+			classCounter[i*cols+j] /= float64(totalCounter[i])
+		}
+	}
+
+	return classCounter, totalCounter, nil
 }
 
 func (t *Trainer) epoch(alpha, radius float64) (meanDist, quantError float64) {
