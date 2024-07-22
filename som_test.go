@@ -26,6 +26,10 @@ func (r *mockReader) ReadLabels(column string) ([]string, error) {
 	return r.Labels, nil
 }
 
+func (r *mockReader) NoData() string {
+	return ""
+}
+
 func TestNew(t *testing.T) {
 	t.Run("Valid configuration", func(t *testing.T) {
 		params := &SomConfig{

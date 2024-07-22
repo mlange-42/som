@@ -1,16 +1,32 @@
 package conv
 
 import (
+	"math"
 	"testing"
 
 	"github.com/mlange-42/som/table"
 	"github.com/stretchr/testify/assert"
 )
 
+func equalWithNaN(s1, s2 []float64) bool {
+	if len(s1) != len(s2) {
+		return false
+	}
+	for i := range s1 {
+		if math.IsNaN(s1[i]) != math.IsNaN(s2[i]) {
+			return false
+		}
+		if !math.IsNaN(s1[i]) && s1[i] != s2[i] {
+			return false
+		}
+	}
+	return true
+}
+
 func TestClassesToTable(t *testing.T) {
 	t.Run("String classes", func(t *testing.T) {
-		classes := []string{"A", "B", "A", "C", "B", "A"}
-		table, err := ClassesToTable(classes, nil)
+		classes := []string{"A", "B", "A", "C", "-", "A"}
+		table, err := ClassesToTable(classes, nil, "-")
 		assert.NoError(t, err)
 
 		assert.Equal(t, 3, table.Columns())
@@ -22,15 +38,15 @@ func TestClassesToTable(t *testing.T) {
 			0, 1, 0,
 			1, 0, 0,
 			0, 0, 1,
-			0, 1, 0,
+			math.NaN(), math.NaN(), math.NaN(),
 			1, 0, 0,
 		}
-		assert.Equal(t, expectedData, table.Data())
+		assert.True(t, equalWithNaN(expectedData, table.Data()))
 	})
 
 	t.Run("String classes with columns", func(t *testing.T) {
 		classes := []string{"A", "B", "A", "C", "B", "A"}
-		table, err := ClassesToTable(classes, []string{"C", "A"})
+		table, err := ClassesToTable(classes, []string{"C", "A"}, "")
 		assert.NoError(t, err)
 
 		assert.Equal(t, 2, table.Columns())
@@ -39,22 +55,22 @@ func TestClassesToTable(t *testing.T) {
 
 		expectedData := []float64{
 			0, 1,
-			0, 0,
+			math.NaN(), math.NaN(),
 			0, 1,
 			1, 0,
-			0, 0,
+			math.NaN(), math.NaN(),
 			0, 1,
 		}
-		assert.Equal(t, expectedData, table.Data())
+		assert.True(t, equalWithNaN(expectedData, table.Data()))
 	})
 
 	t.Run("Integer classes", func(t *testing.T) {
-		classes := []int{1, 2, 1, 3, 2, 1}
-		table, err := ClassesToTable(classes, nil)
+		classes := []int{1, 2, 1, 3, 2, 1, -1}
+		table, err := ClassesToTable(classes, nil, -1)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 3, table.Columns())
-		assert.Equal(t, 6, table.Rows())
+		assert.Equal(t, 7, table.Rows())
 		assert.Equal(t, []string{"1", "2", "3"}, table.ColumnNames())
 
 		expectedData := []float64{
@@ -64,13 +80,14 @@ func TestClassesToTable(t *testing.T) {
 			0, 0, 1,
 			0, 1, 0,
 			1, 0, 0,
+			math.NaN(), math.NaN(), math.NaN(),
 		}
-		assert.Equal(t, expectedData, table.Data())
+		assert.True(t, equalWithNaN(expectedData, table.Data()))
 	})
 
 	t.Run("Single class", func(t *testing.T) {
 		classes := []string{"A", "A", "A"}
-		table, err := ClassesToTable(classes, nil)
+		table, err := ClassesToTable(classes, nil, "")
 		assert.NoError(t, err)
 
 		assert.Equal(t, 1, table.Columns())

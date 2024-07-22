@@ -33,6 +33,10 @@ func (s *StringReader) ReadLabels(column string) ([]string, error) {
 	return readLabels(strings.NewReader(s.text), column, s.delim)
 }
 
+func (s *StringReader) NoData() string {
+	return s.noData
+}
+
 // FileReader is an implementation of [table.Reader] that reads data from a CSV file.
 type FileReader struct {
 	path   string
@@ -55,6 +59,10 @@ func (f *FileReader) ReadColumns(columns []string) (*table.Table, error) {
 
 func (f *FileReader) ReadLabels(column string) ([]string, error) {
 	return readLabels(strings.NewReader(f.text), column, f.delim)
+}
+
+func (f *FileReader) NoData() string {
+	return f.noData
 }
 
 func readColumns(reader io.Reader, columns []string, delim rune, noData string) (*table.Table, error) {

@@ -54,7 +54,7 @@ func labelCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			classes, indices := conv.ClassesToIndices(labels)
+			classes, indices := conv.ClassesToIndices(labels, noData)
 
 			s, err := som.New(config)
 			if err != nil {

@@ -12,13 +12,16 @@ import (
 // If the columns parameter is empty, the table will have a column for each unique class label.
 // If the columns parameter is provided, the table will have a column for each provided class label,
 // and an error will be returned if any duplicate class labels are found.
-func ClassesToTable[T comparable](classes []T, columns []T) (*table.Table, error) {
+func ClassesToTable[T comparable](classes []T, columns []T, noData T) (*table.Table, error) {
 	var classList []T
 	var classNames []string
 	classMap := map[T]int{}
 
 	if len(columns) == 0 {
 		for _, c := range classes {
+			if c == noData {
+				continue
+			}
 			if _, ok := classMap[c]; !ok {
 				classList = append(classList, c)
 				classNames = append(classNames, fmt.Sprintf("%v", c))
@@ -38,13 +41,17 @@ func ClassesToTable[T comparable](classes []T, columns []T) (*table.Table, error
 		}
 	}
 
-	data := make([]float64, len(classList)*len(classes))
+	numClasses := len(classList)
+	data := make([]float64, numClasses*len(classes))
 	for i, c := range classes {
 		idx, ok := classMap[c]
 		if !ok {
+			for col := 0; col < numClasses; col++ {
+				data[i*numClasses+col] = math.NaN()
+			}
 			continue
 		}
-		data[i*len(classList)+idx] = 1
+		data[i*numClasses+idx] = 1
 	}
 	table, err := table.NewWithData(classNames, data)
 	if err != nil {
@@ -54,12 +61,15 @@ func ClassesToTable[T comparable](classes []T, columns []T) (*table.Table, error
 }
 
 // ClassesToIndices converts a slice of class labels to a slice of class indices and a slice of unique class labels.
-func ClassesToIndices[T comparable](classes []T) (columns []T, indices []int) {
+func ClassesToIndices[T comparable](classes []T, noData T) (columns []T, indices []int) {
 	columns = []T{}
 	classMap := map[T]int{}
 	indices = make([]int, len(classes))
 
 	for i, c := range classes {
+		if c == noData {
+			indices[i] = -1
+		}
 		idx, ok := classMap[c]
 		if !ok {
 			idx = len(columns)
@@ -82,8 +92,13 @@ func TableToClasses(table *table.Table) ([]string, []int) {
 		maxIndex := 0
 		cols := table.Columns()
 		for j := 0; j < cols; j++ {
-			if row[j] > maxValue {
-				maxValue = row[j]
+			value := row[j]
+			if math.IsNaN(value) {
+				maxIndex = -1
+				break
+			}
+			if value > maxValue {
+				maxValue = value
 				maxIndex = j
 			}
 		}
@@ -104,8 +119,13 @@ func LayerToClasses(l *layer.Layer) ([]string, []int) {
 		maxIndex := 0
 		cols := l.ColumnNames()
 		for j := 0; j < len(cols); j++ {
-			if row[j] > maxValue {
-				maxValue = row[j]
+			value := row[j]
+			if math.IsNaN(value) {
+				maxIndex = -1
+				break
+			}
+			if value > maxValue {
+				maxValue = value
 				maxIndex = j
 			}
 		}

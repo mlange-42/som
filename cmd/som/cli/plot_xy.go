@@ -81,7 +81,7 @@ func plotXyCommand() *cobra.Command {
 					if err != nil {
 						return err
 					}
-					dataCats, dataIndices = conv.ClassesToIndices(colorColumn)
+					dataCats, dataIndices = conv.ClassesToIndices(colorColumn, noData)
 				}
 			}
 
