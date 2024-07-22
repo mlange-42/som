@@ -88,10 +88,15 @@ func ToSomConfig(ymlData []byte) (*som.SomConfig, *som.TrainingConfig, error) {
 		if err != nil {
 			return nil, nil, err
 		}
-		wtDecay, err := decay.FromString(yml.Training.WeightDecay)
-		if err != nil {
-			return nil, nil, err
+
+		var wtDecay decay.Decay
+		if yml.Training.WeightDecay != "" {
+			wtDecay, err = decay.FromString(yml.Training.WeightDecay)
+			if err != nil {
+				return nil, nil, err
+			}
 		}
+
 		training = &som.TrainingConfig{
 			Epochs:             yml.Training.Epochs,
 			LearningRate:       alpha,
