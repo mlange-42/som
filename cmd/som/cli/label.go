@@ -46,7 +46,7 @@ func labelCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			tables, err := config.PrepareTables(reader, ignore, true)
+			tables, err := config.PrepareTables(reader, ignore, false)
 			if err != nil {
 				return err
 			}
