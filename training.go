@@ -102,11 +102,7 @@ func (t *Trainer) propagateLabels(name string, probabilities []float64, counts [
 			len(probabilities), rows, cols, rows*cols)
 	}
 
-	lay1, err := layer.NewWithData(name, classes, nil, *t.som.Size(), &distance.Hamming{}, 0.00001, true, probabilities)
-	if err != nil {
-		return nil, err
-	}
-	lay2, err := layer.NewWithData(name, classes, nil, *t.som.Size(), &distance.Hamming{}, 0.00001, true, append(make([]float64, 0, rows*cols), probabilities...))
+	lay1, lay2, err := t.createLabelLayers(name, classes, probabilities)
 	if err != nil {
 		return nil, err
 	}
@@ -119,44 +115,20 @@ func (t *Trainer) propagateLabels(name string, probabilities []float64, counts [
 	for iter := 0; iter < 10000; iter++ {
 		totalDiff := 0.0
 		for x := 0; x < w; x++ {
-			dxMin, dxMax := max(x-1, 0)-x, min(x+1, w-1)-x
 			for y := 0; y < h; y++ {
 				nodeIdx := t.som.Size().Index(x, y)
 				if counts[nodeIdx] > 0 {
+					// Node with known labels.
 					continue
 				}
 				self := lay2.GetNode(x, y)
 				selfPrev := lay1.GetNode(x, y)
 				for i := 0; i < cols; i++ {
-					diff := self[i] - selfPrev[i]
-					totalDiff += math.Abs(diff)
+					totalDiff += math.Abs(self[i] - selfPrev[i])
 					self[i] = 0
 				}
 
-				sumWeights := 0.0
-
-				dyMin, dyMax := max(y-1, 0)-y, min(y+1, h-1)-y
-				for dx := dxMin; dx <= dxMax; dx++ {
-					for dy := dyMin; dy <= dyMax; dy++ {
-						if dx != 0 && dy != 0 {
-							continue
-						}
-						var weight float64
-						if dx == 0 && dy == 0 {
-							weight = t.som.neighborhood.Weight(0, sigma)
-						} else {
-							weight = t.som.neighborhood.Weight(uMatrix[2*y+dy][2*x+dx], sigma)
-						}
-
-						other := lay1.GetNode(x+dx, y+dy)
-						for i := 0; i < cols; i++ {
-							v := weight * other[i]
-							self[i] += v
-							sumWeights += v
-						}
-					}
-				}
-
+				sumWeights := t.updateLabelsFromNeighbors(x, y, self, lay1, uMatrix, sigma)
 				if sumWeights == 0 {
 					continue
 				}
@@ -166,7 +138,6 @@ func (t *Trainer) propagateLabels(name string, probabilities []float64, counts [
 				}
 			}
 		}
-		//fmt.Fprintln(os.Stderr, totalDiff)
 
 		lay1, lay2 = lay2, lay1
 		if iter > 0 && totalDiff < 0.001 {
@@ -175,6 +146,56 @@ func (t *Trainer) propagateLabels(name string, probabilities []float64, counts [
 	}
 
 	return lay1, nil
+}
+
+func (t *Trainer) updateLabelsFromNeighbors(x, y int, self []float64, lay1 *layer.Layer, uMatrix [][]float64, sigma float64) float64 {
+	sumWeights := 0.0
+
+	w, h := t.som.Size().Width, t.som.Size().Height
+	dxMin, dxMax := max(x-1, 0)-x, min(x+1, w-1)-x
+	dyMin, dyMax := max(y-1, 0)-y, min(y+1, h-1)-y
+	for dx := dxMin; dx <= dxMax; dx++ {
+		for dy := dyMin; dy <= dyMax; dy++ {
+			if dx != 0 && dy != 0 {
+				continue // diagonal neighbors
+			}
+			var weight float64
+			if dx == 0 && dy == 0 {
+				// BMU
+				weight = t.som.neighborhood.Weight(0, sigma)
+			} else {
+				// Neighbor node
+				weight = t.som.neighborhood.Weight(uMatrix[2*y+dy][2*x+dx], sigma)
+			}
+
+			other := lay1.GetNode(x+dx, y+dy)
+
+			sumWeights += t.updateLabels(self, other, weight)
+		}
+	}
+	return sumWeights
+}
+
+func (t *Trainer) updateLabels(self, other []float64, weight float64) float64 {
+	sumWeights := 0.0
+	for i := 0; i < len(self); i++ {
+		v := weight * other[i]
+		self[i] += v
+		sumWeights += v
+	}
+	return sumWeights
+}
+
+func (t *Trainer) createLabelLayers(name string, classes []string, probabilities []float64) (*layer.Layer, *layer.Layer, error) {
+	lay1, err := layer.NewWithData(name, classes, nil, *t.som.Size(), &distance.Hamming{}, 0.00001, true, probabilities)
+	if err != nil {
+		return nil, nil, err
+	}
+	lay2, err := layer.NewWithData(name, classes, nil, *t.som.Size(), &distance.Hamming{}, 0.00001, true, append(make([]float64, 0, len(probabilities)), probabilities...))
+	if err != nil {
+		return nil, nil, err
+	}
+	return lay1, lay2, nil
 }
 
 func (t *Trainer) calcPropagationSigma(uMatrix [][]float64) float64 {
