@@ -16,7 +16,7 @@ import (
 // Categorical layers are converted back to their string representations.
 func SomToCsv(som *som.Som, writer io.Writer, delim rune, noData string) error {
 	layers := collectLayers(som)
-	labelColumns, labels := collectLabels(som)
+	labelColumns, labels := collectLabels(som, noData)
 
 	err := writeHeadersSom(writer, labelColumns, layers, delim)
 	if err != nil {
@@ -110,7 +110,7 @@ func collectLayers(som *som.Som) []*layer.Layer {
 	return layers
 }
 
-func collectLabels(som *som.Som) ([]string, [][]string) {
+func collectLabels(som *som.Som, noData string) ([]string, [][]string) {
 	labelColumns := []string{}
 	labels := [][]string{}
 
@@ -121,6 +121,11 @@ func collectLabels(som *som.Som) ([]string, [][]string) {
 		classes, indices := conv.LayerToClasses(layer)
 		labs := make([]string, len(indices))
 		for i := range indices {
+			idx := indices[i]
+			if idx < 0 {
+				labs[i] = noData
+				continue
+			}
 			labs[i] = classes[indices[i]]
 		}
 		labels = append(labels, labs)
