@@ -10,6 +10,7 @@ import (
 	"github.com/mlange-42/som/decay"
 	"github.com/mlange-42/som/distance"
 	"github.com/mlange-42/som/layer"
+	"github.com/mlange-42/som/neighborhood"
 	"github.com/mlange-42/som/table"
 )
 
@@ -109,6 +110,7 @@ func (t *Trainer) propagateLabels(name string, probabilities []float64, counts [
 
 	uMatrix := t.som.UMatrix(false)
 	sigma := t.calcPropagationSigma(uMatrix)
+	neigh := &neighborhood.Gaussian{}
 
 	w, h := t.som.Size().Width, t.som.Size().Height
 
@@ -128,7 +130,7 @@ func (t *Trainer) propagateLabels(name string, probabilities []float64, counts [
 					self[i] = 0
 				}
 
-				sumWeights := t.updateLabelsFromNeighbors(x, y, self, lay1, uMatrix, sigma)
+				sumWeights := t.updateLabelsFromNeighbors(x, y, self, lay1, uMatrix, sigma, neigh)
 				if sumWeights == 0 {
 					continue
 				}
@@ -148,7 +150,9 @@ func (t *Trainer) propagateLabels(name string, probabilities []float64, counts [
 	return lay1, nil
 }
 
-func (t *Trainer) updateLabelsFromNeighbors(x, y int, self []float64, lay1 *layer.Layer, uMatrix [][]float64, sigma float64) float64 {
+func (t *Trainer) updateLabelsFromNeighbors(x, y int,
+	self []float64, lay1 *layer.Layer, uMatrix [][]float64, sigma float64,
+	neigh neighborhood.Neighborhood) float64 {
 	sumWeights := 0.0
 
 	w, h := t.som.Size().Width, t.som.Size().Height
@@ -162,10 +166,10 @@ func (t *Trainer) updateLabelsFromNeighbors(x, y int, self []float64, lay1 *laye
 			var weight float64
 			if dx == 0 && dy == 0 {
 				// BMU
-				weight = t.som.neighborhood.Weight(0, sigma)
+				weight = neigh.Weight(0, sigma)
 			} else {
 				// Neighbor node
-				weight = t.som.neighborhood.Weight(uMatrix[2*y+dy][2*x+dx], sigma)
+				weight = neigh.Weight(uMatrix[2*y+dy][2*x+dx], sigma)
 			}
 
 			other := lay1.GetNode(x+dx, y+dy)
@@ -229,7 +233,7 @@ func (t *Trainer) calcPropagationSigma(uMatrix [][]float64) float64 {
 		}
 	}
 
-	return values[urpMinIndex]
+	return values[urpMinIndex] / 3.0
 }
 
 func calcSquaredURP(sMin, sMax float64, distribution []float64, index int) float64 {
