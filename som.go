@@ -5,6 +5,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"slices"
 
 	"github.com/mlange-42/som/conv"
 	"github.com/mlange-42/som/distance"
@@ -28,10 +29,16 @@ type SomConfig struct {
 // If a categorical layer has no columns specified, it will attempt to read the class names for that layer
 // and create a table from the classes. The created tables are returned in the same order as
 // the layers in the SomConfig.
-func (c *SomConfig) PrepareTables(reader table.Reader, updateNormalizers bool) ([]*table.Table, error) {
+func (c *SomConfig) PrepareTables(reader table.Reader, ignoreLayers []string, updateNormalizers bool) ([]*table.Table, error) {
 	tables := make([]*table.Table, len(c.Layers))
+
+	ignoreFound := make([]bool, len(ignoreLayers))
 	for i := range c.Layers {
 		layer := c.Layers[i]
+		if idx := slices.Index(ignoreLayers, layer.Name); idx >= 0 {
+			ignoreFound[idx] = true
+			continue
+		}
 
 		if layer.Categorical {
 			classes, err := reader.ReadLabels(layer.Name)
@@ -69,12 +76,22 @@ func (c *SomConfig) PrepareTables(reader table.Reader, updateNormalizers bool) (
 
 		tables[i] = table
 	}
+
+	for i, f := range ignoreFound {
+		if !f {
+			return nil, fmt.Errorf("layer %s from ignore list not found in layers", ignoreLayers[i])
+		}
+	}
+
 	return tables, nil
 }
 
 // LayerDef represents the configuration for a single layer in a Self-Organizing Map (SOM).
 // It defines the name, columns, normalization, metric, weight, and whether the layer is categorical.
 // If the layer has weights, it can also be initialized with the provided data.
+//
+// A weight value of 0.0 is interpreted as standard weight of 1.0.
+// To get a weight of 0.0, give the weight field a negative value.
 type LayerDef struct {
 	Name        string            // Name of the layer
 	Columns     []string          // Columns to use from the data
@@ -107,6 +124,8 @@ func New(params *SomConfig) (*Som, error) {
 		weight := l.Weight
 		if weight == 0 {
 			weight = 1
+		} else if weight < 0 {
+			weight = 0
 		}
 		metric := l.Metric
 		if metric == nil {
@@ -254,6 +273,9 @@ func (s *Som) updateNode(x, y int, data [][]float64, rate float64) {
 func (s *Som) distance(data [][]float64, unit int) float64 {
 	totalDist := 0.0
 	for l, layer := range s.layers {
+		if layer.Weight() == 0 || data[l] == nil {
+			continue
+		}
 		node := layer.GetNodeAt(unit)
 		dist := layer.Metric().Distance(node, data[l])
 		totalDist += layer.Weight() * dist
@@ -264,6 +286,9 @@ func (s *Som) distance(data [][]float64, unit int) float64 {
 func (s *Som) nodeDistance(unit1, unit2 int) float64 {
 	totalDist := 0.0
 	for _, layer := range s.layers {
+		if layer.Weight() == 0 {
+			continue
+		}
 		node1 := layer.GetNodeAt(unit1)
 		node2 := layer.GetNodeAt(unit2)
 		dist := layer.Metric().Distance(node1, node2)
@@ -292,9 +317,9 @@ func (s *Som) Layers() []*layer.Layer {
 // the dimensions of the original map, with the values representing the
 // distances between nodes and their neighbors.
 //
-// Cells that don't correspond to a link, but to a node or an "empty space"
+// If fill is true, cells that don't correspond to a link, but to a node or an "empty space"
 // are filled with the average of the surrounding links.
-func (s *Som) UMatrix() [][]float64 {
+func (s *Som) UMatrix(fill bool) [][]float64 {
 	height := s.size.Height*2 - 1
 	width := s.size.Width*2 - 1
 	u := make([][]float64, height)
@@ -318,6 +343,10 @@ func (s *Som) UMatrix() [][]float64 {
 				u[y*2+1][x*2] = s.nodeDistance(nodeHere, nodeDown)
 			}
 		}
+	}
+
+	if !fill {
+		return u
 	}
 
 	for x := 0; x < s.size.Width*2-1; x++ {

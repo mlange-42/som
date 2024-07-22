@@ -21,11 +21,11 @@ func plotCommand() *cobra.Command {
 		},
 	}
 
-	command.AddCommand(heatmapCommand())
-	command.AddCommand(uMatrixCommand())
-	command.AddCommand(xyCommand())
-	command.AddCommand(densityCommand())
-	command.AddCommand(errorCommand())
+	command.AddCommand(plotHeatmapCommand())
+	command.AddCommand(plotUMatrixCommand())
+	command.AddCommand(plotXyCommand())
+	command.AddCommand(plotDensityCommand())
+	command.AddCommand(plotErrorCommand())
 
 	return command
 }
@@ -34,7 +34,8 @@ func plotHeatmap(size []int,
 	somFile, outFile, dataFile,
 	labelsColumn, delim, noData string,
 	title string,
-	getData func(s *som.Som, p *som.Predictor) plotter.GridXYZ) error {
+	ignoreLayers []string,
+	getData func(s *som.Som, p *som.Predictor, r table.Reader) (plotter.GridXYZ, []string, error)) error {
 
 	del := []rune(delim)
 	if len(delim) != 1 {
@@ -58,7 +59,7 @@ func plotHeatmap(size []int,
 		if err != nil {
 			return err
 		}
-		predictor, _, err = createPredictor(config, s, reader)
+		predictor, _, err = createPredictor(config, s, reader, ignoreLayers)
 		if err != nil {
 			return err
 		}
@@ -77,9 +78,12 @@ func plotHeatmap(size []int,
 		}
 	}
 
-	grid := getData(s, predictor)
+	grid, cats, err := getData(s, predictor, reader)
+	if err != nil {
+		return err
+	}
 
-	img, err := plot.Heatmap(title, grid, size[0], size[1], nil, labels, positions)
+	img, err := plot.Heatmap(title, grid, size[0], size[1], cats, labels, positions)
 	if err != nil {
 		return err
 	}

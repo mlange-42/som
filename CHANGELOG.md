@@ -2,6 +2,11 @@
 
 ## [[unpublished]](https://github.com/mlange-42/som/compare/v0.1.0...main)
 
+### Features
+
+* Adds label propagation for semi-supervised learning (#43)
+* Adds switch `--ignore` to all prediction-related commands, for ignoring layers (#43)
+
 ### Bugfixes
 
 * Update BMU weights before the weights of neighboring nodes (#42)

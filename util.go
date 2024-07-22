@@ -19,6 +19,9 @@ func checkTables(som *Som, tables []*table.Table) error {
 
 	rows := -1
 	for _, table := range tables {
+		if table == nil {
+			continue
+		}
 		if rows == -1 {
 			rows = table.Rows()
 		} else if rows != table.Rows() {
@@ -28,6 +31,9 @@ func checkTables(som *Som, tables []*table.Table) error {
 
 	for i := range som.layers {
 		table := tables[i]
+		if table == nil {
+			continue
+		}
 		cols := som.layers[i].ColumnNames()
 		if table.Columns() != len(cols) {
 			return fmt.Errorf("number of columns in table (%d) does not match number of columns in layer (%d)", table.Columns(), len(cols))

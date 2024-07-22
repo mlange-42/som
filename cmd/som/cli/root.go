@@ -21,6 +21,7 @@ func RootCommand() *cobra.Command {
 	}
 
 	root.AddCommand(trainCommand())
+	root.AddCommand(labelCommand())
 	root.AddCommand(exportCommand())
 	root.AddCommand(bmuCommand())
 	root.AddCommand(plotCommand())

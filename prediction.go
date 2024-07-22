@@ -45,9 +45,8 @@ func (p *Predictor) GetBMUTable() *table.Table {
 	bmu := make([]float64, rows*cols)
 
 	for i := 0; i < rows; i++ {
-		for j := 0; j < len(p.tables); j++ {
-			data[j] = p.tables[j].GetRow(i)
-		}
+		p.collectData(i, data)
+
 		idx, dist := p.som.GetBMU(data)
 		x, y := p.som.Size().Coords(idx)
 		bmu[i*cols] = float64(idx)
@@ -64,6 +63,17 @@ func (p *Predictor) GetBMUTable() *table.Table {
 	return t
 }
 
+func (p *Predictor) collectData(row int, data [][]float64) {
+	for j := 0; j < len(p.tables); j++ {
+		t := p.tables[j]
+		if t == nil {
+			data[j] = nil
+		} else {
+			data[j] = t.GetRow(row)
+		}
+	}
+}
+
 // GetBMU returns a slice of the best matching unit (BMU) indices for each row in the
 // associated tables.
 func (p *Predictor) GetBMU() []int {
@@ -73,9 +83,8 @@ func (p *Predictor) GetBMU() []int {
 	bmu := make([]int, rows)
 
 	for i := 0; i < rows; i++ {
-		for j := 0; j < len(p.tables); j++ {
-			data[j] = p.tables[j].GetRow(i)
-		}
+		p.collectData(i, data)
+
 		idx, _ := p.som.GetBMU(data)
 		bmu[i] = idx
 	}
@@ -93,9 +102,8 @@ func (p *Predictor) GetBMUWithDistance() ([]int, []float64) {
 	distance := make([]float64, rows)
 
 	for i := 0; i < rows; i++ {
-		for j := 0; j < len(p.tables); j++ {
-			data[j] = p.tables[j].GetRow(i)
-		}
+		p.collectData(i, data)
+
 		bmu[i], distance[i] = p.som.GetBMU(data)
 	}
 

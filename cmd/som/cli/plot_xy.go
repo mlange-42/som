@@ -13,7 +13,7 @@ import (
 	"gonum.org/v1/plot/plotter"
 )
 
-func xyCommand() *cobra.Command {
+func plotXyCommand() *cobra.Command {
 	var size []int
 	var xColumn string
 	var yColumn string
@@ -24,6 +24,7 @@ func xyCommand() *cobra.Command {
 	var labelsColumn string
 	var delim string
 	var noData string
+	var ignore []string
 
 	command := &cobra.Command{
 		Use:   "xy [flags] <som-file> <out-file>",
@@ -69,7 +70,7 @@ func xyCommand() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				tables, err = config.PrepareTables(reader, false)
+				tables, err = config.PrepareTables(reader, ignore, false)
 				if err != nil {
 					return err
 				}
@@ -121,6 +122,7 @@ func xyCommand() *cobra.Command {
 	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of individual heatmap panels")
 	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required for --labels")
 	command.Flags().StringVarP(&labelsColumn, "labels", "l", "", "Labels column in the data file")
+	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
 
 	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")
 	command.Flags().StringVarP(&noData, "no-data", "n", "", "No-data value (default \"\")")

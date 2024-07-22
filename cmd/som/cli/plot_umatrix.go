@@ -3,16 +3,18 @@ package cli
 import (
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/plot"
+	"github.com/mlange-42/som/table"
 	"github.com/spf13/cobra"
 	"gonum.org/v1/plot/plotter"
 )
 
-func uMatrixCommand() *cobra.Command {
+func plotUMatrixCommand() *cobra.Command {
 	var size []int
 	var dataFile string
 	var labelsColumn string
 	var delim string
 	var noData string
+	var ignore []string
 
 	command := &cobra.Command{
 		Use:   "u-matrix [flags] <som-file> <out-file>",
@@ -26,9 +28,10 @@ func uMatrixCommand() *cobra.Command {
 			return plotHeatmap(size,
 				somFile, outFile, dataFile,
 				labelsColumn, delim, noData, "U-Matrix",
-				func(s *som.Som, p *som.Predictor) plotter.GridXYZ {
-					uMatrix := s.UMatrix()
-					return &plot.UMatrixGrid{UMatrix: uMatrix}
+				ignore,
+				func(s *som.Som, p *som.Predictor, r table.Reader) (plotter.GridXYZ, []string, error) {
+					uMatrix := s.UMatrix(true)
+					return &plot.UMatrixGrid{UMatrix: uMatrix}, nil, nil
 				},
 			)
 		},
@@ -36,6 +39,7 @@ func uMatrixCommand() *cobra.Command {
 
 	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of individual heatmap panels")
 	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required for --labels")
+	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
 	command.Flags().StringVarP(&labelsColumn, "labels", "l", "", "Labels column in the data file")
 
 	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")

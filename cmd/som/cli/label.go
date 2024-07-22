@@ -2,26 +2,27 @@ package cli
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
-	"strings"
 
 	"github.com/mlange-42/som"
+	"github.com/mlange-42/som/conv"
 	"github.com/mlange-42/som/csv"
-	"github.com/mlange-42/som/table"
 	"github.com/mlange-42/som/yml"
 	"github.com/spf13/cobra"
 )
 
-func bmuCommand() *cobra.Command {
+func labelCommand() *cobra.Command {
 	var delim string
 	var noData string
-	var preserve []string
+	var column string
+	var seed int64
 	var ignore []string
 
 	command := &cobra.Command{
-		Use:   "bmu [flags] <som-file> <data-file>",
-		Short: "Finds the best-matching unit (BMU) for each table row in a dataset",
-		Long:  `Finds the best-matching unit (BMU) for each table row in a dataset`,
+		Use:   "label [flags] <som-file> <data-file>",
+		Short: "Classifies SOM nodes using label propagation",
+		Long:  `Classifies SOM nodes using label propagation`,
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]
@@ -31,7 +32,7 @@ func bmuCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			config, _, err := yml.ToSomConfig(somYaml)
+			config, trainingConfig, err := yml.ToSomConfig(somYaml)
 			if err != nil {
 				return err
 			}
@@ -45,49 +46,49 @@ func bmuCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
-			preserved := [][]string{}
-			for _, column := range preserve {
-				col, err := reader.ReadLabels(column)
-				if err != nil {
-					return err
-				}
-				preserved = append(preserved, col)
-			}
-
-			tables, err := config.PrepareTables(reader, ignore, false)
+			tables, err := config.PrepareTables(reader, ignore, true)
 			if err != nil {
 				return err
 			}
+			labels, err := reader.ReadLabels(column)
+			if err != nil {
+				return err
+			}
+			classes, indices := conv.ClassesToIndices(labels)
 
 			s, err := som.New(config)
 			if err != nil {
 				return err
 			}
-			pred, err := som.NewPredictor(s, tables)
+			trainer, err := som.NewTrainer(s, tables, trainingConfig, rand.New(rand.NewSource(seed)))
 			if err != nil {
 				return err
 			}
 
-			bmu := pred.GetBMUTable()
-			writer := strings.Builder{}
-			err = csv.TablesToCsv([]*table.Table{bmu}, preserve, preserved, &writer, del[0], noData)
+			err = trainer.PropagateLabels(column, classes, indices)
 			if err != nil {
 				return err
 			}
 
-			fmt.Println(writer.String())
+			outYaml, err := yml.ToYAML(s)
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(outYaml))
 
 			return nil
 		},
 	}
-	command.Flags().StringSliceVarP(&preserve, "preserve", "p", nil, "Preserve columns and prepend them to the output table")
+
+	command.Flags().StringVarP(&column, "column", "c", "", "Column to use for label propagation")
 	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
+	command.Flags().Int64VarP(&seed, "seed", "s", 42, "Random seed")
 
 	command.Flags().StringVarP(&delim, "delimiter", "d", ",", "CSV delimiter")
 	command.Flags().StringVarP(&noData, "no-data", "n", "", "No-data string")
 
 	command.Flags().SortFlags = false
+	command.MarkFlagRequired("column")
 
 	return command
 }
