@@ -69,6 +69,7 @@ func ClassesToIndices[T comparable](classes []T, noData T) (columns []T, indices
 	for i, c := range classes {
 		if c == noData {
 			indices[i] = -1
+			continue
 		}
 		idx, ok := classMap[c]
 		if !ok {

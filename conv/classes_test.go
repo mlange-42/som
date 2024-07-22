@@ -105,13 +105,14 @@ func TestTableToClasses(t *testing.T) {
 			0.1, 0.2, 0.7, 0.0,
 			0.8, 0.1, 0.0, 0.1,
 			0.3, 0.3, 0.3, 0.1,
+			math.NaN(), 0, 0, 0,
 		})
 		assert.Nil(t, err)
 
 		columnNames, classes := TableToClasses(table)
 
 		assert.Equal(t, []string{"A", "B", "C", "D"}, columnNames)
-		assert.Equal(t, []int{2, 0, 0}, classes)
+		assert.Equal(t, []int{2, 0, 0, -1}, classes)
 	})
 
 	t.Run("Table with one row", func(t *testing.T) {
