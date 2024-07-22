@@ -2,7 +2,9 @@ package som
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
+	"os"
 	"strconv"
 
 	"github.com/mlange-42/som/decay"
@@ -73,17 +75,16 @@ func (t *Trainer) Train(progress chan TrainingProgress) {
 	close(progress)
 }
 
-func (t *Trainer) PropagateLabels(name string, classes []string, indices []int) error {
+func (t *Trainer) PropagateLabels(name string, classes []string, indices []int, sigma float64) error {
 	if len(indices) != t.tables[0].Rows() {
 		return fmt.Errorf("length of indices (%d) does not match number of data rows (%d)", len(indices), t.tables[0].Rows())
 	}
 
-	classCounter, _, err := t.findLabels(classes, indices)
+	probabilities, counts, err := t.findLabels(classes, indices)
 	if err != nil {
 		return err
 	}
-
-	lay, err := layer.NewWithData(name, classes, nil, *t.som.Size(), &distance.Hamming{}, 0.00001, true, classCounter)
+	lay, err := t.propagateLabels(name, probabilities, counts, classes, sigma)
 	if err != nil {
 		return err
 	}
@@ -91,6 +92,87 @@ func (t *Trainer) PropagateLabels(name string, classes []string, indices []int) 
 	t.som.layers = append(t.som.layers, lay)
 
 	return nil
+}
+
+func (t *Trainer) propagateLabels(name string, probabilities []float64, counts []int, classes []string, sigma float64) (*layer.Layer, error) {
+	rows := len(counts)
+	cols := len(classes)
+	if len(probabilities) != rows*cols {
+		return nil, fmt.Errorf("length of data (%d) does not match expected length (%d*%d=%d)",
+			len(probabilities), rows, cols, rows*cols)
+	}
+
+	lay1, err := layer.NewWithData(name, classes, nil, *t.som.Size(), &distance.Hamming{}, 0.00001, true, probabilities)
+	if err != nil {
+		return nil, err
+	}
+	lay2, err := layer.NewWithData(name, classes, nil, *t.som.Size(), &distance.Hamming{}, 0.00001, true, append(make([]float64, 0, rows*cols), probabilities...))
+	if err != nil {
+		return nil, err
+	}
+
+	uMatrix := t.som.UMatrix(false)
+
+	w, h := t.som.Size().Width, t.som.Size().Height
+
+	for iter := 0; iter < 10000; iter++ {
+		totalDiff := 0.0
+		for x := 0; x < w; x++ {
+			dxMin, dxMax := max(x-1, 0)-x, min(x+1, w-1)-x
+			for y := 0; y < h; y++ {
+				nodeIdx := t.som.Size().Index(x, y)
+				if counts[nodeIdx] > 0 {
+					continue
+				}
+				self := lay2.GetNode(x, y)
+				selfPrev := lay1.GetNode(x, y)
+				for i := 0; i < cols; i++ {
+					diff := self[i] - selfPrev[i]
+					totalDiff += math.Abs(diff)
+				}
+
+				sumWeights := 0.0
+
+				dyMin, dyMax := max(y-1, 0)-y, min(y+1, h-1)-y
+				for dx := dxMin; dx <= dxMax; dx++ {
+					for dy := dyMin; dy <= dyMax; dy++ {
+						if dx != 0 && dy != 0 {
+							continue
+						}
+						var weight float64
+						if dx == 0 && dy == 0 {
+							weight = t.som.neighborhood.Weight(0, sigma)
+						} else {
+							weight = t.som.neighborhood.Weight(uMatrix[2*y+dy][2*x+dx], sigma)
+						}
+
+						other := lay1.GetNode(x+dx, y+dy)
+						for i := 0; i < cols; i++ {
+							v := weight * other[i]
+							self[i] += v
+							sumWeights += v
+						}
+					}
+				}
+
+				if sumWeights == 0 {
+					continue
+				}
+
+				for i := 0; i < cols; i++ {
+					self[i] /= sumWeights
+				}
+			}
+		}
+		fmt.Fprintln(os.Stderr, totalDiff)
+
+		lay1, lay2 = lay2, lay1
+		if iter > 0 && totalDiff < 0.001 {
+			break
+		}
+	}
+
+	return lay1, nil
 }
 
 func (t *Trainer) findLabels(classes []string, indices []int) ([]float64, []int, error) {
@@ -111,6 +193,9 @@ func (t *Trainer) findLabels(classes []string, indices []int) ([]float64, []int,
 		totalCounter[v]++
 	}
 	for i := 0; i < rows; i++ {
+		if totalCounter[i] == 0 {
+			continue
+		}
 		for j := 0; j < cols; j++ {
 			classCounter[i*cols+j] /= float64(totalCounter[i])
 		}

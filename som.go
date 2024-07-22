@@ -292,9 +292,9 @@ func (s *Som) Layers() []*layer.Layer {
 // the dimensions of the original map, with the values representing the
 // distances between nodes and their neighbors.
 //
-// Cells that don't correspond to a link, but to a node or an "empty space"
+// If fill is true, cells that don't correspond to a link, but to a node or an "empty space"
 // are filled with the average of the surrounding links.
-func (s *Som) UMatrix() [][]float64 {
+func (s *Som) UMatrix(fill bool) [][]float64 {
 	height := s.size.Height*2 - 1
 	width := s.size.Width*2 - 1
 	u := make([][]float64, height)
@@ -318,6 +318,10 @@ func (s *Som) UMatrix() [][]float64 {
 				u[y*2+1][x*2] = s.nodeDistance(nodeHere, nodeDown)
 			}
 		}
+	}
+
+	if !fill {
+		return u
 	}
 
 	for x := 0; x < s.size.Width*2-1; x++ {

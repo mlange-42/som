@@ -28,7 +28,7 @@ func plotUMatrixCommand() *cobra.Command {
 				somFile, outFile, dataFile,
 				labelsColumn, delim, noData, "U-Matrix",
 				func(s *som.Som, p *som.Predictor, r table.Reader) (plotter.GridXYZ, []string, error) {
-					uMatrix := s.UMatrix()
+					uMatrix := s.UMatrix(true)
 					return &plot.UMatrixGrid{UMatrix: uMatrix}, nil, nil
 				},
 			)

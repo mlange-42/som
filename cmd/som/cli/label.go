@@ -64,7 +64,7 @@ func labelCommand() *cobra.Command {
 				return err
 			}
 
-			err = trainer.PropagateLabels(column, classes, indices)
+			err = trainer.PropagateLabels(column, classes, indices, 0.2)
 			if err != nil {
 				return err
 			}

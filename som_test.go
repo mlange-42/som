@@ -625,7 +625,7 @@ func TestUMatrix(t *testing.T) {
 	som.layers[0].Set(1, 1, 0, 1)
 	som.layers[0].Set(1, 1, 1, 2)
 
-	uMatrix := som.UMatrix()
+	uMatrix := som.UMatrix(true)
 
 	assert.Equal(t, 3, len(uMatrix))
 	assert.Equal(t, 3, len(uMatrix[0]))
