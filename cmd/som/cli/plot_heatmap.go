@@ -51,7 +51,7 @@ func plotHeatmapCommand() *cobra.Command {
 				return err
 			}
 
-			columns, indices, err := extractIndices(s, columns)
+			columns, indices, err := extractIndices(s, columns, true)
 			if err != nil {
 				return err
 			}
@@ -172,14 +172,16 @@ func readSom(somFile string) (*som.SomConfig, *som.Som, error) {
 	return config, s, nil
 }
 
-func extractIndices(s *som.Som, columns []string) ([]string, [][2]int, error) {
+func extractIndices(s *som.Som, columns []string, inclCategorical bool) ([]string, [][2]int, error) {
 	var indices [][2]int
 
 	if len(columns) == 0 {
 		for i, l := range s.Layers() {
 			if l.IsCategorical() {
-				indices = append(indices, [2]int{i, -1})
-				columns = append(columns, l.Name())
+				if inclCategorical {
+					indices = append(indices, [2]int{i, -1})
+					columns = append(columns, l.Name())
+				}
 				continue
 			}
 			for j, c := range l.ColumnNames() {
@@ -193,6 +195,9 @@ func extractIndices(s *som.Som, columns []string) ([]string, [][2]int, error) {
 			found := false
 			for j, l := range s.Layers() {
 				if l.IsCategorical() {
+					if !inclCategorical {
+						return nil, nil, fmt.Errorf("column %s is in categorical layer %s but inclCategorical is false", col, l.Name())
+					}
 					if col == l.Name() {
 						indices[i] = [2]int{j, -1}
 						found = true
