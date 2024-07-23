@@ -55,7 +55,7 @@ func bmuCommand() *cobra.Command {
 				preserved = append(preserved, col)
 			}
 
-			tables, err := config.PrepareTables(reader, ignore, false)
+			tables, _, err := config.PrepareTables(reader, ignore, false, false)
 			if err != nil {
 				return err
 			}

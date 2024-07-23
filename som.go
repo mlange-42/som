@@ -29,8 +29,9 @@ type SomConfig struct {
 // If a categorical layer has no columns specified, it will attempt to read the class names for that layer
 // and create a table from the classes. The created tables are returned in the same order as
 // the layers in the SomConfig.
-func (c *SomConfig) PrepareTables(reader table.Reader, ignoreLayers []string, updateNormalizers bool) ([]*table.Table, error) {
-	tables := make([]*table.Table, len(c.Layers))
+func (c *SomConfig) PrepareTables(reader table.Reader, ignoreLayers []string, updateNormalizers bool, keepOriginal bool) (normalized, raw []*table.Table, err error) {
+	normalized = make([]*table.Table, len(c.Layers))
+	raw = []*table.Table{}
 
 	ignoreFound := make([]bool, len(ignoreLayers))
 	for i := range c.Layers {
@@ -43,47 +44,63 @@ func (c *SomConfig) PrepareTables(reader table.Reader, ignoreLayers []string, up
 		if layer.Categorical {
 			classes, err := reader.ReadLabels(layer.Name)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 
-			table, err := conv.ClassesToTable(classes, layer.Columns, reader.NoData())
+			tab, err := conv.ClassesToTable(classes, layer.Columns, reader.NoData())
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
-			layer.Columns = table.ColumnNames()
-			tables[i] = table
+			layer.Columns = tab.ColumnNames()
+			normalized[i] = tab
+
+			if keepOriginal {
+				rawTable, err := table.NewWithData(tab.ColumnNames(), append([]float64{}, tab.Data()...))
+				if err != nil {
+					return nil, nil, err
+				}
+				raw = append(normalized, rawTable)
+			}
 
 			continue
 		}
 
 		if len(layer.Columns) == 0 {
-			return nil, fmt.Errorf("layer %s has no columns", layer.Name)
+			return nil, nil, fmt.Errorf("layer %s has no columns", layer.Name)
 		}
 
-		table, err := reader.ReadColumns(layer.Columns)
+		tab, err := reader.ReadColumns(layer.Columns)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
+		}
+
+		if keepOriginal {
+			rawTable, err := table.NewWithData(tab.ColumnNames(), append([]float64{}, tab.Data()...))
+			if err != nil {
+				return nil, nil, err
+			}
+			raw = append(raw, rawTable)
 		}
 
 		if len(layer.Norm) != 0 {
 			for j := range layer.Columns {
 				if updateNormalizers {
-					layer.Norm[j].Initialize(table, j)
+					layer.Norm[j].Initialize(tab, j)
 				}
-				table.NormalizeColumn(j, layer.Norm[j])
+				tab.NormalizeColumn(j, layer.Norm[j])
 			}
 		}
 
-		tables[i] = table
+		normalized[i] = tab
 	}
 
 	for i, f := range ignoreFound {
 		if !f {
-			return nil, fmt.Errorf("layer %s from ignore list not found in layers", ignoreLayers[i])
+			return nil, nil, fmt.Errorf("layer %s from ignore list not found in layers", ignoreLayers[i])
 		}
 	}
 
-	return tables, nil
+	return normalized, raw, nil
 }
 
 // LayerDef represents the configuration for a single layer in a Self-Organizing Map (SOM).

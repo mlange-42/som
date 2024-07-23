@@ -50,7 +50,7 @@ func TestPredictorGetBMU(t *testing.T) {
 	reader := mockReader{
 		Table: tab,
 	}
-	tables, err := conf.PrepareTables(&reader, nil, false)
+	tables, _, err := conf.PrepareTables(&reader, nil, false, false)
 	assert.NoError(t, err)
 
 	p, err := NewPredictor(som, tables)

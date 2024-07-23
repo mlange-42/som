@@ -70,7 +70,7 @@ func plotXyCommand() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				tables, err = config.PrepareTables(reader, ignore, false)
+				tables, _, err = config.PrepareTables(reader, ignore, false, false)
 				if err != nil {
 					return err
 				}

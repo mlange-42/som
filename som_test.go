@@ -92,7 +92,7 @@ func TestNew(t *testing.T) {
 			Table:  tab,
 			Labels: []string{"A", "B", "A"},
 		}
-		tables, err := params.PrepareTables(&reader, nil, false)
+		tables, _, err := params.PrepareTables(&reader, nil, false, false)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 2, len(tables))
