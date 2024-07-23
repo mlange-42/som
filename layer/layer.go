@@ -56,7 +56,7 @@ func NewWithData(name string, columns []string, normalizers []norm.Normalizer, s
 	if len(normalizers) == 0 {
 		normalizers = make([]norm.Normalizer, len(columns))
 		for i := range columns {
-			normalizers[i] = &norm.None{}
+			normalizers[i] = &norm.Identity{}
 		}
 	}
 	if len(normalizers) != len(columns) {

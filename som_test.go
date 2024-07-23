@@ -9,6 +9,7 @@ import (
 	"github.com/mlange-42/som/distance"
 	"github.com/mlange-42/som/layer"
 	"github.com/mlange-42/som/neighborhood"
+	"github.com/mlange-42/som/norm"
 	"github.com/mlange-42/som/table"
 	"github.com/stretchr/testify/assert"
 )
@@ -38,12 +39,14 @@ func TestNew(t *testing.T) {
 				{
 					Name:    "Layer1",
 					Columns: []string{"x", "y"},
+					Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}},
 					Weight:  0.5,
 					Metric:  &distance.Manhattan{},
 				},
 				{
 					Name:    "Layer2",
 					Columns: []string{"a", "b", "c"},
+					Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}, &norm.Identity{}},
 					Weight:  1.0,
 					Metric:  &distance.Euclidean{},
 				},
@@ -72,6 +75,7 @@ func TestNew(t *testing.T) {
 				{
 					Name:    "Layer1",
 					Columns: []string{"x", "y"},
+					Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}},
 					Weight:  0.5,
 					Metric:  &distance.Manhattan{},
 				},
@@ -80,6 +84,7 @@ func TestNew(t *testing.T) {
 					Columns:     nil,
 					Weight:      1.0,
 					Metric:      &distance.Hamming{},
+					Norm:        []norm.Normalizer{&norm.Identity{}},
 					Categorical: true,
 				},
 			},
@@ -117,6 +122,7 @@ func TestNew(t *testing.T) {
 			Layers: []*LayerDef{
 				{
 					Name:        "EmptyLayer",
+					Norm:        []norm.Normalizer{&norm.Identity{}},
 					Categorical: true,
 				},
 			},
@@ -134,6 +140,7 @@ func TestNew(t *testing.T) {
 				{
 					Name:    "DefaultLayer",
 					Columns: []string{"x"},
+					Norm:    []norm.Normalizer{&norm.Identity{}},
 				},
 			},
 		}
@@ -151,11 +158,13 @@ func TestNew(t *testing.T) {
 					Name:        "CategoricalLayer",
 					Categorical: true,
 					Columns:     []string{"category1", "category2"},
+					Norm:        []norm.Normalizer{&norm.Identity{}},
 					Weight:      0.7,
 				},
 				{
 					Name:    "NumericLayer",
 					Columns: []string{"x", "y", "z"},
+					Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}, &norm.Identity{}},
 					Weight:  1.2,
 					Metric:  &distance.Manhattan{},
 				},

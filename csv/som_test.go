@@ -11,6 +11,7 @@ import (
 	"github.com/mlange-42/som/distance"
 	"github.com/mlange-42/som/layer"
 	"github.com/mlange-42/som/neighborhood"
+	"github.com/mlange-42/som/norm"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -49,6 +50,7 @@ func createMockSom() *som.Som {
 			{
 				Name:        "CategoricalLayer",
 				Columns:     []string{"A", "B"},
+				Norm:        []norm.Normalizer{&norm.Identity{}, &norm.Identity{}},
 				Metric:      &distance.Hamming{},
 				Categorical: true,
 				Weights:     []float64{0, 1, 0, 1, 1, 0, 1, 0},
@@ -56,12 +58,14 @@ func createMockSom() *som.Som {
 			{
 				Name:    "NumericLayer1",
 				Columns: []string{"a", "b"},
+				Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}},
 				Metric:  &distance.Euclidean{},
 				Weights: []float64{0.1, 0.2, 0.3, 0.4, 1.0, 2.0, 3.0, 4.0},
 			},
 			{
 				Name:    "NumericLayer2",
 				Columns: []string{"c", "d"},
+				Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}},
 				Metric:  &distance.Euclidean{},
 				Weights: []float64{1.0, 2.0, 3.0, 4.0, 0.1, 0.2, 0.3, 0.4},
 			},

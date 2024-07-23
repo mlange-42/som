@@ -6,6 +6,7 @@ import (
 	"github.com/mlange-42/som/distance"
 	"github.com/mlange-42/som/layer"
 	"github.com/mlange-42/som/neighborhood"
+	"github.com/mlange-42/som/norm"
 	"github.com/mlange-42/som/table"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,6 +23,7 @@ func TestPredictorGetBMU(t *testing.T) {
 				Name:    "L1",
 				Columns: []string{"x", "y"},
 				Metric:  &distance.Euclidean{},
+				Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}},
 				Weights: []float64{
 					0, 0, // 0, 0
 					0, 1, // 0, 1

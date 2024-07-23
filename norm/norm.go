@@ -10,7 +10,7 @@ var normalizers = map[string]func() Normalizer{}
 
 func init() {
 	n := []func() Normalizer{
-		func() Normalizer { return &None{} },
+		func() Normalizer { return &Identity{} },
 		func() Normalizer { return &Gaussian{} },
 		func() Normalizer { return &Uniform{} },
 	}
@@ -78,27 +78,27 @@ type DataSource interface {
 	Range(column int) (min, max float64)
 }
 
-type None struct{}
+type Identity struct{}
 
-func (n *None) Name() string {
+func (n *Identity) Name() string {
 	return "none"
 }
 
-func (n *None) Normalize(value float64) float64 {
+func (n *Identity) Normalize(value float64) float64 {
 	return value
 }
 
-func (n *None) DeNormalize(value float64) float64 {
+func (n *Identity) DeNormalize(value float64) float64 {
 	return value
 }
 
-func (n *None) Initialize(t DataSource, column int) {}
+func (n *Identity) Initialize(t DataSource, column int) {}
 
-func (n *None) SetArgs(args ...float64) error {
+func (n *Identity) SetArgs(args ...float64) error {
 	return nil
 }
 
-func (n *None) GetArgs() []float64 {
+func (n *Identity) GetArgs() []float64 {
 	return nil
 }
 

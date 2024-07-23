@@ -78,7 +78,7 @@ func TestUniform(t *testing.T) {
 }
 
 func TestNone(t *testing.T) {
-	n := &None{}
+	n := &Identity{}
 
 	t.Run("Name", func(t *testing.T) {
 		assert.Equal(t, "none", n.Name())

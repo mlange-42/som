@@ -36,9 +36,15 @@ func (c *SomConfig) PrepareTables(reader table.Reader, ignoreLayers []string, up
 	ignoreFound := make([]bool, len(ignoreLayers))
 	for i := range c.Layers {
 		layer := c.Layers[i]
+
+		var ignored bool
 		if idx := slices.Index(ignoreLayers, layer.Name); idx >= 0 {
 			ignoreFound[idx] = true
-			continue
+			if keepOriginal {
+				ignored = true
+			} else {
+				continue
+			}
 		}
 
 		if layer.Categorical {
@@ -52,14 +58,14 @@ func (c *SomConfig) PrepareTables(reader table.Reader, ignoreLayers []string, up
 				return nil, nil, err
 			}
 			layer.Columns = tab.ColumnNames()
-			normalized[i] = tab
 
-			if keepOriginal {
-				rawTable, err := table.NewWithData(tab.ColumnNames(), append([]float64{}, tab.Data()...))
-				if err != nil {
-					return nil, nil, err
-				}
-				raw[i] = rawTable
+			if !ignored {
+				normalized[i] = tab
+			}
+
+			err = keepTable(raw, i, tab, keepOriginal)
+			if err != nil {
+				return nil, nil, err
 			}
 
 			continue
@@ -74,24 +80,15 @@ func (c *SomConfig) PrepareTables(reader table.Reader, ignoreLayers []string, up
 			return nil, nil, err
 		}
 
-		if keepOriginal {
-			rawTable, err := table.NewWithData(tab.ColumnNames(), append([]float64{}, tab.Data()...))
-			if err != nil {
-				return nil, nil, err
-			}
-			raw[i] = rawTable
+		err = keepTable(raw, i, tab, keepOriginal)
+		if err != nil {
+			return nil, nil, err
 		}
 
-		if len(layer.Norm) != 0 {
-			for j := range layer.Columns {
-				if updateNormalizers {
-					layer.Norm[j].Initialize(tab, j)
-				}
-				tab.NormalizeColumn(j, layer.Norm[j])
-			}
+		if !ignored {
+			normalizeTable(tab, layer, updateNormalizers)
+			normalized[i] = tab
 		}
-
-		normalized[i] = tab
 	}
 
 	for i, f := range ignoreFound {
@@ -105,6 +102,29 @@ func (c *SomConfig) PrepareTables(reader table.Reader, ignoreLayers []string, up
 	}
 
 	return normalized, nil, nil
+}
+
+func normalizeTable(tab *table.Table, layer *LayerDef, update bool) {
+	if len(layer.Norm) != 0 {
+		for j := range layer.Columns {
+			if update {
+				layer.Norm[j].Initialize(tab, j)
+			}
+			tab.NormalizeColumn(j, layer.Norm[j])
+		}
+	}
+}
+
+func keepTable(list []*table.Table, idx int, tab *table.Table, keep bool) error {
+	if !keep {
+		return nil
+	}
+	rawTable, err := table.NewWithData(tab.ColumnNames(), append([]float64{}, tab.Data()...))
+	if err != nil {
+		return err
+	}
+	list[idx] = rawTable
+	return nil
 }
 
 // LayerDef represents the configuration for a single layer in a Self-Organizing Map (SOM).
@@ -142,6 +162,28 @@ func New(params *SomConfig) (*Som, error) {
 		if len(l.Columns) == 0 {
 			return nil, fmt.Errorf("layer %s has no columns", l.Name)
 		}
+
+		if l.Categorical {
+			if len(l.Norm) != len(l.Columns) && len(l.Norm) > 1 {
+				return nil, fmt.Errorf("number of normalizers (%d) must match number of columns (%d) for layer %s", len(l.Norm), len(l.Columns), l.Name)
+			}
+			for _, n := range l.Norm {
+				if _, ok := n.(*norm.Identity); !ok {
+					return nil, fmt.Errorf("categorical layer %s must use identity normalizer", l.Name)
+				}
+			}
+			if len(l.Norm) != len(l.Columns) {
+				l.Norm = make([]norm.Normalizer, len(l.Columns))
+				for j := range l.Columns {
+					l.Norm[j] = &norm.Identity{}
+				}
+			}
+		} else {
+			if len(l.Norm) != len(l.Columns) {
+				return nil, fmt.Errorf("number of normalizers (%d) must match number of columns (%d) for layer %s", len(l.Norm), len(l.Columns), l.Name)
+			}
+		}
+
 		weight := l.Weight
 		if weight == 0 {
 			weight = 1
