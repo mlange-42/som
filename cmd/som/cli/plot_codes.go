@@ -42,9 +42,9 @@ func plotCodesCommand() *cobra.Command {
 		},
 	}
 
-	command.PersistentFlags().StringSliceVarP(&cliArgs.Columns, "columns", "c", nil, "Columns to use for the heatmap (default all)")
+	command.PersistentFlags().StringSliceVarP(&cliArgs.Columns, "columns", "c", nil, "Columns to use for the codes plot (default all)")
 	command.PersistentFlags().BoolVarP(&cliArgs.Normalized, "normalized", "n", false, "Use raw, normalized node weights")
-	command.PersistentFlags().IntSliceVarP(&cliArgs.Size, "size", "s", []int{600, 400}, "Size of individual heatmap panels")
+	command.PersistentFlags().IntSliceVarP(&cliArgs.Size, "size", "s", []int{600, 400}, "Size of the plot in pixels")
 	command.PersistentFlags().SortFlags = false
 
 	command.AddCommand(plotCodesLinesCommand())
