@@ -31,7 +31,7 @@ type SomConfig struct {
 // the layers in the SomConfig.
 func (c *SomConfig) PrepareTables(reader table.Reader, ignoreLayers []string, updateNormalizers bool, keepOriginal bool) (normalized, raw []*table.Table, err error) {
 	normalized = make([]*table.Table, len(c.Layers))
-	raw = []*table.Table{}
+	raw = make([]*table.Table, len(c.Layers))
 
 	ignoreFound := make([]bool, len(ignoreLayers))
 	for i := range c.Layers {
@@ -59,7 +59,7 @@ func (c *SomConfig) PrepareTables(reader table.Reader, ignoreLayers []string, up
 				if err != nil {
 					return nil, nil, err
 				}
-				raw = append(normalized, rawTable)
+				raw[i] = rawTable
 			}
 
 			continue
@@ -79,7 +79,7 @@ func (c *SomConfig) PrepareTables(reader table.Reader, ignoreLayers []string, up
 			if err != nil {
 				return nil, nil, err
 			}
-			raw = append(raw, rawTable)
+			raw[i] = rawTable
 		}
 
 		if len(layer.Norm) != 0 {
@@ -100,7 +100,11 @@ func (c *SomConfig) PrepareTables(reader table.Reader, ignoreLayers []string, up
 		}
 	}
 
-	return normalized, raw, nil
+	if keepOriginal {
+		return normalized, raw, nil
+	}
+
+	return normalized, nil, nil
 }
 
 // LayerDef represents the configuration for a single layer in a Self-Organizing Map (SOM).

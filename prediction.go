@@ -1,6 +1,7 @@
 package som
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/mlange-42/som/table"
@@ -63,6 +64,64 @@ func (p *Predictor) GetBMUTable() *table.Table {
 	return t
 }
 
+func (p *Predictor) FillMissing(tables []*table.Table) error {
+	if err := checkTables(p.som, tables); err != nil {
+		return err
+	}
+
+	rows := tables[0].Rows()
+	if rows != p.tables[0].Rows() {
+		return fmt.Errorf("number of rows in tables does not match number of rows in predictor tables")
+	}
+
+	hasMissing := make([]bool, rows)
+	for _, t := range tables {
+		if t == nil {
+			continue
+		}
+
+		for j := 0; j < rows; j++ {
+			if hasMissing[j] {
+				continue
+			}
+
+			row := t.GetRow(j)
+			for k := range t.Columns() {
+				if math.IsNaN(row[k]) {
+					hasMissing[j] = true
+					break
+				}
+			}
+		}
+	}
+
+	data := make([][]float64, len(tables))
+	for i := 0; i < rows; i++ {
+		if !hasMissing[i] {
+			continue
+		}
+
+		p.collectData(i, data)
+		bmu, _ := p.som.GetBMU(data)
+		for j, t := range tables {
+			if t == nil {
+				continue
+			}
+			lay := p.som.layers[j]
+			node := lay.GetNodeAt(bmu)
+			outRow := t.GetRow(i)
+			for k := range t.Columns() {
+				if math.IsNaN(outRow[k]) {
+					norm := lay.Normalizers()[k]
+					outRow[k] = norm.DeNormalize(node[k])
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 func (p *Predictor) collectData(row int, data [][]float64) {
 	for j := 0; j < len(p.tables); j++ {
 		t := p.tables[j]
@@ -72,6 +131,14 @@ func (p *Predictor) collectData(row int, data [][]float64) {
 			data[j] = t.GetRow(row)
 		}
 	}
+}
+
+// GetRowBMU returns the best matching unit (BMU) index and the distance between the
+// input data and the BMU for the given row in the associated tables.
+func (p *Predictor) GetRowBMU(row int) (int, float64) {
+	data := make([][]float64, len(p.tables))
+	p.collectData(row, data)
+	return p.som.GetBMU(data)
 }
 
 // GetBMU returns a slice of the best matching unit (BMU) indices for each row in the

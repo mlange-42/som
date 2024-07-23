@@ -8,6 +8,7 @@
 * Adds switch `--ignore` to all prediction-related commands, for ignoring layers (#43)
 * Adds weight decay for better regularization during training (#44)
 * Can handle missing/no-data class labels (#45)
+* Adds CLI command `fill` for filling missing data (#49)
 
 ### Bugfixes
 
