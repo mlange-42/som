@@ -11,6 +11,10 @@
 * Adds CLI command `fill` for filling missing data (#49)
 * Adds CLI command `predict` for predicting complete layers (#50)
 
+### Documentation
+
+* Examples are included in release downloads (#51)
+
 ### Bugfixes
 
 * Update BMU weights before the weights of neighboring nodes (#42)
