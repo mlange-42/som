@@ -11,6 +11,7 @@ import (
 func plotCodesCommand() *cobra.Command {
 	var size []int
 	var columns []string
+	var normalized bool
 
 	command := &cobra.Command{
 		Use:   "codes [flags] <som-file> <out-file>",
@@ -36,7 +37,7 @@ func plotCodesCommand() *cobra.Command {
 			}
 
 			plotType := plot.CodeLines{}
-			img, err := plot.Codes(s, indices, &plotType, image.Pt(size[0], size[1]))
+			img, err := plot.Codes(s, indices, normalized, &plotType, image.Pt(size[0], size[1]))
 			if err != nil {
 				return err
 			}
@@ -46,6 +47,7 @@ func plotCodesCommand() *cobra.Command {
 	}
 
 	command.Flags().StringSliceVarP(&columns, "columns", "c", nil, "Columns to use for the heatmap (default all)")
+	command.Flags().BoolVarP(&normalized, "normalized", "n", false, "Use raw, normalized node weights")
 	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of individual heatmap panels")
 
 	command.Flags().SortFlags = false

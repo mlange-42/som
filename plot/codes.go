@@ -5,6 +5,7 @@ import (
 	"math"
 
 	"github.com/mlange-42/som"
+	"github.com/mlange-42/som/norm"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/font"
 	"gonum.org/v1/plot/plotter"
@@ -16,7 +17,7 @@ type CodePlot interface {
 	Plot(data []float64, dRange Range) (*plot.Plot, error)
 }
 
-func Codes(s *som.Som, columns [][2]int, plotType CodePlot, size image.Point) (image.Image, error) {
+func Codes(s *som.Som, columns [][2]int, normalized bool, plotType CodePlot, size image.Point) (image.Image, error) {
 	legendHeight := 20
 	pad := 3
 
@@ -26,7 +27,7 @@ func Codes(s *som.Som, columns [][2]int, plotType CodePlot, size image.Point) (i
 	img := vgimg.NewWith(vgimg.UseWH(font.Length(size.X), font.Length(size.Y)), vgimg.UseDPI(72))
 	dc := draw.New(img)
 
-	dRange := dataRange(s, columns)
+	dRange := dataRange(s, columns, normalized)
 
 	w, h := s.Size().Width, s.Size().Height
 	for x := 0; x < w; x++ {
@@ -36,7 +37,7 @@ func Codes(s *som.Som, columns [][2]int, plotType CodePlot, size image.Point) (i
 				font.Length(y*codeHeight+legendHeight+pad), font.Length((y+1-h)*codeHeight-pad))
 
 			node := s.Size().Index(x, y)
-			data := nodeData(s, node, columns)
+			data := nodeData(s, node, columns, normalized)
 			p, err := plotType.Plot(data, dRange)
 			if err != nil {
 				return nil, err
@@ -77,16 +78,23 @@ func cleanupAxes(p *plot.Plot) {
 	p.Y.Padding = 0
 }
 
-func dataRange(s *som.Som, columns [][2]int) Range {
+func dataRange(s *som.Som, columns [][2]int, normalized bool) Range {
 	min := math.Inf(1)
 	max := math.Inf(-1)
+
+	identity := norm.Identity{}
 
 	nodes := s.Size().Nodes()
 	for _, c := range columns {
 		lay := s.Layers()[c[0]]
-		norm := lay.Normalizers()[c[1]]
+		var normalizer norm.Normalizer
+		if normalized {
+			normalizer = &identity
+		} else {
+			normalizer = lay.Normalizers()[c[1]]
+		}
 		for i := 0; i < nodes; i++ {
-			value := norm.DeNormalize(lay.GetAt(i, c[1]))
+			value := normalizer.DeNormalize(lay.GetAt(i, c[1]))
 			if value < min {
 				min = value
 			}
@@ -99,13 +107,22 @@ func dataRange(s *som.Som, columns [][2]int) Range {
 	return Range{min, max}
 }
 
-func nodeData(s *som.Som, node int, columns [][2]int) []float64 {
+func nodeData(s *som.Som, node int, columns [][2]int, normalized bool) []float64 {
 	data := make([]float64, len(columns))
-	for i, c := range columns {
-		lay := s.Layers()[c[0]]
-		norm := lay.Normalizers()[c[1]]
-		data[i] = norm.DeNormalize(lay.GetAt(node, c[1]))
+
+	if normalized {
+		for i, c := range columns {
+			lay := s.Layers()[c[0]]
+			data[i] = lay.GetAt(node, c[1])
+		}
+	} else {
+		for i, c := range columns {
+			lay := s.Layers()[c[0]]
+			norm := lay.Normalizers()[c[1]]
+			data[i] = norm.DeNormalize(lay.GetAt(node, c[1]))
+		}
 	}
+
 	return data
 }
 
