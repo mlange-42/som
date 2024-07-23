@@ -74,5 +74,6 @@ jobs:
       run: |
         ./_examples/cluster2d/run.sh
         ./_examples/countries/run.sh
+        ./_examples/elections/run.sh
         ./_examples/iris/run.sh
         ./_examples/olive/run.sh
