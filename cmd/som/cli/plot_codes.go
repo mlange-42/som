@@ -35,7 +35,11 @@ func plotCodesCommand() *cobra.Command {
 				return err
 			}
 
-			img := plot.Codes(s, indices, image.Pt(size[0], size[1]))
+			plotType := plot.CodeLines{}
+			img, err := plot.Codes(s, indices, &plotType, image.Pt(size[0], size[1]))
+			if err != nil {
+				return err
+			}
 
 			return writeImage(img, outFile)
 		},
