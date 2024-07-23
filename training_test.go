@@ -8,6 +8,7 @@ import (
 	"github.com/mlange-42/som/decay"
 	"github.com/mlange-42/som/layer"
 	"github.com/mlange-42/som/neighborhood"
+	"github.com/mlange-42/som/norm"
 	"github.com/mlange-42/som/table"
 	"github.com/stretchr/testify/assert"
 )
@@ -19,10 +20,12 @@ func TestNewTrainer(t *testing.T) {
 		Layers: []*LayerDef{
 			{
 				Columns: []string{"x", "y"},
+				Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}},
 				Weight:  0.5,
 			},
 			{
 				Columns: []string{"a", "b", "c"},
+				Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}, &norm.Identity{}},
 				Weight:  1.0,
 			},
 		},
@@ -72,10 +75,12 @@ func TestTrainerDecay(t *testing.T) {
 		Layers: []*LayerDef{
 			{
 				Columns: []string{"x", "y"},
+				Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}},
 				Weight:  0.5,
 			},
 			{
 				Columns: []string{"a", "b", "c"},
+				Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}, &norm.Identity{}},
 				Weight:  1.0,
 			},
 		},
@@ -114,10 +119,12 @@ func TestTrainerTrain(t *testing.T) {
 		Layers: []*LayerDef{
 			{
 				Columns: []string{"x", "y"},
+				Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}},
 				Weight:  0.5,
 			},
 			{
 				Columns: []string{"a", "b", "c"},
+				Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}, &norm.Identity{}},
 				Weight:  1.0,
 			},
 		},

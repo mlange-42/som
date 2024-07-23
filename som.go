@@ -162,26 +162,9 @@ func New(params *SomConfig) (*Som, error) {
 		if len(l.Columns) == 0 {
 			return nil, fmt.Errorf("layer %s has no columns", l.Name)
 		}
-
-		if l.Categorical {
-			if len(l.Norm) != len(l.Columns) && len(l.Norm) > 1 {
-				return nil, fmt.Errorf("number of normalizers (%d) must match number of columns (%d) for layer %s", len(l.Norm), len(l.Columns), l.Name)
-			}
-			for _, n := range l.Norm {
-				if _, ok := n.(*norm.Identity); !ok {
-					return nil, fmt.Errorf("categorical layer %s must use identity normalizer", l.Name)
-				}
-			}
-			if len(l.Norm) != len(l.Columns) {
-				l.Norm = make([]norm.Normalizer, len(l.Columns))
-				for j := range l.Columns {
-					l.Norm[j] = &norm.Identity{}
-				}
-			}
-		} else {
-			if len(l.Norm) != len(l.Columns) {
-				return nil, fmt.Errorf("number of normalizers (%d) must match number of columns (%d) for layer %s", len(l.Norm), len(l.Columns), l.Name)
-			}
+		norm, err := checkAndFixLayerNorm(l)
+		if err != nil {
+			return nil, err
 		}
 
 		weight := l.Weight
@@ -199,11 +182,10 @@ func New(params *SomConfig) (*Som, error) {
 			}
 		}
 
-		var err error
 		if len(l.Weights) == 0 {
-			lay[i], err = layer.New(l.Name, l.Columns, l.Norm, params.Size, metric, weight, l.Categorical)
+			lay[i], err = layer.New(l.Name, l.Columns, norm, params.Size, metric, weight, l.Categorical)
 		} else {
-			lay[i], err = layer.NewWithData(l.Name, l.Columns, l.Norm, params.Size, metric, weight, l.Categorical, l.Weights)
+			lay[i], err = layer.NewWithData(l.Name, l.Columns, norm, params.Size, metric, weight, l.Categorical, l.Weights)
 		}
 		if err != nil {
 			return nil, err
@@ -215,6 +197,31 @@ func New(params *SomConfig) (*Som, error) {
 		neighborhood: params.Neighborhood,
 		metric:       params.MapMetric,
 	}, nil
+}
+
+func checkAndFixLayerNorm(l *LayerDef) ([]norm.Normalizer, error) {
+	n := l.Norm
+	if l.Categorical {
+		if len(n) != len(l.Columns) && len(n) > 1 {
+			return nil, fmt.Errorf("number of normalizers (%d) must match number of columns (%d) for layer %s", len(l.Norm), len(l.Columns), l.Name)
+		}
+		for _, nn := range n {
+			if _, ok := nn.(*norm.Identity); !ok {
+				return nil, fmt.Errorf("categorical layer %s must use identity normalizer", l.Name)
+			}
+		}
+		if len(n) != len(l.Columns) {
+			n = make([]norm.Normalizer, len(l.Columns))
+			for j := range l.Columns {
+				n[j] = &norm.Identity{}
+			}
+		}
+	} else {
+		if len(n) != len(l.Columns) {
+			return nil, fmt.Errorf("number of normalizers (%d) must match number of columns (%d) for layer %s", len(l.Norm), len(l.Columns), l.Name)
+		}
+	}
+	return n, nil
 }
 
 // Size returns the size of the Self-Organizing Map (SOM) instance.

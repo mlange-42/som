@@ -4,7 +4,7 @@ cd "$(dirname "$0")"
 mkdir out
 set -e
 
-#som train untrained.yml data.csv -p out/progress.csv -P 10 > out/trained.yml
+som train untrained.yml data.csv -p out/progress.csv -P 10 > out/trained.yml
 som export out/trained.yml > out/export.csv
 som bmu out/trained.yml data.csv --ignore continent --preserve Country,code,continent > out/bmu.csv
 som plot heatmap out/trained.yml out/heatmap.png --data-file data.csv --labels Country --ignore continent
