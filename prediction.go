@@ -16,6 +16,7 @@ type Predictor struct {
 
 // NewPredictor creates a new Predictor instance with the given SOM and tables.
 // The tables must have the same number of rows as the SOM has nodes.
+// Tables are assumed to be normalized.
 // An error is returned if the tables do not match the SOM.
 func NewPredictor(som *Som, tables []*table.Table) (*Predictor, error) {
 	if err := checkTables(som, tables); err != nil {
@@ -65,6 +66,11 @@ func (p *Predictor) GetBMUTable() *table.Table {
 	return t
 }
 
+// FillMissing fills in any missing values in the input tables by using the best matching units
+// (BMUs) from the SOM to determine the appropriate values to fill in.
+// Tables in the argument should not be normalized.
+// The number of rows in the input tables must match the number of
+// rows in the Predictor's tables.
 func (p *Predictor) FillMissing(tables []*table.Table) error {
 	if err := checkTables(p.som, tables); err != nil {
 		return err
@@ -104,6 +110,14 @@ func (p *Predictor) FillMissing(tables []*table.Table) error {
 	return nil
 }
 
+// Predict generates predictions for the specified layers in the input tables using the
+// self-organizing map (SOM) associated with the Predictor. The input tables should not
+// be normalized. The function will create new tables for the predicted layers and
+// populate them with the predicted values.
+//
+// If any of the layers to predict are already present in the input tables, an error
+// will be returned. The number of rows in the input tables must match the number of
+// rows in the Predictor's tables.
 func (p *Predictor) Predict(tables []*table.Table, layers []string) error {
 	if err := checkTables(p.som, tables); err != nil {
 		return err
