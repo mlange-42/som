@@ -127,7 +127,7 @@ func createLayer(s *ymlSom, l *ymlLayer) (*som.LayerDef, error) {
 		var err error
 		if i >= len(l.Norm) {
 			if len(l.Norm) == 0 {
-				norms[i] = &norm.None{}
+				norms[i] = &norm.Identity{}
 				continue
 			}
 			norms[i], err = norm.FromString(l.Norm[0])
@@ -165,7 +165,7 @@ func ToYAML(som *som.Som) ([]byte, error) {
 		allNone := true
 		for i, n := range l.Normalizers() {
 			norms[i] = norm.ToString(n)
-			if _, ok := n.(*norm.None); !ok {
+			if _, ok := n.(*norm.Identity); !ok {
 				allNone = false
 			}
 		}

@@ -42,8 +42,8 @@ func Example() {
 					"b",
 				},
 				Norm: []norm.Normalizer{
-					&norm.None{},
-					&norm.None{},
+					&norm.Identity{},
+					&norm.Identity{},
 				},
 				Metric: &distance.Euclidean{},
 			},
@@ -86,7 +86,7 @@ func Example() {
 
 	// Create data sources for plotting
 	xy := plot.SomXY{Som: s, XLayer: 0, XColumn: 0, YLayer: 0, YColumn: 1}
-	dataXY := plot.TableXY{XTable: data, YTable: data, XColumn: 0, YColumn: 1, XNorm: &norm.None{}, YNorm: &norm.None{}}
+	dataXY := plot.TableXY{XTable: data, YTable: data, XColumn: 0, YColumn: 1, XNorm: &norm.Identity{}, YNorm: &norm.Identity{}}
 	// Make a scatter plot
 	img, err := plot.XY("xy", &xy, *s.Size(), 600, 400, nil, nil, true, &dataXY, nil, nil, false)
 	if err != nil {

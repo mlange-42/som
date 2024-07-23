@@ -218,8 +218,7 @@ func extractIndices(s *som.Som, columns []string) ([]string, [][2]int, error) {
 }
 
 func createPredictor(config *som.SomConfig, s *som.Som, reader table.Reader, ignoreLayers []string) (*som.Predictor, []*table.Table, error) {
-
-	tables, err := config.PrepareTables(reader, ignoreLayers, false)
+	tables, _, err := config.PrepareTables(reader, ignoreLayers, false, false)
 	if err != nil {
 		return nil, nil, err
 	}

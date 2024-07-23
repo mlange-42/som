@@ -9,6 +9,7 @@ import (
 	"github.com/mlange-42/som/distance"
 	"github.com/mlange-42/som/layer"
 	"github.com/mlange-42/som/neighborhood"
+	"github.com/mlange-42/som/norm"
 	"github.com/mlange-42/som/table"
 	"github.com/stretchr/testify/assert"
 )
@@ -38,12 +39,14 @@ func TestNew(t *testing.T) {
 				{
 					Name:    "Layer1",
 					Columns: []string{"x", "y"},
+					Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}},
 					Weight:  0.5,
 					Metric:  &distance.Manhattan{},
 				},
 				{
 					Name:    "Layer2",
 					Columns: []string{"a", "b", "c"},
+					Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}, &norm.Identity{}},
 					Weight:  1.0,
 					Metric:  &distance.Euclidean{},
 				},
@@ -72,6 +75,7 @@ func TestNew(t *testing.T) {
 				{
 					Name:    "Layer1",
 					Columns: []string{"x", "y"},
+					Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}},
 					Weight:  0.5,
 					Metric:  &distance.Manhattan{},
 				},
@@ -80,6 +84,7 @@ func TestNew(t *testing.T) {
 					Columns:     nil,
 					Weight:      1.0,
 					Metric:      &distance.Hamming{},
+					Norm:        []norm.Normalizer{&norm.Identity{}},
 					Categorical: true,
 				},
 			},
@@ -92,7 +97,7 @@ func TestNew(t *testing.T) {
 			Table:  tab,
 			Labels: []string{"A", "B", "A"},
 		}
-		tables, err := params.PrepareTables(&reader, nil, false)
+		tables, _, err := params.PrepareTables(&reader, nil, false, false)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 2, len(tables))
@@ -117,6 +122,7 @@ func TestNew(t *testing.T) {
 			Layers: []*LayerDef{
 				{
 					Name:        "EmptyLayer",
+					Norm:        []norm.Normalizer{&norm.Identity{}},
 					Categorical: true,
 				},
 			},
@@ -134,6 +140,7 @@ func TestNew(t *testing.T) {
 				{
 					Name:    "DefaultLayer",
 					Columns: []string{"x"},
+					Norm:    []norm.Normalizer{&norm.Identity{}},
 				},
 			},
 		}
@@ -151,11 +158,13 @@ func TestNew(t *testing.T) {
 					Name:        "CategoricalLayer",
 					Categorical: true,
 					Columns:     []string{"category1", "category2"},
+					Norm:        []norm.Normalizer{&norm.Identity{}},
 					Weight:      0.7,
 				},
 				{
 					Name:    "NumericLayer",
 					Columns: []string{"x", "y", "z"},
+					Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}, &norm.Identity{}},
 					Weight:  1.2,
 					Metric:  &distance.Manhattan{},
 				},
@@ -193,11 +202,13 @@ func TestGetBMU(t *testing.T) {
 		Layers: []*LayerDef{
 			{
 				Columns: []string{"x", "y"},
+				Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}},
 				Weight:  0.5,
 				Metric:  &distance.Euclidean{},
 			},
 			{
 				Columns: []string{"a", "b"},
+				Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}},
 				Weight:  1.0,
 				Metric:  &distance.SumOfSquares{},
 			},
@@ -220,6 +231,7 @@ func TestGetBMU(t *testing.T) {
 			Layers: []*LayerDef{
 				{
 					Columns: []string{"x"},
+					Norm:    []norm.Normalizer{&norm.Identity{}},
 					Weight:  1.0,
 				},
 			},
@@ -239,10 +251,12 @@ func TestGetBMU(t *testing.T) {
 			Layers: []*LayerDef{
 				{
 					Columns: []string{"x", "y", "z"},
+					Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}, &norm.Identity{}},
 					Weight:  0.5,
 				},
 				{
 					Columns: []string{"a", "b", "c"},
+					Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}, &norm.Identity{}},
 					Weight:  1.0,
 				},
 			},
@@ -264,11 +278,13 @@ func createSom() *Som {
 		Layers: []*LayerDef{
 			{
 				Columns: []string{"x", "y"},
+				Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}},
 				Weight:  0.5,
 				Metric:  &distance.Euclidean{},
 			},
 			{
 				Columns: []string{"a", "b"},
+				Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}},
 				Weight:  1.0,
 				Metric:  &distance.SumOfSquares{},
 			},
@@ -390,6 +406,7 @@ func TestNodeDistance(t *testing.T) {
 		Layers: []*LayerDef{
 			{
 				Columns: []string{"x", "y"},
+				Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}},
 				Weight:  1.0,
 				Metric:  &distance.Euclidean{},
 				Weights: []float64{
@@ -421,6 +438,7 @@ func TestNodeMapDistance(t *testing.T) {
 		Layers: []*LayerDef{
 			{
 				Columns: []string{"x", "y"},
+				Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}},
 				Weight:  1.0,
 				Metric:  &distance.Euclidean{},
 				Weights: []float64{
@@ -580,8 +598,10 @@ func BenchmarkUpdateWeightsViSOM_10x10x5_Linear2(b *testing.B) {
 
 func createBenchSom(width, height int, dims int, neigh neighborhood.Neighborhood) *Som {
 	cols := make([]string, dims)
+	norms := make([]norm.Normalizer, dims)
 	for i := 0; i < dims; i++ {
 		cols[i] = fmt.Sprintf("x%d", i)
+		norms[i] = &norm.Identity{}
 	}
 
 	params := SomConfig{
@@ -589,6 +609,7 @@ func createBenchSom(width, height int, dims int, neigh neighborhood.Neighborhood
 		Layers: []*LayerDef{
 			{
 				Columns: cols,
+				Norm:    norms,
 				Metric:  &distance.Euclidean{},
 			},
 		},
@@ -613,6 +634,7 @@ func TestUMatrix(t *testing.T) {
 			{
 				Name:    "Layer1",
 				Columns: []string{"x", "y"},
+				Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}},
 				Weight:  1.0,
 				Metric:  &distance.Euclidean{},
 			},

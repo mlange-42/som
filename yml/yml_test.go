@@ -52,7 +52,7 @@ som:
 
 		assert.Equal(t, &gauss, config.Layers[0].Norm[0])
 		assert.Equal(t, &norm.Uniform{}, config.Layers[0].Norm[1])
-		assert.Equal(t, &norm.None{}, config.Layers[0].Norm[2])
+		assert.Equal(t, &norm.Identity{}, config.Layers[0].Norm[2])
 	})
 
 	t.Run("Invalid YAML syntax", func(t *testing.T) {
