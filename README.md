@@ -104,10 +104,11 @@ som:                     # SOM definitions
       weight: 0.5        # Weight of the layer
 
 training:                # Training parameters. Optional. Can be overwritten by CLI arguments
-  epochs: 2500                   # Number of training epochs
-  alpha: polynomial 0.25 0.01 2  # Learning rate decay function
-  radius: polynomial 6 1 2       # Neighborhood radius decay function
-  lambda: 0.33                   # ViSOM resolution parameter
+  epochs: 2500                        # Number of training epochs
+  alpha: polynomial 0.25 0.01 2       # Learning rate decay function
+  radius: polynomial 6 1 2            # Neighborhood radius decay function
+  weight-decay: polynomial 0.5 0.0 3  # Weight decay coefficient function
+  lambda: 0.33                        # ViSOM resolution parameter
 ```
 
 See the [examples](./_examples) folder for more examples.
