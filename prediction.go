@@ -3,6 +3,7 @@ package som
 import (
 	"fmt"
 	"math"
+	"slices"
 
 	"github.com/mlange-42/som/table"
 )
@@ -74,26 +75,7 @@ func (p *Predictor) FillMissing(tables []*table.Table) error {
 		return fmt.Errorf("number of rows in tables does not match number of rows in predictor tables")
 	}
 
-	hasMissing := make([]bool, rows)
-	for _, t := range tables {
-		if t == nil {
-			continue
-		}
-
-		for j := 0; j < rows; j++ {
-			if hasMissing[j] {
-				continue
-			}
-
-			row := t.GetRow(j)
-			for k := range t.Columns() {
-				if math.IsNaN(row[k]) {
-					hasMissing[j] = true
-					break
-				}
-			}
-		}
-	}
+	hasMissing := findRowsWithMissing(tables)
 
 	data := make([][]float64, len(tables))
 	for i := 0; i < rows; i++ {
@@ -120,6 +102,76 @@ func (p *Predictor) FillMissing(tables []*table.Table) error {
 	}
 
 	return nil
+}
+
+func (p *Predictor) Predict(tables []*table.Table, layers []string) error {
+	if err := checkTables(p.som, tables); err != nil {
+		return err
+	}
+
+	rows := tables[0].Rows()
+	if rows != p.tables[0].Rows() {
+		return fmt.Errorf("number of rows in tables does not match number of rows in predictor tables")
+	}
+
+	toPredict := make([]bool, len(p.som.layers))
+	for i, l := range p.som.layers {
+		toPredict[i] = slices.Contains(layers, l.Name())
+		if !toPredict[i] {
+			continue
+		}
+		if tables[i] != nil {
+			return fmt.Errorf("layer %s to predict is already present in input", l.Name())
+		}
+		tables[i] = table.New(l.ColumnNames(), rows)
+	}
+
+	data := make([][]float64, len(tables))
+	for i := 0; i < rows; i++ {
+		p.collectData(i, data)
+		bmu, _ := p.som.GetBMU(data)
+
+		for j, lay := range p.som.layers {
+			if !toPredict[j] {
+				continue
+			}
+			tab := tables[j]
+			node := lay.GetNodeAt(bmu)
+			outRow := tab.GetRow(i)
+
+			for k := range tab.Columns() {
+				norm := lay.Normalizers()[k]
+				outRow[k] = norm.DeNormalize(node[k])
+			}
+		}
+	}
+
+	return nil
+}
+
+func findRowsWithMissing(tables []*table.Table) []bool {
+	rows := tables[0].Rows()
+	hasMissing := make([]bool, rows)
+	for _, t := range tables {
+		if t == nil {
+			continue
+		}
+
+		for j := 0; j < rows; j++ {
+			if hasMissing[j] {
+				continue
+			}
+
+			row := t.GetRow(j)
+			for k := range t.Columns() {
+				if math.IsNaN(row[k]) {
+					hasMissing[j] = true
+					break
+				}
+			}
+		}
+	}
+	return hasMissing
 }
 
 func (p *Predictor) collectData(row int, data [][]float64) {

@@ -9,6 +9,7 @@
 * Adds weight decay for better regularization during training (#44)
 * Can handle missing/no-data class labels (#45)
 * Adds CLI command `fill` for filling missing data (#49)
+* Adds CLI command `predict` for predicting complete layers (#50)
 
 ### Bugfixes
 

@@ -37,14 +37,9 @@ func (c *SomConfig) PrepareTables(reader table.Reader, ignoreLayers []string, up
 	for i := range c.Layers {
 		layer := c.Layers[i]
 
-		var ignored bool
 		if idx := slices.Index(ignoreLayers, layer.Name); idx >= 0 {
 			ignoreFound[idx] = true
-			if keepOriginal {
-				ignored = true
-			} else {
-				continue
-			}
+			continue
 		}
 
 		if layer.Categorical {
@@ -53,9 +48,7 @@ func (c *SomConfig) PrepareTables(reader table.Reader, ignoreLayers []string, up
 				return nil, nil, err
 			}
 
-			if !ignored {
-				normalized[i] = tab
-			}
+			normalized[i] = tab
 
 			err = keepTable(raw, i, tab, keepOriginal)
 			if err != nil {
@@ -79,10 +72,8 @@ func (c *SomConfig) PrepareTables(reader table.Reader, ignoreLayers []string, up
 			return nil, nil, err
 		}
 
-		if !ignored {
-			normalizeTable(tab, layer, updateNormalizers)
-			normalized[i] = tab
-		}
+		normalizeTable(tab, layer, updateNormalizers)
+		normalized[i] = tab
 	}
 
 	for i, f := range ignoreFound {
