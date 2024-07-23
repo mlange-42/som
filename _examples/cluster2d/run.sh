@@ -21,3 +21,6 @@ som label out/trained-vi.yml data-labels.csv -c class > out/labelled.yml
 som plot heatmap out/labelled.yml out/heatmap-labelled.png --data-file data-labels.csv --labels class --ignore class
 som plot heatmap out/labelled.yml out/heatmap-labelled-all.png --data-file data.csv --labels class --ignore class
 som plot xy out/labelled.yml out/xy-labelled.png -x x -y y -c class --data-file data.csv -C class --ignore class
+
+# Predict labels on trained SOM
+som predict out/labelled.yml data.csv --layers class --all > out/prediced.csv
