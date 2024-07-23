@@ -22,6 +22,7 @@ func plotCommand() *cobra.Command {
 	}
 
 	command.AddCommand(plotHeatmapCommand())
+	command.AddCommand(plotCodesCommand())
 	command.AddCommand(plotUMatrixCommand())
 	command.AddCommand(plotXyCommand())
 	command.AddCommand(plotDensityCommand())
