@@ -48,16 +48,10 @@ func (c *SomConfig) PrepareTables(reader table.Reader, ignoreLayers []string, up
 		}
 
 		if layer.Categorical {
-			classes, err := reader.ReadLabels(layer.Name)
+			tab, err := createCategoricalTable(reader, layer)
 			if err != nil {
 				return nil, nil, err
 			}
-
-			tab, err := conv.ClassesToTable(classes, layer.Columns, reader.NoData())
-			if err != nil {
-				return nil, nil, err
-			}
-			layer.Columns = tab.ColumnNames()
 
 			if !ignored {
 				normalized[i] = tab
@@ -113,6 +107,20 @@ func normalizeTable(tab *table.Table, layer *LayerDef, update bool) {
 			tab.NormalizeColumn(j, layer.Norm[j])
 		}
 	}
+}
+
+func createCategoricalTable(reader table.Reader, layer *LayerDef) (*table.Table, error) {
+	classes, err := reader.ReadLabels(layer.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	tab, err := conv.ClassesToTable(classes, layer.Columns, reader.NoData())
+	if err != nil {
+		return nil, err
+	}
+	layer.Columns = tab.ColumnNames()
+	return tab, nil
 }
 
 func keepTable(list []*table.Table, idx int, tab *table.Table, keep bool) error {
