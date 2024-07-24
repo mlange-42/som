@@ -5,12 +5,21 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"strings"
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/plot"
 	"github.com/spf13/cobra"
 	"golang.org/x/image/colornames"
+	"gonum.org/v1/plot/plotter"
 )
+
+var stepStyles = map[string]plotter.StepKind{
+	"none": plotter.NoStep,
+	"mid":  plotter.MidStep,
+	"pre":  plotter.PreStep,
+	"post": plotter.PostStep,
+}
 
 func plotCodesCommand() *cobra.Command {
 	cliArgs := codePlotArgs{}
@@ -70,6 +79,8 @@ type codePlotArgs struct {
 type codePlotKey struct{}
 
 func plotCodesLinesCommand() *cobra.Command {
+	var stepStyle string
+
 	command := &cobra.Command{
 		Use:   "line [flags] <som-file> <out-file>",
 		Short: "Plots SOM nodes codes as line charts",
@@ -86,7 +97,14 @@ func plotCodesLinesCommand() *cobra.Command {
 				return err
 			}
 
-			plotType := plot.CodeLines{}
+			step, ok := stepStyles[strings.ToLower(stepStyle)]
+			if !ok {
+				return fmt.Errorf("invalid step style: %s", stepStyle)
+			}
+
+			plotType := plot.CodeLines{
+				StepStyle: step,
+			}
 			img, err := plot.Codes(cliArgs.Som, indices, cliArgs.Normalized, cliArgs.ZeroAxis, &plotType, image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
 			if err != nil {
 				return err
@@ -95,6 +113,9 @@ func plotCodesLinesCommand() *cobra.Command {
 			return writeImage(img, cliArgs.OutFile)
 		},
 	}
+
+	command.Flags().StringVarP(&stepStyle, "step", "S", "none", "Line step style (none, mid, pre, post)")
+
 	return command
 }
 

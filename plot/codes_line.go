@@ -5,7 +5,9 @@ import (
 	"gonum.org/v1/plot/plotter"
 )
 
-type CodeLines struct{}
+type CodeLines struct {
+	StepStyle plotter.StepKind
+}
 
 func (c *CodeLines) Plot(data []float64, dataRange Range) (*plot.Plot, []plot.Thumbnailer, error) {
 	p := plot.New()
@@ -14,6 +16,7 @@ func (c *CodeLines) Plot(data []float64, dataRange Range) (*plot.Plot, []plot.Th
 	if err != nil {
 		return nil, nil, err
 	}
+	lines.StepStyle = c.StepStyle
 
 	cleanupAxes(p)
 	p.Y.AutoRescale = false
