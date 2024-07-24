@@ -120,6 +120,9 @@ func (g *Gaussian) DeNormalize(value float64) float64 {
 
 func (g *Gaussian) Initialize(t DataSource, column int) {
 	g.mean, g.std = t.MeanStdDev(column)
+	if g.std == 0 {
+		g.std = 1
+	}
 }
 
 func (g *Gaussian) SetArgs(args ...float64) error {
@@ -128,6 +131,9 @@ func (g *Gaussian) SetArgs(args ...float64) error {
 	}
 	g.mean = args[0]
 	g.std = args[1]
+	if g.std == 0 {
+		g.std = 1
+	}
 	return nil
 }
 
@@ -153,6 +159,9 @@ func (u *Uniform) DeNormalize(value float64) float64 {
 
 func (u *Uniform) Initialize(t DataSource, column int) {
 	u.min, u.max = t.Range(column)
+	if u.max == u.min {
+		u.max = u.min + 1
+	}
 }
 
 func (u *Uniform) SetArgs(args ...float64) error {
@@ -161,6 +170,9 @@ func (u *Uniform) SetArgs(args ...float64) error {
 	}
 	u.min = args[0]
 	u.max = args[1]
+	if u.max == u.min {
+		u.max = u.min + 1
+	}
 	return nil
 }
 
