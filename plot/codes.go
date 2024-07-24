@@ -1,50 +1,87 @@
 package plot
 
 import (
+	"fmt"
 	"image"
+	"image/color"
 	"math"
 
+	"github.com/benoitmasson/plotters/piechart"
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/norm"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/font"
 	"gonum.org/v1/plot/plotter"
+	"gonum.org/v1/plot/vg"
 	"gonum.org/v1/plot/vg/draw"
 	"gonum.org/v1/plot/vg/vgimg"
 )
 
 type CodePlot interface {
-	Plot(data []float64, dRange Range) (*plot.Plot, error)
+	Plot(data []float64, dRange Range) (*plot.Plot, []plot.Thumbnailer, error)
 }
 
 func Codes(s *som.Som, columns [][2]int, normalized bool, zeroAxis bool, plotType CodePlot, size image.Point) (image.Image, error) {
-	legendHeight := 20
-	hPad, vPad := 2, 10
-
-	codeHeight := (size.Y - legendHeight) / s.Size().Height
-	codeWidth := size.X / s.Size().Width
+	legendFontSize := 16
 
 	img := vgimg.NewWith(vgimg.UseWH(font.Length(size.X), font.Length(size.Y)), vgimg.UseDPI(72))
 	dc := draw.New(img)
 
-	dRange := dataRange(s, columns, normalized, zeroAxis)
+	plots := make([]*plot.Plot, s.Size().Width*s.Size().Height)
 
+	dRange := dataRange(s, columns, normalized, zeroAxis)
 	w, h := s.Size().Width, s.Size().Height
+
+	var thumbs []plot.Thumbnailer
 	for x := 0; x < w; x++ {
 		for y := 0; y < h; y++ {
-			c := draw.Crop(dc,
-				font.Length(x*codeWidth+hPad), font.Length((x+1-w)*codeWidth-hPad),
-				font.Length(y*codeHeight+legendHeight+vPad), font.Length((y+1-h)*codeHeight-vPad))
-
 			node := s.Size().Index(x, y)
 			data := nodeData(s, node, columns, normalized)
-			p, err := plotType.Plot(data, dRange)
+
+			var p *plot.Plot
+			var err error
+			p, thumbs, err = plotType.Plot(data, dRange)
 			if err != nil {
 				return nil, err
 			}
-
-			p.Draw(c)
+			plots[node] = p
 		}
+	}
+
+	var l Legend
+	if len(thumbs) > 0 {
+		l = NewLegend()
+		l.Left = true
+		l.YOffs = vg.Millimeter * 2
+		l.TextStyle.Font.Size = font.Length(legendFontSize)
+		for i := range thumbs {
+			c := columns[i]
+			label := s.Layers()[c[0]].ColumnNames()[c[1]]
+			l.Add(label, thumbs[i])
+		}
+		l.AdjustColumns(font.Length(size.X))
+		l.XOffs = (font.Length(size.X) - l.Rectangle(dc).Max.X) / 2
+
+		l.Draw(dc)
+	}
+
+	legendHeight := (legendFontSize + 2) * int(math.Ceil(float64(len(thumbs))/float64(l.Columns)))
+	hPad, vPad := 2, 4
+
+	codeHeight := (size.Y - legendHeight) / s.Size().Height
+	codeWidth := size.X / s.Size().Width
+
+	for i, p := range plots {
+		x, y := s.Size().Coords(i)
+		c := draw.Crop(dc,
+			font.Length(x*codeWidth+hPad), font.Length((x+1-w)*codeWidth-hPad),
+			font.Length(y*codeHeight+legendHeight+vPad), font.Length((y+1-h)*codeHeight-vPad))
+
+		p.Draw(c)
+	}
+
+	if len(thumbs) > 0 {
+		l.Draw(dc)
 	}
 
 	return img.Image(), nil
@@ -52,12 +89,12 @@ func Codes(s *som.Som, columns [][2]int, normalized bool, zeroAxis bool, plotTyp
 
 type CodeLines struct{}
 
-func (c *CodeLines) Plot(data []float64, dataRange Range) (*plot.Plot, error) {
+func (c *CodeLines) Plot(data []float64, dataRange Range) (*plot.Plot, []plot.Thumbnailer, error) {
 	p := plot.New()
 
 	lines, err := plotter.NewLine(SimpleXY(data))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	cleanupAxes(p)
@@ -66,7 +103,53 @@ func (c *CodeLines) Plot(data []float64, dataRange Range) (*plot.Plot, error) {
 
 	p.Add(lines)
 
-	return p, nil
+	return p, nil, nil
+}
+
+type CodePie struct {
+	Colors []color.Color
+}
+
+func (c *CodePie) Plot(data []float64, dataRange Range) (*plot.Plot, []plot.Thumbnailer, error) {
+	if len(c.Colors) == 0 {
+		c.Colors = []color.Color{color.RGBA{R: 160, G: 160, B: 160, A: 255}}
+	}
+
+	total := 0.0
+	for _, v := range data {
+		if v < 0 {
+			return nil, nil, fmt.Errorf("negative values not supported in pie chart")
+		}
+		total += v
+	}
+
+	p := plot.New()
+	p.HideAxes()
+
+	thumbs := make([]plot.Thumbnailer, len(data))
+
+	offset := 0.0
+	for i, v := range data {
+		pie, err := piechart.NewPieChart(plotter.Values([]float64{v}))
+		if err != nil {
+			return nil, nil, err
+		}
+		pie.Labels.Show = false
+		pie.Radius = 1
+		pie.LineStyle.Width = 1
+		pie.LineStyle.Color = color.White
+		pie.Color = c.Colors[i%len(c.Colors)]
+
+		pie.Total = total
+		pie.Offset.Value = offset
+		p.Add(pie)
+
+		thumbs[i] = pie
+
+		offset += v
+	}
+
+	return p, thumbs, nil
 }
 
 func cleanupAxes(p *plot.Plot) {
