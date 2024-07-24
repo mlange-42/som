@@ -76,10 +76,10 @@ func (l *Legend) Draw(c draw.Canvas) {
 	yoff := vg.Length(l.YPosition-draw.PosBottom) / 2
 	yoff += descent
 
+	w := textWidth + l.ThumbnailWidth
 	for i, e := range l.entries {
 		row := i / l.Columns
 		col := i % l.Columns
-		w := textWidth + l.ThumbnailWidth
 		x := vg.Length(col)*w + xOrigin
 		y := vg.Length(rows-1-row)*(entryHeight+l.Padding) + yOrigin
 
@@ -96,6 +96,12 @@ func (l *Legend) Draw(c draw.Canvas) {
 
 		c.FillText(sty, vg.Point{X: x + textOffset, Y: icon.Min.Y + yoffs}, e.text)
 	}
+}
+
+func (l *Legend) AdjustColumns(maxWidth font.Length) {
+	textWidth := l.textWidth()
+	w := textWidth + l.ThumbnailWidth
+	l.Columns = min(len(l.entries), int(maxWidth/w))
 }
 
 func (l *Legend) Rectangle(c draw.Canvas) vg.Rectangle {
