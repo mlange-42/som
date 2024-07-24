@@ -8,7 +8,7 @@ import (
 	"github.com/mlange-42/som/table"
 )
 
-// Predictor is a struct that holds a SOM and a set of tables for making predictions.
+// Predictor is a struct that holds an SOM and a set of tables for making predictions.
 type Predictor struct {
 	som    *Som
 	tables []*table.Table

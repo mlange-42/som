@@ -89,7 +89,7 @@ func XY(
 }
 
 func setMarkerStyle(plot *plotter.Scatter, categories []string, catIndices []int, size float64, defaultColor color.Color) palette.Palette {
-	pal := NewRandomPalette(len(categories))
+	pal := NewRandomPalette(DefaultColors, len(categories))
 	if len(catIndices) > 0 {
 		plot.GlyphStyleFunc = func(i int) draw.GlyphStyle {
 			cat := catIndices[i]
