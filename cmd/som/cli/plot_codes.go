@@ -49,6 +49,7 @@ func plotCodesCommand() *cobra.Command {
 	command.PersistentFlags().SortFlags = false
 
 	command.AddCommand(plotCodesLinesCommand())
+	command.AddCommand(plotCodesPiesCommand())
 
 	return command
 }
@@ -82,6 +83,35 @@ func plotCodesLinesCommand() *cobra.Command {
 			}
 
 			plotType := plot.CodeLines{}
+			img, err := plot.Codes(cliArgs.Som, indices, cliArgs.Normalized, cliArgs.ZeroAxis, &plotType, image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
+			if err != nil {
+				return err
+			}
+
+			return writeImage(img, cliArgs.OutFile)
+		},
+	}
+	return command
+}
+
+func plotCodesPiesCommand() *cobra.Command {
+	command := &cobra.Command{
+		Use:   "pie [flags] <som-file> <out-file>",
+		Short: "Plots SOM nodes codes as pie charts",
+		Long:  `Plots SOM nodes codes as pie charts`,
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliArgs, ok := cmd.Context().Value(codePlotKey{}).(codePlotArgs)
+			if !ok {
+				return fmt.Errorf("args not found in context")
+			}
+
+			_, indices, err := extractIndices(cliArgs.Som, cliArgs.Columns, false)
+			if err != nil {
+				return err
+			}
+
+			plotType := plot.CodePie{}
 			img, err := plot.Codes(cliArgs.Som, indices, cliArgs.Normalized, cliArgs.ZeroAxis, &plotType, image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
 			if err != nil {
 				return err

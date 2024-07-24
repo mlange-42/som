@@ -3,6 +3,7 @@ module github.com/mlange-42/som
 go 1.22.0
 
 require (
+	github.com/benoitmasson/plotters/piechart v1.2.1
 	github.com/pkg/profile v1.7.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5

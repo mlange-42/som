@@ -1,9 +1,12 @@
 package plot
 
 import (
+	"fmt"
 	"image"
+	"image/color"
 	"math"
 
+	"github.com/benoitmasson/plotters/piechart"
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/norm"
 	"gonum.org/v1/plot"
@@ -19,7 +22,7 @@ type CodePlot interface {
 
 func Codes(s *som.Som, columns [][2]int, normalized bool, zeroAxis bool, plotType CodePlot, size image.Point) (image.Image, error) {
 	legendHeight := 20
-	hPad, vPad := 2, 10
+	hPad, vPad := 2, 4
 
 	codeHeight := (size.Y - legendHeight) / s.Size().Height
 	codeWidth := size.X / s.Size().Width
@@ -65,6 +68,33 @@ func (c *CodeLines) Plot(data []float64, dataRange Range) (*plot.Plot, error) {
 	p.Y.Min, p.Y.Max = dataRange.Min, dataRange.Max
 
 	p.Add(lines)
+
+	return p, nil
+}
+
+type CodePie struct{}
+
+func (c *CodePie) Plot(data []float64, dataRange Range) (*plot.Plot, error) {
+	for _, v := range data {
+		if v < 0 {
+			return nil, fmt.Errorf("negative values not supported in pie chart")
+		}
+	}
+
+	p := plot.New()
+	p.HideAxes()
+
+	pie, err := piechart.NewPieChart(plotter.Values(data))
+	if err != nil {
+		return nil, err
+	}
+	pie.Labels.Show = false
+	pie.Radius = 1
+	pie.LineStyle.Width = 1
+	pie.LineStyle.Color = color.White
+	pie.Color = color.Black
+
+	p.Add(pie)
 
 	return p, nil
 }
