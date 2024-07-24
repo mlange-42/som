@@ -80,6 +80,7 @@ type codePlotKey struct{}
 
 func plotCodesLinesCommand() *cobra.Command {
 	var stepStyle string
+	var vertical bool
 
 	command := &cobra.Command{
 		Use:   "line [flags] <som-file> <out-file>",
@@ -104,6 +105,7 @@ func plotCodesLinesCommand() *cobra.Command {
 
 			plotType := plot.CodeLines{
 				StepStyle: step,
+				Vertical:  vertical,
 			}
 			img, err := plot.Codes(cliArgs.Som, indices, cliArgs.Normalized, cliArgs.ZeroAxis, &plotType, image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
 			if err != nil {
@@ -115,6 +117,7 @@ func plotCodesLinesCommand() *cobra.Command {
 	}
 
 	command.Flags().StringVarP(&stepStyle, "step", "S", "none", "Line step style (none, mid, pre, post)")
+	command.Flags().BoolVarP(&vertical, "vertical", "v", false, "Plot lines vertically")
 
 	return command
 }

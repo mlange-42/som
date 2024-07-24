@@ -7,12 +7,17 @@ import (
 
 type CodeLines struct {
 	StepStyle plotter.StepKind
+	Vertical  bool
 }
 
 func (c *CodeLines) Plot(data []float64, dataRange Range) (*plot.Plot, []plot.Thumbnailer, error) {
 	p := plot.New()
 
-	lines, err := plotter.NewLine(SimpleXY(data))
+	xy := SimpleXY{
+		Values:   data,
+		Vertical: c.Vertical,
+	}
+	lines, err := plotter.NewLine(&xy)
 	if err != nil {
 		return nil, nil, err
 	}
