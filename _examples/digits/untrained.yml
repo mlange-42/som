@@ -1,0 +1,31 @@
+som:
+  size: [12, 8]
+  neighborhood: gaussian
+  metric: manhattan
+  layers:
+    - name: Pixel
+      columns: [
+        P00,P10,P20,P30,P40,P50,P60,P70,
+        P01,P11,P21,P31,P41,P51,P61,P71,
+        P02,P12,P22,P32,P42,P52,P62,P72,
+        P03,P13,P23,P33,P43,P53,P63,P73,
+        P04,P14,P24,P34,P44,P54,P64,P74,
+        P05,P15,P25,P35,P45,P55,P65,P75,
+        P06,P16,P26,P36,P46,P56,P66,P76,
+        P07,P17,P27,P37,P47,P57,P67,P77
+      ]
+      norm: [gaussian]
+      metric: euclidean
+      weight: 1
+
+    - name: class
+      metric: hamming
+      categorical: true
+      weight: 0.25
+
+training:
+  epochs: 500
+  alpha: polynomial 0.8 0.01 2
+  radius: polynomial 8 0.7 2
+  weight-decay: polynomial 0.5 0.0 3
+  lambda: 0.0
