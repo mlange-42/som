@@ -14,3 +14,5 @@ som plot error out/trained.yml out/error.png --data-file data.csv --labels Count
 som plot xy out/trained.yml out/xy.png -x log_GNI -y Income_low_40 -c continent --data-file data.csv -C continent
 
 som fill out/trained.yml data.csv --ignore continent --preserve Country,code,continent > out/filled.csv
+
+som plot codes rose out/trained.yml out/codes-rose.png -n -s 800,600
