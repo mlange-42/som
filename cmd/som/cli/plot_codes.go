@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"image/color"
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/plot"
 	"github.com/spf13/cobra"
+	"golang.org/x/image/colornames"
 )
 
 func plotCodesCommand() *cobra.Command {
@@ -95,6 +97,8 @@ func plotCodesLinesCommand() *cobra.Command {
 }
 
 func plotCodesPiesCommand() *cobra.Command {
+	var colors []string
+
 	command := &cobra.Command{
 		Use:   "pie [flags] <som-file> <out-file>",
 		Short: "Plots SOM nodes codes as pie charts",
@@ -111,7 +115,17 @@ func plotCodesPiesCommand() *cobra.Command {
 				return err
 			}
 
-			plotType := plot.CodePie{}
+			cols := make([]color.Color, len(colors))
+			for i, c := range colors {
+				cols[i], ok = colornames.Map[c]
+				if !ok {
+					return fmt.Errorf("color name %s unknown", c)
+				}
+			}
+
+			plotType := plot.CodePie{
+				Colors: cols,
+			}
 			img, err := plot.Codes(cliArgs.Som, indices, cliArgs.Normalized, cliArgs.ZeroAxis, &plotType, image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
 			if err != nil {
 				return err
@@ -120,5 +134,8 @@ func plotCodesPiesCommand() *cobra.Command {
 			return writeImage(img, cliArgs.OutFile)
 		},
 	}
+
+	command.Flags().StringSliceVarP(&colors, "colors", "C", nil, "Colors for pie slices")
+
 	return command
 }

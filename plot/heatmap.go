@@ -41,7 +41,7 @@ func Heatmap(title string, g plotter.GridXYZ, width, height int, categories []st
 	p.Add(labelsPlot)
 
 	thumbs := plotter.PaletteThumbnailers(pal)
-	for i := len(thumbs) - 1; i >= 0; i-- {
+	for i := 0; i < len(thumbs); i++ {
 		t := thumbs[i]
 		if categorical {
 			l.Add(categories[i], t)
