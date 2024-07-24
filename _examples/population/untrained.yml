@@ -1,0 +1,22 @@
+som:
+  size: [10, 6]
+  neighborhood: gaussian
+  metric: manhattan
+  layers:
+    - name: Cohort
+      columns: [
+        C00,C05,C10,C15,C20,
+        C25,C30,C35,C40,C45,
+        C50,C55,C60,C65,C70,
+        C75,C80
+      ]
+      norm: [gaussian]
+      metric: euclidean
+      weight: 1
+
+training:
+  epochs: 2500
+  alpha: polynomial 0.75 0.01 2
+  radius: polynomial 8 0.5 2
+  weight-decay: polynomial 0.5 0.0 3
+  lambda: 0.0
