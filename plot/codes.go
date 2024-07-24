@@ -23,22 +23,11 @@ type CodePlot interface {
 
 func Codes(s *som.Som, columns [][2]int, normalized bool, zeroAxis bool, plotType CodePlot, size image.Point) (image.Image, error) {
 	legendFontSize := 16
-	legendEntries := len(columns)
-	maxLegendCols := 8
-	legendRows := int(math.Ceil(float64(legendEntries) / float64(maxLegendCols)))
-	legendCols := int(math.Ceil(float64(legendEntries) / float64(legendRows)))
-
-	legendHeight := legendRows * (legendFontSize + 2)
-	hPad, vPad := 2, 4
-
-	codeHeight := (size.Y - legendHeight) / s.Size().Height
-	codeWidth := size.X / s.Size().Width
 
 	img := vgimg.NewWith(vgimg.UseWH(font.Length(size.X), font.Length(size.Y)), vgimg.UseDPI(72))
 	dc := draw.New(img)
 
 	plots := make([]*plot.Plot, s.Size().Width*s.Size().Height)
-	canvases := make([]draw.Canvas, len(plots))
 
 	dRange := dataRange(s, columns, normalized, zeroAxis)
 	w, h := s.Size().Width, s.Size().Height
@@ -46,10 +35,6 @@ func Codes(s *som.Som, columns [][2]int, normalized bool, zeroAxis bool, plotTyp
 	var thumbs []plot.Thumbnailer
 	for x := 0; x < w; x++ {
 		for y := 0; y < h; y++ {
-			c := draw.Crop(dc,
-				font.Length(x*codeWidth+hPad), font.Length((x+1-w)*codeWidth-hPad),
-				font.Length(y*codeHeight+legendHeight+vPad), font.Length((y+1-h)*codeHeight-vPad))
-
 			node := s.Size().Index(x, y)
 			data := nodeData(s, node, columns, normalized)
 
@@ -60,17 +45,12 @@ func Codes(s *som.Som, columns [][2]int, normalized bool, zeroAxis bool, plotTyp
 				return nil, err
 			}
 			plots[node] = p
-			canvases[node] = c
 		}
 	}
 
-	for i, p := range plots {
-		p.Draw(canvases[i])
-	}
-
+	var l Legend
 	if len(thumbs) > 0 {
-		l := NewLegend()
-		l.Columns = legendCols
+		l = NewLegend()
 		l.Left = true
 		l.YOffs = vg.Millimeter * 2
 		l.TextStyle.Font.Size = font.Length(legendFontSize)
@@ -79,8 +59,28 @@ func Codes(s *som.Som, columns [][2]int, normalized bool, zeroAxis bool, plotTyp
 			label := s.Layers()[c[0]].ColumnNames()[c[1]]
 			l.Add(label, thumbs[i])
 		}
+		l.AdjustColumns(font.Length(size.X))
 		l.XOffs = (font.Length(size.X) - l.Rectangle(dc).Max.X) / 2
 
+		l.Draw(dc)
+	}
+
+	legendHeight := (legendFontSize + 2) * int(math.Ceil(float64(len(thumbs))/float64(l.Columns)))
+	hPad, vPad := 2, 4
+
+	codeHeight := (size.Y - legendHeight) / s.Size().Height
+	codeWidth := size.X / s.Size().Width
+
+	for i, p := range plots {
+		x, y := s.Size().Coords(i)
+		c := draw.Crop(dc,
+			font.Length(x*codeWidth+hPad), font.Length((x+1-w)*codeWidth-hPad),
+			font.Length(y*codeHeight+legendHeight+vPad), font.Length((y+1-h)*codeHeight-vPad))
+
+		p.Draw(c)
+	}
+
+	if len(thumbs) > 0 {
 		l.Draw(dc)
 	}
 
