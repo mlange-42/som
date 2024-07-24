@@ -18,8 +18,8 @@ func plotUMatrixCommand() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "u-matrix [flags] <som-file> <out-file>",
-		Short: "Plots the u-matrix of an SOM",
-		Long:  `Plots the u-matrix of an SOM`,
+		Short: "Plots the u-matrix of an SOM, showing inter-nde distances",
+		Long:  `Plots the u-matrix of an SOM, showing inter-nde distances`,
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]

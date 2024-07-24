@@ -17,8 +17,8 @@ func plotCodesCommand() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "codes [flags] <som-file> <out-file>",
-		Short: "Plots SOM nodes codes in different ways",
-		Long:  `Plots SOM nodes codes in different ways`,
+		Short: "Plots SOM node codes in different ways. See sub-commands.",
+		Long:  `Plots SOM node codes in different ways. See sub-commands.`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]
 			cliArgs.OutFile = args[1]
