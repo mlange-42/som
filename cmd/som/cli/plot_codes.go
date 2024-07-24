@@ -52,6 +52,7 @@ func plotCodesCommand() *cobra.Command {
 
 	command.AddCommand(plotCodesLinesCommand())
 	command.AddCommand(plotCodesPiesCommand())
+	command.AddCommand(plotCodesRoseCommand())
 
 	return command
 }
@@ -124,6 +125,50 @@ func plotCodesPiesCommand() *cobra.Command {
 			}
 
 			plotType := plot.CodePie{
+				Colors: cols,
+			}
+			img, err := plot.Codes(cliArgs.Som, indices, cliArgs.Normalized, cliArgs.ZeroAxis, &plotType, image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
+			if err != nil {
+				return err
+			}
+
+			return writeImage(img, cliArgs.OutFile)
+		},
+	}
+
+	command.Flags().StringSliceVarP(&colors, "colors", "C", nil, "Colors for pie slices")
+
+	return command
+}
+
+func plotCodesRoseCommand() *cobra.Command {
+	var colors []string
+
+	command := &cobra.Command{
+		Use:   "rose [flags] <som-file> <out-file>",
+		Short: "Plots SOM nodes codes as rose alias Nightingale charts",
+		Long:  `Plots SOM nodes codes as rose alias Nightingale charts`,
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliArgs, ok := cmd.Context().Value(codePlotKey{}).(codePlotArgs)
+			if !ok {
+				return fmt.Errorf("args not found in context")
+			}
+
+			_, indices, err := extractIndices(cliArgs.Som, cliArgs.Columns, false)
+			if err != nil {
+				return err
+			}
+
+			cols := make([]color.Color, len(colors))
+			for i, c := range colors {
+				cols[i], ok = colornames.Map[c]
+				if !ok {
+					return fmt.Errorf("color name %s unknown", c)
+				}
+			}
+
+			plotType := plot.CodeRose{
 				Colors: cols,
 			}
 			img, err := plot.Codes(cliArgs.Som, indices, cliArgs.Normalized, cliArgs.ZeroAxis, &plotType, image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
