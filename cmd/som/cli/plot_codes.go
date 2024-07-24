@@ -53,6 +53,7 @@ func plotCodesCommand() *cobra.Command {
 	command.AddCommand(plotCodesLinesCommand())
 	command.AddCommand(plotCodesPiesCommand())
 	command.AddCommand(plotCodesRoseCommand())
+	command.AddCommand(plotCodesImageCommand())
 
 	return command
 }
@@ -181,6 +182,44 @@ func plotCodesRoseCommand() *cobra.Command {
 	}
 
 	command.Flags().StringSliceVarP(&colors, "colors", "C", nil, "Colors for pie slices")
+
+	return command
+}
+
+func plotCodesImageCommand() *cobra.Command {
+	var rows int
+
+	command := &cobra.Command{
+		Use:   "image [flags] <som-file> <out-file>",
+		Short: "Plots SOM nodes codes as images",
+		Long:  `Plots SOM nodes codes as images`,
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliArgs, ok := cmd.Context().Value(codePlotKey{}).(codePlotArgs)
+			if !ok {
+				return fmt.Errorf("args not found in context")
+			}
+
+			_, indices, err := extractIndices(cliArgs.Som, cliArgs.Columns, false)
+			if err != nil {
+				return err
+			}
+
+			plotType := plot.CodeImage{
+				Rows: rows,
+			}
+			img, err := plot.Codes(cliArgs.Som, indices, cliArgs.Normalized, cliArgs.ZeroAxis, &plotType, image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
+			if err != nil {
+				return err
+			}
+
+			return writeImage(img, cliArgs.OutFile)
+		},
+	}
+
+	command.Flags().IntVarP(&rows, "rows", "r", 1, "Number of rows for image plot")
+
+	command.MarkFlagRequired("rows")
 
 	return command
 }

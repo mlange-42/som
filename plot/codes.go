@@ -1,17 +1,13 @@
 package plot
 
 import (
-	"fmt"
 	"image"
-	"image/color"
 	"math"
 
-	"github.com/benoitmasson/plotters/piechart"
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/norm"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/font"
-	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/vg"
 	"gonum.org/v1/plot/vg/draw"
 	"gonum.org/v1/plot/vg/vgimg"
@@ -85,107 +81,6 @@ func Codes(s *som.Som, columns [][2]int, normalized bool, zeroAxis bool, plotTyp
 	}
 
 	return img.Image(), nil
-}
-
-type CodeLines struct{}
-
-func (c *CodeLines) Plot(data []float64, dataRange Range) (*plot.Plot, []plot.Thumbnailer, error) {
-	p := plot.New()
-
-	lines, err := plotter.NewLine(SimpleXY(data))
-	if err != nil {
-		return nil, nil, err
-	}
-
-	cleanupAxes(p)
-	p.Y.AutoRescale = false
-	p.Y.Min, p.Y.Max = dataRange.Min, dataRange.Max
-
-	p.Add(lines)
-
-	return p, nil, nil
-}
-
-type CodePie struct {
-	Colors []color.Color
-}
-
-func (c *CodePie) Plot(data []float64, dataRange Range) (*plot.Plot, []plot.Thumbnailer, error) {
-	if len(c.Colors) == 0 {
-		c.Colors = DefaultColors
-	}
-
-	total := 0.0
-	for _, v := range data {
-		if v < 0 {
-			return nil, nil, fmt.Errorf("negative values not supported in pie chart")
-		}
-		total += v
-	}
-
-	p := plot.New()
-	p.HideAxes()
-
-	thumbs := make([]plot.Thumbnailer, len(data))
-
-	offset := 0.0
-	for i, v := range data {
-		pie, err := piechart.NewPieChart(plotter.Values([]float64{v}))
-		if err != nil {
-			return nil, nil, err
-		}
-		pie.Labels.Show = false
-		pie.Radius = 1
-		pie.LineStyle.Width = 1
-		pie.LineStyle.Color = color.White
-		pie.Color = c.Colors[i%len(c.Colors)]
-
-		pie.Total = total
-		pie.Offset.Value = offset
-		p.Add(pie)
-
-		thumbs[i] = pie
-
-		offset += v
-	}
-
-	return p, thumbs, nil
-}
-
-type CodeRose struct {
-	Colors []color.Color
-}
-
-func (c *CodeRose) Plot(data []float64, dataRange Range) (*plot.Plot, []plot.Thumbnailer, error) {
-	if len(c.Colors) == 0 {
-		c.Colors = DefaultColors
-	}
-
-	p := plot.New()
-	p.HideAxes()
-
-	thumbs := make([]plot.Thumbnailer, len(data))
-
-	for i, v := range data {
-		pie, err := piechart.NewPieChart(&ConstantValues{Val: 1, Length: 1})
-		if err != nil {
-			return nil, nil, err
-		}
-		pie.Radius = (v - dataRange.Min) / (dataRange.Max - dataRange.Min)
-
-		pie.Labels.Show = false
-		pie.LineStyle.Width = 0.5
-		pie.LineStyle.Color = color.White
-		pie.Color = c.Colors[i%len(c.Colors)]
-
-		pie.Total = float64(len(data))
-		pie.Offset.Value = float64(i)
-		p.Add(pie)
-
-		thumbs[i] = pie
-	}
-
-	return p, thumbs, nil
 }
 
 func cleanupAxes(p *plot.Plot) {
