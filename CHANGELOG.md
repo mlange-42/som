@@ -10,6 +10,7 @@
 * Can handle missing/no-data class labels (#45)
 * Adds CLI command `fill` for filling missing data (#49)
 * Adds CLI command `predict` for predicting complete layers (#50)
+* Adds `codes` plots showing a 2D array of small line, pie or rose charts, one for each node (#52, #53, #53)
 
 ### Documentation
 
