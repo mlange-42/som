@@ -112,7 +112,7 @@ type CodePie struct {
 
 func (c *CodePie) Plot(data []float64, dataRange Range) (*plot.Plot, []plot.Thumbnailer, error) {
 	if len(c.Colors) == 0 {
-		c.Colors = []color.Color{color.RGBA{R: 160, G: 160, B: 160, A: 255}}
+		c.Colors = DefaultColors
 	}
 
 	total := 0.0
@@ -158,7 +158,7 @@ type CodeRose struct {
 
 func (c *CodeRose) Plot(data []float64, dataRange Range) (*plot.Plot, []plot.Thumbnailer, error) {
 	if len(c.Colors) == 0 {
-		c.Colors = []color.Color{color.RGBA{R: 160, G: 160, B: 160, A: 255}}
+		c.Colors = DefaultColors
 	}
 
 	p := plot.New()

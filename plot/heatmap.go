@@ -27,7 +27,7 @@ func Heatmap(title string, g plotter.GridXYZ, width, height int, categories []st
 	categorical := len(categories) > 0
 	var pal palette.Palette
 	if categorical {
-		pal = NewRandomPalette(len(categories))
+		pal = NewRandomPalette(DefaultColors, len(categories))
 	} else {
 		pal = palette.Rainbow(numColors, palette.Blue, palette.Red, 1, 1, 1)
 	}

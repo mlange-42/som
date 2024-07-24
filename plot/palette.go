@@ -2,19 +2,18 @@ package plot
 
 import (
 	"image/color"
-	"math/rand"
-
-	"gonum.org/v1/plot/palette"
 )
 
 type RandomPalette struct {
 	colors []color.Color
 }
 
-func NewRandomPalette(cols int) *RandomPalette {
-	colors := make([]color.Color, cols)
-
+func NewRandomPalette(cols []color.Color, count int) *RandomPalette {
+	colors := make([]color.Color, count)
 	for i := range colors {
+		colors[i] = cols[i%len(cols)]
+	}
+	/*for i := range colors {
 		col := palette.HSVA{
 			H: float64(i) / float64(cols),
 			S: rand.Float64()*0.5 + 0.5,
@@ -22,7 +21,7 @@ func NewRandomPalette(cols int) *RandomPalette {
 			A: 1,
 		}
 		colors[i] = color.NRGBAModel.Convert(col)
-	}
+	}*/
 	return &RandomPalette{colors: colors}
 }
 
