@@ -44,6 +44,7 @@ func plotCodesCommand() *cobra.Command {
 
 	command.PersistentFlags().StringSliceVarP(&cliArgs.Columns, "columns", "c", nil, "Columns to use for the codes plot (default all)")
 	command.PersistentFlags().BoolVarP(&cliArgs.Normalized, "normalized", "n", false, "Use raw, normalized node weights")
+	command.PersistentFlags().BoolVarP(&cliArgs.ZeroAxis, "zero", "z", false, "Zero the y-axis lower limit")
 	command.PersistentFlags().IntSliceVarP(&cliArgs.Size, "size", "s", []int{600, 400}, "Size of the plot in pixels")
 	command.PersistentFlags().SortFlags = false
 
@@ -57,6 +58,7 @@ type codePlotArgs struct {
 	OutFile    string
 	Columns    []string
 	Normalized bool
+	ZeroAxis   bool
 	Size       []int
 }
 
@@ -80,7 +82,7 @@ func plotCodesLinesCommand() *cobra.Command {
 			}
 
 			plotType := plot.CodeLines{}
-			img, err := plot.Codes(cliArgs.Som, indices, cliArgs.Normalized, &plotType, image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
+			img, err := plot.Codes(cliArgs.Som, indices, cliArgs.Normalized, cliArgs.ZeroAxis, &plotType, image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
 			if err != nil {
 				return err
 			}

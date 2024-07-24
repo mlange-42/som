@@ -17,9 +17,9 @@ type CodePlot interface {
 	Plot(data []float64, dRange Range) (*plot.Plot, error)
 }
 
-func Codes(s *som.Som, columns [][2]int, normalized bool, plotType CodePlot, size image.Point) (image.Image, error) {
+func Codes(s *som.Som, columns [][2]int, normalized bool, zeroAxis bool, plotType CodePlot, size image.Point) (image.Image, error) {
 	legendHeight := 20
-	pad := 3
+	hPad, vPad := 2, 10
 
 	codeHeight := (size.Y - legendHeight) / s.Size().Height
 	codeWidth := size.X / s.Size().Width
@@ -27,14 +27,14 @@ func Codes(s *som.Som, columns [][2]int, normalized bool, plotType CodePlot, siz
 	img := vgimg.NewWith(vgimg.UseWH(font.Length(size.X), font.Length(size.Y)), vgimg.UseDPI(72))
 	dc := draw.New(img)
 
-	dRange := dataRange(s, columns, normalized)
+	dRange := dataRange(s, columns, normalized, zeroAxis)
 
 	w, h := s.Size().Width, s.Size().Height
 	for x := 0; x < w; x++ {
 		for y := 0; y < h; y++ {
 			c := draw.Crop(dc,
-				font.Length(x*codeWidth+pad), font.Length((x+1-w)*codeWidth-pad),
-				font.Length(y*codeHeight+legendHeight+pad), font.Length((y+1-h)*codeHeight-pad))
+				font.Length(x*codeWidth+hPad), font.Length((x+1-w)*codeWidth-hPad),
+				font.Length(y*codeHeight+legendHeight+vPad), font.Length((y+1-h)*codeHeight-vPad))
 
 			node := s.Size().Index(x, y)
 			data := nodeData(s, node, columns, normalized)
@@ -78,9 +78,9 @@ func cleanupAxes(p *plot.Plot) {
 	p.Y.Padding = 0
 }
 
-func dataRange(s *som.Som, columns [][2]int, normalized bool) Range {
-	min := math.Inf(1)
-	max := math.Inf(-1)
+func dataRange(s *som.Som, columns [][2]int, normalized bool, zeroAxis bool) Range {
+	minValue := math.Inf(1)
+	maxValue := math.Inf(-1)
 
 	identity := norm.Identity{}
 
@@ -95,16 +95,17 @@ func dataRange(s *som.Som, columns [][2]int, normalized bool) Range {
 		}
 		for i := 0; i < nodes; i++ {
 			value := normalizer.DeNormalize(lay.GetAt(i, c[1]))
-			if value < min {
-				min = value
-			}
-			if value > max {
-				max = value
-			}
+			minValue = math.Min(minValue, value)
+			maxValue = math.Max(maxValue, value)
 		}
 	}
 
-	return Range{min, max}
+	if zeroAxis {
+		minValue = math.Min(minValue, 0)
+		maxValue = math.Max(maxValue, 0)
+	}
+
+	return Range{minValue, maxValue}
 }
 
 func nodeData(s *som.Som, node int, columns [][2]int, normalized bool) []float64 {
