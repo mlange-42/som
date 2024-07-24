@@ -216,3 +216,13 @@ func (t *TableXY) XY(i int) (x, y float64) {
 func (t *TableXY) Len() int {
 	return t.XTable.Rows()
 }
+
+type SimpleXY []float64
+
+func (s SimpleXY) XY(i int) (x, y float64) {
+	return float64(i), s[i]
+}
+
+func (s SimpleXY) Len() int {
+	return len(s)
+}

@@ -53,7 +53,7 @@ func plotXyCommand() *cobra.Command {
 				columns = append(columns, color)
 			}
 
-			_, indices, err := extractIndices(s, columns)
+			_, indices, err := extractIndices(s, columns, true)
 			if err != nil {
 				return err
 			}
@@ -74,7 +74,10 @@ func plotXyCommand() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				data = extractData(config, tables, indices)
+				data, err = extractData(config, tables, indices)
+				if err != nil {
+					return err
+				}
 
 				if dataColor != "" {
 					colorColumn, err := reader.ReadLabels(dataColor)
@@ -97,7 +100,11 @@ func plotXyCommand() *cobra.Command {
 			var classes []string
 			var classIndices []int
 			if len(indices) > 2 {
-				classes, classIndices = conv.LayerToClasses(s.Layers()[indices[2][0]])
+				classLayer := s.Layers()[indices[2][0]]
+				if !classLayer.IsCategorical() {
+					return fmt.Errorf("class layer %s is not categorical, can't use it for color", classLayer.Name())
+				}
+				classes, classIndices = conv.LayerToClasses(classLayer)
 			}
 
 			img, err := plot.XY(
@@ -119,7 +126,7 @@ func plotXyCommand() *cobra.Command {
 	command.Flags().BoolVarP(&noGrid, "no-grid", "G", false, "Don't draw SOM grid lines")
 	command.Flags().StringVarP(&dataColor, "data-color", "C", "", "Column for data color")
 
-	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of individual heatmap panels")
+	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of the plot in pixels")
 	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required for --labels")
 	command.Flags().StringVarP(&labelsColumn, "labels", "l", "", "Labels column in the data file")
 	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
@@ -136,12 +143,22 @@ func plotXyCommand() *cobra.Command {
 	return command
 }
 
-func extractData(conf *som.SomConfig, tables []*table.Table, indices [][2]int) plotter.XYer {
-	xy := make([]plotter.XY, 0, tables[0].Rows())
+func extractData(conf *som.SomConfig, tables []*table.Table, indices [][2]int) (plotter.XYer, error) {
+	l1, l2 := conf.Layers[indices[0][0]], conf.Layers[indices[1][0]]
+
+	if l1.Categorical {
+		return nil, fmt.Errorf("layer %s is categorical, cannot plot", l1.Name)
+	}
+	if l2.Categorical {
+		return nil, fmt.Errorf("layer %s is categorical, cannot plot", l2.Name)
+	}
+
 	t1, t2 := tables[indices[0][0]], tables[indices[1][0]]
 	c1, c2 := indices[0][1], indices[1][1]
 
-	n1, n2 := conf.Layers[indices[0][0]].Norm[c1], conf.Layers[indices[1][0]].Norm[c2]
+	n1, n2 := l1.Norm[c1], l2.Norm[c2]
+
+	xy := make([]plotter.XY, 0, tables[0].Rows())
 
 	for i := 0; i < t1.Rows(); i++ {
 		x, y := n1.DeNormalize(t1.Get(i, c1)), n2.DeNormalize(t2.Get(i, c2))
@@ -154,5 +171,5 @@ func extractData(conf *som.SomConfig, tables []*table.Table, indices [][2]int) p
 		})
 	}
 
-	return plotter.XYs(xy)
+	return plotter.XYs(xy), nil
 }

@@ -37,7 +37,7 @@ func plotUMatrixCommand() *cobra.Command {
 		},
 	}
 
-	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of individual heatmap panels")
+	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of the plot in pixels")
 	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required for --labels")
 	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
 	command.Flags().StringVarP(&labelsColumn, "labels", "l", "", "Labels column in the data file")
