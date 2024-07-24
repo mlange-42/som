@@ -15,6 +15,7 @@ func plotUMatrixCommand() *cobra.Command {
 	var delim string
 	var noData string
 	var ignore []string
+	var sample int
 
 	command := &cobra.Command{
 		Use:   "u-matrix [flags] <som-file> <out-file>",
@@ -28,7 +29,7 @@ func plotUMatrixCommand() *cobra.Command {
 			return plotHeatmap(size,
 				somFile, outFile, dataFile,
 				labelsColumn, delim, noData, "U-Matrix",
-				ignore,
+				ignore, sample,
 				func(s *som.Som, p *som.Predictor, r table.Reader) (plotter.GridXYZ, []string, error) {
 					uMatrix := s.UMatrix(true)
 					return &plot.UMatrixGrid{UMatrix: uMatrix}, nil, nil
@@ -41,6 +42,7 @@ func plotUMatrixCommand() *cobra.Command {
 	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required for --labels")
 	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
 	command.Flags().StringVarP(&labelsColumn, "labels", "l", "", "Labels column in the data file")
+	command.Flags().IntVarP(&sample, "sample", "S", 0, "Sample this many rows from the data file (default all)")
 
 	command.Flags().StringVarP(&delim, "delimiter", "D", ",", "CSV delimiter")
 	command.Flags().StringVarP(&noData, "no-data", "N", "", "No-data value (default \"\")")

@@ -6,6 +6,7 @@ import (
 	"image/draw"
 	"image/png"
 	"math"
+	"math/rand"
 	"os"
 	"path"
 
@@ -28,6 +29,7 @@ func plotHeatmapCommand() *cobra.Command {
 	var delim string
 	var noData string
 	var ignore []string
+	var sample int
 
 	command := &cobra.Command{
 		Use:   "heatmap [flags] <som-file> <out-file>",
@@ -86,7 +88,7 @@ func plotHeatmapCommand() *cobra.Command {
 					return fmt.Errorf("data file must be specified when labels column is specified")
 				}
 
-				labels, positions, err = extractLabels(predictor, labelsColumn, reader)
+				labels, positions, err = extractLabels(predictor, labelsColumn, reader, sample)
 				if err != nil {
 					return err
 				}
@@ -129,6 +131,7 @@ func plotHeatmapCommand() *cobra.Command {
 	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required for --labels")
 	command.Flags().StringVarP(&labelsColumn, "labels", "l", "", "Labels column in the data file")
 	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
+	command.Flags().IntVarP(&sample, "sample", "S", 0, "Sample this many rows from the data file (default all)")
 
 	command.Flags().StringVarP(&delim, "delimiter", "D", ",", "CSV delimiter")
 	command.Flags().StringVarP(&noData, "no-data", "N", "", "No-data value (default \"\")")
@@ -237,7 +240,7 @@ func createPredictor(config *som.SomConfig, s *som.Som, reader table.Reader, ign
 }
 
 func extractLabels(predictor *som.Predictor,
-	labelsColumn string, reader table.Reader) ([]string, []plotter.XY, error) {
+	labelsColumn string, reader table.Reader, sample int) ([]string, []plotter.XY, error) {
 
 	labels, err := reader.ReadLabels(labelsColumn)
 	if err != nil {
@@ -247,21 +250,40 @@ func extractLabels(predictor *som.Predictor,
 	bmu := predictor.GetBMUTable()
 	nodes := predictor.Som().Size().Nodes()
 
+	indices := make([]int, len(labels))
+	for i := range indices {
+		indices[i] = i
+	}
+
+	var outLabel []string
+	if sample > 0 && sample < len(indices) {
+		rand.Shuffle(len(indices), func(i, j int) { indices[i], indices[j] = indices[j], indices[i] })
+		indices = indices[:sample]
+		outLabel = make([]string, sample)
+	}
+
 	perCell := make([]int, nodes)
-	for i := range labels {
+	for _, i := range indices {
 		idx := int(bmu.Get(i, 0))
 		perCell[idx]++
 	}
 	count := make([]int, nodes)
 
-	xy := make([]plotter.XY, len(labels))
-	for i := range labels {
+	xy := make([]plotter.XY, len(indices))
+	for c, i := range indices {
 		idx := int(bmu.Get(i, 0))
 
 		frac := float64(count[idx]+1) / float64(perCell[idx]+1)
 
-		xy[i].X, xy[i].Y = bmu.Get(i, 1), bmu.Get(i, 2)-0.5+frac
+		xy[c].X, xy[c].Y = bmu.Get(i, 1), bmu.Get(i, 2)-0.5+frac
 		count[idx]++
+
+		if outLabel != nil {
+			outLabel[c] = labels[i]
+		}
+	}
+	if outLabel != nil {
+		return outLabel, xy, nil
 	}
 	return labels, xy, nil
 }

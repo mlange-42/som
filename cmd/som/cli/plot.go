@@ -35,7 +35,7 @@ func plotHeatmap(size []int,
 	somFile, outFile, dataFile,
 	labelsColumn, delim, noData string,
 	title string,
-	ignoreLayers []string,
+	ignoreLayers []string, sampleData int,
 	getData func(s *som.Som, p *som.Predictor, r table.Reader) (plotter.GridXYZ, []string, error)) error {
 
 	del := []rune(delim)
@@ -73,7 +73,7 @@ func plotHeatmap(size []int,
 		if dataFile == "" {
 			return fmt.Errorf("data file must be specified when labels column is specified")
 		}
-		labels, positions, err = extractLabels(predictor, labelsColumn, reader)
+		labels, positions, err = extractLabels(predictor, labelsColumn, reader, sampleData)
 		if err != nil {
 			return err
 		}

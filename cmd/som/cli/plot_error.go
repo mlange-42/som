@@ -16,6 +16,7 @@ func plotErrorCommand() *cobra.Command {
 	var noData string
 	var rmse bool
 	var ignore []string
+	var sample int
 
 	command := &cobra.Command{
 		Use:   "error [flags] <som-file> <out-file>",
@@ -35,7 +36,7 @@ func plotErrorCommand() *cobra.Command {
 
 			return plotHeatmap(size,
 				somFile, outFile, dataFile,
-				labelsColumn, delim, noData, title, ignore,
+				labelsColumn, delim, noData, title, ignore, sample,
 				func(s *som.Som, p *som.Predictor, r table.Reader) (plotter.GridXYZ, []string, error) {
 					mse := p.GetError(rmse)
 					return &plot.FloatGrid{Size: *s.Size(), Values: mse}, nil, nil
@@ -50,6 +51,7 @@ func plotErrorCommand() *cobra.Command {
 	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required")
 	command.Flags().StringVarP(&labelsColumn, "labels", "l", "", "Labels column in the data file")
 	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
+	command.Flags().IntVarP(&sample, "sample", "S", 0, "Sample this many rows from the data file (default all)")
 
 	command.Flags().StringVarP(&delim, "delimiter", "D", ",", "CSV delimiter")
 	command.Flags().StringVarP(&noData, "no-data", "N", "", "No-data value (default \"\")")
