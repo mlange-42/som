@@ -216,54 +216,59 @@ func extractIndices(s *som.Som, columns []string, inclContinuous, inclCategorica
 	var indices [][2]int
 
 	if len(columns) == 0 {
-		for i, l := range s.Layers() {
+		return extractAllIndices(s, inclContinuous, inclCategorical)
+	}
+
+	indices = make([][2]int, len(columns))
+	for i, col := range columns {
+		found := false
+		for j, l := range s.Layers() {
 			if l.IsCategorical() {
-				if inclCategorical {
-					indices = append(indices, [2]int{i, -1})
-					columns = append(columns, l.Name())
+				if col == l.Name() {
+					if !inclCategorical {
+						return nil, nil, fmt.Errorf("column %s is in categorical layer %s but categorical layers are excluded", col, l.Name())
+					}
+					indices[i] = [2]int{j, -1}
+					found = true
+					break
 				}
 				continue
 			}
-			if inclContinuous {
-				for j, c := range l.ColumnNames() {
-					indices = append(indices, [2]int{i, j})
-					columns = append(columns, c)
+			for k, c := range l.ColumnNames() {
+				if c == col {
+					if !inclContinuous {
+						return nil, nil, fmt.Errorf("column %s is in continuous layer %s but continuous layers are excluded", col, l.Name())
+					}
+					indices[i] = [2]int{j, k}
+					found = true
+					break
 				}
 			}
 		}
-	} else {
-		indices = make([][2]int, len(columns))
-		for i, col := range columns {
-			found := false
-			for j, l := range s.Layers() {
-				if l.IsCategorical() {
-					if col == l.Name() {
-						if !inclCategorical {
-							return nil, nil, fmt.Errorf("column %s is in categorical layer %s but categorical layers are excluded", col, l.Name())
-						}
-						indices[i] = [2]int{j, -1}
-						found = true
-						break
-					}
-					continue
-				}
-				for k, c := range l.ColumnNames() {
-					if c == col {
-						if !inclContinuous {
-							return nil, nil, fmt.Errorf("column %s is in continuous layer %s but continuous layers are excluded", col, l.Name())
-						}
-						indices[i] = [2]int{j, k}
-						found = true
-						break
-					}
-				}
-			}
-			if !found {
-				return nil, nil, fmt.Errorf("could not find column %s", col)
-			}
+		if !found {
+			return nil, nil, fmt.Errorf("could not find column %s", col)
 		}
 	}
 
+	return columns, indices, nil
+}
+
+func extractAllIndices(s *som.Som, inclContinuous, inclCategorical bool) (columns []string, indices [][2]int, err error) {
+	for i, l := range s.Layers() {
+		if l.IsCategorical() {
+			if inclCategorical {
+				indices = append(indices, [2]int{i, -1})
+				columns = append(columns, l.Name())
+			}
+			continue
+		}
+		if inclContinuous {
+			for j, c := range l.ColumnNames() {
+				indices = append(indices, [2]int{i, j})
+				columns = append(columns, c)
+			}
+		}
+	}
 	return columns, indices, nil
 }
 
