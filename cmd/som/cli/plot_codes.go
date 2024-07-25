@@ -21,6 +21,18 @@ var stepStyles = map[string]plotter.StepKind{
 	"post": plotter.PostStep,
 }
 
+type codePlotArgs struct {
+	Som        *som.Som
+	OutFile    string
+	Columns    []string
+	Boundaries string
+	Normalized bool
+	ZeroAxis   bool
+	Size       []int
+}
+
+type codePlotKey struct{}
+
 func plotCodesCommand() *cobra.Command {
 	cliArgs := codePlotArgs{}
 
@@ -34,7 +46,10 @@ with a small plot representing each node. Each sub-command uses
 a different type of plot for the nodes.
 
 SOM variables to show in each plot can be restricted using --columns
-By default, all non-categorical variables are used.`,
+By default, all non-categorical variables are used.
+
+For SOMs with categorical variables, --boundaries can be used to show
+boundaries between categories.`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
 				_ = cmd.Help()
@@ -68,6 +83,7 @@ By default, all non-categorical variables are used.`,
 	}
 
 	command.PersistentFlags().StringSliceVarP(&cliArgs.Columns, "columns", "c", nil, "Columns to use for the codes plot (default all)")
+	command.PersistentFlags().StringVarP(&cliArgs.Boundaries, "boundaries", "b", "", "Optional categorical variable to show boundaries for")
 	command.PersistentFlags().BoolVarP(&cliArgs.Normalized, "normalized", "n", false, "Use raw, normalized node weights")
 	command.PersistentFlags().BoolVarP(&cliArgs.ZeroAxis, "zero", "z", false, "Zero the y-axis lower limit")
 
@@ -83,17 +99,6 @@ By default, all non-categorical variables are used.`,
 
 	return command
 }
-
-type codePlotArgs struct {
-	Som        *som.Som
-	OutFile    string
-	Columns    []string
-	Normalized bool
-	ZeroAxis   bool
-	Size       []int
-}
-
-type codePlotKey struct{}
 
 func plotCodesLinesCommand() *cobra.Command {
 	var stepStyle string
@@ -118,7 +123,10 @@ so that each plot uses its individual axis range.
 (Applies to the x-axis for vertical plots)
 
 SOM variables to show in each plot can be restricted using --columns
-By default, all non-categorical variables are used.`,
+By default, all non-categorical variables are used.
+
+For SOMs with categorical variables, --boundaries can be used to show
+boundaries between categories.`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliArgs, ok := cmd.Context().Value(codePlotKey{}).(codePlotArgs)
@@ -126,9 +134,19 @@ By default, all non-categorical variables are used.`,
 				return fmt.Errorf("args not found in context")
 			}
 
-			_, indices, err := extractIndices(cliArgs.Som, cliArgs.Columns, false)
+			_, indices, err := extractIndices(cliArgs.Som, cliArgs.Columns, true, false)
 			if err != nil {
 				return err
+			}
+
+			boundIndex := -1
+			if cliArgs.Boundaries != "" {
+				var err error
+				_, boundIndices, err := extractIndices(cliArgs.Som, []string{cliArgs.Boundaries}, false, true)
+				if err != nil {
+					return err
+				}
+				boundIndex = boundIndices[0][0]
 			}
 
 			step, ok := stepStyles[strings.ToLower(stepStyle)]
@@ -141,7 +159,9 @@ By default, all non-categorical variables are used.`,
 				Vertical:   vertical,
 				AdjustAxis: !autoAxis,
 			}
-			img, err := plot.Codes(cliArgs.Som, indices, cliArgs.Normalized, cliArgs.ZeroAxis, &plotType, image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
+			img, err := plot.Codes(cliArgs.Som, indices, boundIndex,
+				cliArgs.Normalized, cliArgs.ZeroAxis, &plotType,
+				image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
 			if err != nil {
 				return err
 			}
@@ -171,7 +191,10 @@ representing each node. Useful for proportional data like percentages.
 Colors of the pie slices can be customized using --colors.
 
 SOM variables to show in each plot can be restricted using --columns
-By default, all non-categorical variables are used.`,
+By default, all non-categorical variables are used.
+
+For SOMs with categorical variables, --boundaries can be used to show
+boundaries between categories.`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliArgs, ok := cmd.Context().Value(codePlotKey{}).(codePlotArgs)
@@ -179,9 +202,19 @@ By default, all non-categorical variables are used.`,
 				return fmt.Errorf("args not found in context")
 			}
 
-			_, indices, err := extractIndices(cliArgs.Som, cliArgs.Columns, false)
+			_, indices, err := extractIndices(cliArgs.Som, cliArgs.Columns, true, false)
 			if err != nil {
 				return err
+			}
+
+			boundIndex := -1
+			if cliArgs.Boundaries != "" {
+				var err error
+				_, boundIndices, err := extractIndices(cliArgs.Som, []string{cliArgs.Boundaries}, false, true)
+				if err != nil {
+					return err
+				}
+				boundIndex = boundIndices[0][0]
 			}
 
 			cols := make([]color.Color, len(colors))
@@ -195,7 +228,9 @@ By default, all non-categorical variables are used.`,
 			plotType := plot.CodePie{
 				Colors: cols,
 			}
-			img, err := plot.Codes(cliArgs.Som, indices, cliArgs.Normalized, cliArgs.ZeroAxis, &plotType, image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
+			img, err := plot.Codes(cliArgs.Som, indices, boundIndex,
+				cliArgs.Normalized, cliArgs.ZeroAxis, &plotType,
+				image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
 			if err != nil {
 				return err
 			}
@@ -223,7 +258,10 @@ representing each node. Useful for many different kinds of data.
 Colors of the rose slices can be customized using --colors.
 
 SOM variables to show in each plot can be restricted using --columns
-By default, all non-categorical variables are used.`,
+By default, all non-categorical variables are used.
+
+For SOMs with categorical variables, --boundaries can be used to show
+boundaries between categories.`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliArgs, ok := cmd.Context().Value(codePlotKey{}).(codePlotArgs)
@@ -231,9 +269,18 @@ By default, all non-categorical variables are used.`,
 				return fmt.Errorf("args not found in context")
 			}
 
-			_, indices, err := extractIndices(cliArgs.Som, cliArgs.Columns, false)
+			_, indices, err := extractIndices(cliArgs.Som, cliArgs.Columns, true, false)
 			if err != nil {
 				return err
+			}
+			boundIndex := -1
+			if cliArgs.Boundaries != "" {
+				var err error
+				_, boundIndices, err := extractIndices(cliArgs.Som, []string{cliArgs.Boundaries}, false, true)
+				if err != nil {
+					return err
+				}
+				boundIndex = boundIndices[0][0]
 			}
 
 			cols := make([]color.Color, len(colors))
@@ -247,7 +294,9 @@ By default, all non-categorical variables are used.`,
 			plotType := plot.CodeRose{
 				Colors: cols,
 			}
-			img, err := plot.Codes(cliArgs.Som, indices, cliArgs.Normalized, cliArgs.ZeroAxis, &plotType, image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
+			img, err := plot.Codes(cliArgs.Som, indices, boundIndex,
+				cliArgs.Normalized, cliArgs.ZeroAxis, &plotType,
+				image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
 			if err != nil {
 				return err
 			}
@@ -276,7 +325,10 @@ The size of the image id controlled using --rows. The number of image columns
 is determined automatically based on the number of variables and rows.
 
 SOM variables to show in each plot can be restricted using --columns
-By default, all non-categorical variables are used.`,
+By default, all non-categorical variables are used.
+
+For SOMs with categorical variables, --boundaries can be used to show
+boundaries between categories.`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliArgs, ok := cmd.Context().Value(codePlotKey{}).(codePlotArgs)
@@ -284,15 +336,27 @@ By default, all non-categorical variables are used.`,
 				return fmt.Errorf("args not found in context")
 			}
 
-			_, indices, err := extractIndices(cliArgs.Som, cliArgs.Columns, false)
+			_, indices, err := extractIndices(cliArgs.Som, cliArgs.Columns, true, false)
 			if err != nil {
 				return err
+			}
+
+			boundIndex := -1
+			if cliArgs.Boundaries != "" {
+				var err error
+				_, boundIndices, err := extractIndices(cliArgs.Som, []string{cliArgs.Boundaries}, false, true)
+				if err != nil {
+					return err
+				}
+				boundIndex = boundIndices[0][0]
 			}
 
 			plotType := plot.CodeImage{
 				Rows: rows,
 			}
-			img, err := plot.Codes(cliArgs.Som, indices, cliArgs.Normalized, cliArgs.ZeroAxis, &plotType, image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
+			img, err := plot.Codes(cliArgs.Som, indices, boundIndex,
+				cliArgs.Normalized, cliArgs.ZeroAxis, &plotType,
+				image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
 			if err != nil {
 				return err
 			}

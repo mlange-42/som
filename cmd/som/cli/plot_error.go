@@ -12,6 +12,7 @@ func plotErrorCommand() *cobra.Command {
 	var size []int
 	var dataFile string
 	var labelsColumn string
+	var boundaries string
 	var delim string
 	var noData string
 	var rmse bool
@@ -31,7 +32,10 @@ showing the values in the column given by the --label flag:
 
   som plot error som.yml error.png --data-file data.csv --label name
 
-For large datasets, --sample can be used to show only a sub-set of the data.`,
+For large datasets, --sample can be used to show only a sub-set of the data.
+
+For SOMs with categorical variables, --boundaries can be used to show
+boundaries between categories.`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]
@@ -46,7 +50,8 @@ For large datasets, --sample can be used to show only a sub-set of the data.`,
 
 			return plotHeatmap(size,
 				somFile, outFile, dataFile,
-				labelsColumn, delim, noData, title, ignore, sample,
+				labelsColumn, delim, noData, title,
+				ignore, boundaries, sample,
 				func(s *som.Som, p *som.Predictor, r table.Reader) (plotter.GridXYZ, []string, error) {
 					mse := p.GetError(rmse)
 					return &plot.FloatGrid{Size: *s.Size(), Values: mse}, nil, nil
@@ -56,6 +61,7 @@ For large datasets, --sample can be used to show only a sub-set of the data.`,
 	}
 
 	command.Flags().BoolVarP(&rmse, "rmse", "r", false, "Use root mean squared error instead of mean squared error")
+	command.Flags().StringVarP(&boundaries, "boundaries", "b", "", "Optional categorical variable to show boundaries for")
 
 	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of the plot in pixels")
 	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required")

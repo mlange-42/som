@@ -23,6 +23,7 @@ import (
 func plotHeatmapCommand() *cobra.Command {
 	var size []int
 	var columns []string
+	var boundaries string
 	var plotColumns int
 	var dataFile string
 	var labelsColumn string
@@ -42,6 +43,9 @@ Categorical variables are converted to "class maps" with a unique
 color for each category.
 
 To select individual variables or a sub-set of variables, use --columns.
+
+For SOMs with categorical variables, --boundaries can be used to show
+boundaries between categories.
 
 Data provided via --data-file can be displayed on top of the heatmaps,
 showing the values in the column given by the --label flag:
@@ -67,7 +71,7 @@ For large datasets, --sample can be used to show only a sub-set of the data.`,
 				return err
 			}
 
-			columns, indices, err := extractIndices(s, columns, true)
+			columns, indices, err := extractIndices(s, columns, true, true)
 			if err != nil {
 				return err
 			}
@@ -108,26 +112,17 @@ For large datasets, --sample can be used to show only a sub-set of the data.`,
 				}
 			}
 
+			bounds, err := extractBoundariesLayer(s, boundaries)
+			if err != nil {
+				return err
+			}
+
 			for i := range indices {
 				layer, col := indices[i][0], indices[i][1]
 				c, r := i%plotColumns, i/plotColumns
 
-				var grid plotter.GridXYZ
-				var title string
-				var classes []string
-
-				l := s.Layers()[layer]
-				if col >= 0 {
-					grid = &plot.SomLayerGrid{Som: s, Layer: layer, Column: col}
-					title = fmt.Sprintf("%s: %s", l.Name(), l.ColumnNames()[col])
-				} else {
-					title = l.Name()
-					var classIndices []int
-					classes, classIndices = conv.LayerToClasses(l)
-					grid = &plot.IntGrid{Size: *s.Size(), Values: classIndices}
-				}
-
-				subImg, err := plot.Heatmap(title, grid, size[0], size[1], classes, labels, positions)
+				title, classes, grid := createTitleAndGrid(s, layer, col)
+				subImg, err := plot.Heatmap(title, grid, bounds, size[0], size[1], classes, labels, positions)
 				if err != nil {
 					return err
 				}
@@ -140,6 +135,7 @@ For large datasets, --sample can be used to show only a sub-set of the data.`,
 	}
 
 	command.Flags().StringSliceVarP(&columns, "columns", "c", nil, "Columns to use for the heatmap (default all)")
+	command.Flags().StringVarP(&boundaries, "boundaries", "b", "", "Optional categorical variable to show boundaries for")
 	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of individual heatmap panels")
 	command.Flags().IntVarP(&plotColumns, "plot-columns", "p", 0, "Number of plot columns on the image (default sqrt(#cols))")
 	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required for --label")
@@ -155,6 +151,33 @@ For large datasets, --sample can be used to show only a sub-set of the data.`,
 	command.MarkFlagFilename("data-file", "csv")
 
 	return command
+}
+
+func createTitleAndGrid(s *som.Som, layer, col int) (title string, classes []string, grid plotter.GridXYZ) {
+	l := s.Layers()[layer]
+	if col >= 0 {
+		grid = &plot.SomLayerGrid{Som: s, Layer: layer, Column: col}
+		title = fmt.Sprintf("%s: %s", l.Name(), l.ColumnNames()[col])
+	} else {
+		title = l.Name()
+		var classIndices []int
+		classes, classIndices = conv.LayerToClasses(l)
+		grid = &plot.IntGrid{Size: *s.Size(), Values: classIndices}
+	}
+	return
+}
+
+func extractBoundariesLayer(s *som.Som, boundaries string) (plotter.GridXYZ, error) {
+	var bounds plotter.GridXYZ
+	if boundaries != "" {
+		_, idx, err := extractIndices(s, []string{boundaries}, false, true)
+		if err != nil {
+			return nil, err
+		}
+		_, classIndices := conv.LayerToClasses(s.Layers()[idx[0][0]])
+		bounds = &plot.IntGrid{Size: *s.Size(), Values: classIndices}
+	}
+	return bounds, nil
 }
 
 func writeImage(img image.Image, outFile string) error {
@@ -189,53 +212,63 @@ func readSom(somFile string) (*som.SomConfig, *som.Som, error) {
 	return config, s, nil
 }
 
-func extractIndices(s *som.Som, columns []string, inclCategorical bool) ([]string, [][2]int, error) {
+func extractIndices(s *som.Som, columns []string, inclContinuous, inclCategorical bool) ([]string, [][2]int, error) {
 	var indices [][2]int
 
 	if len(columns) == 0 {
-		for i, l := range s.Layers() {
+		return extractAllIndices(s, inclContinuous, inclCategorical)
+	}
+
+	indices = make([][2]int, len(columns))
+	for i, col := range columns {
+		found := false
+		for j, l := range s.Layers() {
 			if l.IsCategorical() {
-				if inclCategorical {
-					indices = append(indices, [2]int{i, -1})
-					columns = append(columns, l.Name())
+				if col == l.Name() {
+					if !inclCategorical {
+						return nil, nil, fmt.Errorf("column %s is in categorical layer %s but categorical layers are excluded", col, l.Name())
+					}
+					indices[i] = [2]int{j, -1}
+					found = true
+					break
 				}
 				continue
 			}
+			for k, c := range l.ColumnNames() {
+				if c == col {
+					if !inclContinuous {
+						return nil, nil, fmt.Errorf("column %s is in continuous layer %s but continuous layers are excluded", col, l.Name())
+					}
+					indices[i] = [2]int{j, k}
+					found = true
+					break
+				}
+			}
+		}
+		if !found {
+			return nil, nil, fmt.Errorf("could not find column %s", col)
+		}
+	}
+
+	return columns, indices, nil
+}
+
+func extractAllIndices(s *som.Som, inclContinuous, inclCategorical bool) (columns []string, indices [][2]int, err error) {
+	for i, l := range s.Layers() {
+		if l.IsCategorical() {
+			if inclCategorical {
+				indices = append(indices, [2]int{i, -1})
+				columns = append(columns, l.Name())
+			}
+			continue
+		}
+		if inclContinuous {
 			for j, c := range l.ColumnNames() {
 				indices = append(indices, [2]int{i, j})
 				columns = append(columns, c)
 			}
 		}
-	} else {
-		indices = make([][2]int, len(columns))
-		for i, col := range columns {
-			found := false
-			for j, l := range s.Layers() {
-				if l.IsCategorical() {
-					if !inclCategorical {
-						return nil, nil, fmt.Errorf("column %s is in categorical layer %s but inclCategorical is false", col, l.Name())
-					}
-					if col == l.Name() {
-						indices[i] = [2]int{j, -1}
-						found = true
-						break
-					}
-					continue
-				}
-				for k, c := range l.ColumnNames() {
-					if c == col {
-						indices[i] = [2]int{j, k}
-						found = true
-						break
-					}
-				}
-			}
-			if !found {
-				return nil, nil, fmt.Errorf("could not find column %s", col)
-			}
-		}
 	}
-
 	return columns, indices, nil
 }
 

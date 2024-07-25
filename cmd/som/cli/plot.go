@@ -47,7 +47,7 @@ func plotHeatmap(size []int,
 	somFile, outFile, dataFile,
 	labelsColumn, delim, noData string,
 	title string,
-	ignoreLayers []string, sampleData int,
+	ignoreLayers []string, boundaries string, sampleData int,
 	getData func(s *som.Som, p *som.Predictor, r table.Reader) (plotter.GridXYZ, []string, error)) error {
 
 	del := []rune(delim)
@@ -91,12 +91,17 @@ func plotHeatmap(size []int,
 		}
 	}
 
+	bounds, err := extractBoundariesLayer(s, boundaries)
+	if err != nil {
+		return err
+	}
+
 	grid, cats, err := getData(s, predictor, reader)
 	if err != nil {
 		return err
 	}
 
-	img, err := plot.Heatmap(title, grid, size[0], size[1], cats, labels, positions)
+	img, err := plot.Heatmap(title, grid, bounds, size[0], size[1], cats, labels, positions)
 	if err != nil {
 		return err
 	}
