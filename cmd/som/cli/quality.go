@@ -72,7 +72,8 @@ Calculates the following SOM quality metrics and prints them to STDOUT:
 			fmt.Printf(`Quantization error:     %7.3f
 Mean square error:      %7.3f
 Root mean square error: %7.3f
-Topographic error:      %7.3f`, qe, mse, rmse, te)
+Topographic error:      %7.3f
+`, qe, mse, rmse, te)
 
 			return nil
 		},

@@ -4,15 +4,19 @@ cd "$(dirname "$0")"
 mkdir out
 set -e
 
-# Train and plot using simple SOM
+echo Train and plot using simple SOM
 som train untrained.yml data.csv -v 0.0 > out/trained.yml
+som quality out/trained.yml data.csv
+
 som plot heatmap out/trained.yml out/heatmap.png --data-file data.csv --label land
 som plot u-matrix out/trained.yml out/u-matrix.png --data-file data.csv --label land
 som plot xy out/trained.yml out/xy-cdu-spd.png -x CDU -y SPD --data-file data.csv -C land
 som plot xy out/trained.yml out/xy-afd-gruene.png -x AfD -y GRUENE --data-file data.csv -C land
 
-# Train and plot using ViSOM
+echo Train and plot using ViSOM
 som train untrained.yml data.csv > out/trained-vi.yml
+som quality out/trained.yml data.csv
+
 som plot heatmap out/trained-vi.yml out/heatmap-vi.png --data-file data.csv --label land
 som plot u-matrix out/trained-vi.yml out/u-matrix-vi.png --data-file data.csv --label land
 som plot xy out/trained-vi.yml out/xy-cdu-spd-vi.png -x CDU -y SPD --data-file data.csv -C land
@@ -32,3 +36,5 @@ som plot codes bar out/trained.yml out/codes-bar.png -s 1200,800 \
 som plot codes bar out/trained-vi.yml out/codes-bar-vi.png -s 1200,800 \
         -c CDU,SPD,GRUENE,FDP,AfD,LINKE,Other \
         -C black,red,green,yellow,blue,purple,silver
+
+echo See sub-folder 'out/' for result tables and images.
