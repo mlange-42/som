@@ -4,7 +4,7 @@ cd "$(dirname "$0")"
 mkdir out
 set -e
 
-#som train untrained.yml data.csv > out/trained.yml
+som train untrained.yml data.csv > out/trained.yml
 som plot heatmap out/trained.yml out/heatmap.png -f data.csv -l Country -s 600,360
 som plot u-matrix out/trained.yml out/u-matrix.png -f data.csv -l Country -s 800,480
 som plot density out/trained.yml out/density.png -f data.csv -l Country -s 800,480

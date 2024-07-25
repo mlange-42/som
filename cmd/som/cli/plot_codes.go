@@ -173,6 +173,8 @@ boundaries between categories.`,
 	command.Flags().BoolVarP(&vertical, "vertical", "v", false, "Plot lines vertically")
 	command.PersistentFlags().BoolVarP(&autoAxis, "auto", "a", false, "Automatically scale sub-plot axes, individually")
 
+	command.Flags().SortFlags = false
+
 	return command
 }
 
@@ -253,6 +255,8 @@ boundaries between categories.`,
 	command.Flags().BoolVarP(&vertical, "vertical", "v", false, "Plot bars arranged vertically (i.e. horizontal bars)")
 	command.PersistentFlags().BoolVarP(&autoAxis, "auto", "a", false, "Automatically scale sub-plot axes, individually")
 
+	command.Flags().SortFlags = false
+
 	return command
 }
 
@@ -317,6 +321,8 @@ boundaries between categories.`,
 
 	command.Flags().StringSliceVarP(&colors, "colors", "C", nil, "Colors for pie slices")
 
+	command.Flags().SortFlags = false
+
 	return command
 }
 
@@ -380,6 +386,8 @@ boundaries between categories.`,
 
 	command.Flags().StringSliceVarP(&colors, "colors", "C", nil, "Colors for pie slices")
 
+	command.Flags().SortFlags = false
+
 	return command
 }
 
@@ -441,6 +449,7 @@ boundaries between categories.`,
 	command.Flags().IntVarP(&rows, "rows", "r", 1, "Number of rows for image plot")
 
 	command.MarkFlagRequired("rows")
+	command.Flags().SortFlags = false
 
 	return command
 }
