@@ -18,6 +18,9 @@ import (
 
 // A BarChart presents grouped data with rectangular bars
 // with lengths proportional to the data values.
+//
+// Modification of gonum.org/v1/plot/plotter.BarChart to allow
+// for column width specification in data coordinates.
 type BarChart struct {
 	plotter.Values
 
