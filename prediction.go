@@ -33,6 +33,11 @@ func (p *Predictor) Som() *Som {
 	return p.som
 }
 
+// Tables returns the tables associated with this Predictor.
+func (p *Predictor) Tables() []*table.Table {
+	return p.tables
+}
+
 // GetBMUTable returns a table with the best matching units (BMUs) for each row in the
 // associated tables. The table contains the following columns:
 //
@@ -225,6 +230,22 @@ func (p *Predictor) GetBMU() []int {
 	return bmu
 }
 
+func (p *Predictor) getBMU2() [][2]int {
+	data := make([][]float64, len(p.tables))
+	rows := p.tables[0].Rows()
+
+	bmu := make([][2]int, rows)
+
+	for i := 0; i < rows; i++ {
+		p.collectData(i, data)
+
+		idx, _, idx2, _ := p.som.GetBMU2(data)
+		bmu[i] = [2]int{idx, idx2}
+	}
+
+	return bmu
+}
+
 // GetBMUWithDistance returns the best matching unit (BMU) indices and the distances
 // between the input data and the BMU for each row in the associated tables.
 func (p *Predictor) GetBMUWithDistance() ([]int, []float64) {
@@ -284,4 +305,53 @@ func (p *Predictor) GetError(rmse bool) []float64 {
 		}
 	}
 	return errors
+}
+
+type Evaluator struct {
+	predictor *Predictor
+}
+
+func NewEvaluator(predictor *Predictor) *Evaluator {
+	return &Evaluator{
+		predictor: predictor,
+	}
+}
+
+func (e *Evaluator) Error() (qe, mse, rmse float64) {
+	p := e.predictor
+	_, dist := p.GetBMUWithDistance()
+
+	sumDist := 0.0
+	errorSum := 0.0
+
+	for _, d := range dist {
+		sumDist += d
+		errorSum += d * d
+	}
+
+	return sumDist / float64(len(dist)),
+		errorSum / float64(len(dist)),
+		math.Sqrt(errorSum / float64(len(dist)))
+}
+
+func (e *Evaluator) TopographicError() float64 {
+	bmu := e.predictor.getBMU2()
+
+	failed := len(bmu)
+	for _, row := range bmu {
+		x1, y1 := e.predictor.som.Size().Coords(row[0])
+		x2, y2 := e.predictor.som.Size().Coords(row[1])
+
+		if x1 != x2 && y1 != y2 {
+			continue // no diagonals allowed (?)
+		}
+		dx := math.Abs(float64(x1 - x2))
+		dy := math.Abs(float64(y1 - y2))
+		if dx > 1 || dy > 1 {
+			continue // too far away
+		}
+		failed--
+	}
+
+	return float64(failed) / float64(len(bmu))
 }

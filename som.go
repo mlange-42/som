@@ -269,6 +269,30 @@ func (s *Som) GetBMU(data [][]float64) (int, float64) {
 	return minIndex, minDist
 }
 
+func (s *Som) GetBMU2(data [][]float64) (int, float64, int, float64) {
+	units := s.size.Nodes()
+
+	minDist := math.MaxFloat64
+	minDist2 := math.MaxFloat64
+	minIndex := -1
+	minIndex2 := -1
+	for i := 0; i < units; i++ {
+		totalDist := s.distance(data, i)
+
+		if totalDist < minDist {
+			minDist2 = minDist
+			minIndex2 = minIndex
+			minDist = totalDist
+			minIndex = i
+		} else if totalDist < minDist2 {
+			minDist2 = totalDist
+			minIndex2 = i
+		}
+	}
+
+	return minIndex, minDist, minIndex2, minDist2
+}
+
 func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius, lambda float64) {
 	lim := s.neighborhood.MaxRadius(radius)
 	if lim < 0 {

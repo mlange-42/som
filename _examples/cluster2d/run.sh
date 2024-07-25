@@ -24,3 +24,5 @@ som plot xy out/labelled.yml out/xy-labelled.png -x x -y y -c class --data-file 
 
 # Predict labels on trained SOM
 som predict out/labelled.yml data.csv --layers class --all > out/prediced.csv
+
+som quality out/labelled.yml data.csv
