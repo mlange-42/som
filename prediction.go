@@ -5,6 +5,7 @@ import (
 	"math"
 	"slices"
 
+	"github.com/mlange-42/som/neighborhood"
 	"github.com/mlange-42/som/table"
 )
 
@@ -340,19 +341,14 @@ func (e *Evaluator) Error() (qe, mse, rmse float64) {
 		math.Sqrt(errorSum / float64(len(e.bmu)))
 }
 
-func (e *Evaluator) TopographicError() float64 {
+func (e *Evaluator) TopographicError(dist neighborhood.Metric) float64 {
 	failed := len(e.bmu)
 	for _, b := range e.bmu {
 		x1, y1 := e.predictor.som.Size().Coords(b.Idx1)
 		x2, y2 := e.predictor.som.Size().Coords(b.Idx2)
 
-		if x1 != x2 && y1 != y2 {
-			continue // no diagonals allowed (?)
-		}
-		dx := math.Abs(float64(x1 - x2))
-		dy := math.Abs(float64(y1 - y2))
-		if dx > 1 || dy > 1 {
-			continue // too far away
+		if dist.Distance(x1, y1, x2, y2) > 1 {
+			continue
 		}
 		failed--
 	}

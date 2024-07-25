@@ -6,6 +6,7 @@ import (
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/csv"
+	"github.com/mlange-42/som/neighborhood"
 	"github.com/mlange-42/som/yml"
 	"github.com/spf13/cobra"
 )
@@ -59,7 +60,7 @@ func qualityCommand() *cobra.Command {
 			eval := som.NewEvaluator(pred)
 
 			qe, mse, rmse := eval.Error()
-			te := eval.TopographicError()
+			te := eval.TopographicError(&neighborhood.ManhattanMetric{})
 
 			fmt.Printf(`Quantization error:     %7.3f
 Mean square error:      %7.3f
