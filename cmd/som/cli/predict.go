@@ -21,8 +21,8 @@ func predictCommand() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "predict [flags] <som-file> <data-file>",
-		Short: "Predict entire layers or table columns using a trained SOM.",
-		Long: `Predict entire layers or table columns using a trained SOM.
+		Short: "Predicts entire layers or table columns using a trained SOM.",
+		Long: `Predicts entire layers or table columns using a trained SOM.
 	
 A table with the same row order as the input table is created.
 Per default, only the predicted layers/variables are added as columns.
