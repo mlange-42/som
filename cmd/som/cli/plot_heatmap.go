@@ -112,35 +112,16 @@ For large datasets, --sample can be used to show only a sub-set of the data.`,
 				}
 			}
 
-			var bounds plotter.GridXYZ
-			if boundaries != "" {
-				_, idx, err := extractIndices(s, []string{boundaries}, true)
-				if err != nil {
-					return err
-				}
-				_, classIndices := conv.LayerToClasses(s.Layers()[idx[0][0]])
-				bounds = &plot.IntGrid{Size: *s.Size(), Values: classIndices}
+			bounds, err := extractBoundariesLayer(s, boundaries)
+			if err != nil {
+				return err
 			}
 
 			for i := range indices {
 				layer, col := indices[i][0], indices[i][1]
 				c, r := i%plotColumns, i/plotColumns
 
-				var grid plotter.GridXYZ
-				var title string
-				var classes []string
-
-				l := s.Layers()[layer]
-				if col >= 0 {
-					grid = &plot.SomLayerGrid{Som: s, Layer: layer, Column: col}
-					title = fmt.Sprintf("%s: %s", l.Name(), l.ColumnNames()[col])
-				} else {
-					title = l.Name()
-					var classIndices []int
-					classes, classIndices = conv.LayerToClasses(l)
-					grid = &plot.IntGrid{Size: *s.Size(), Values: classIndices}
-				}
-
+				title, classes, grid := createTitleAndGrid(s, layer, col)
 				subImg, err := plot.Heatmap(title, grid, bounds, size[0], size[1], classes, labels, positions)
 				if err != nil {
 					return err
@@ -170,6 +151,33 @@ For large datasets, --sample can be used to show only a sub-set of the data.`,
 	command.MarkFlagFilename("data-file", "csv")
 
 	return command
+}
+
+func createTitleAndGrid(s *som.Som, layer, col int) (title string, classes []string, grid plotter.GridXYZ) {
+	l := s.Layers()[layer]
+	if col >= 0 {
+		grid = &plot.SomLayerGrid{Som: s, Layer: layer, Column: col}
+		title = fmt.Sprintf("%s: %s", l.Name(), l.ColumnNames()[col])
+	} else {
+		title = l.Name()
+		var classIndices []int
+		classes, classIndices = conv.LayerToClasses(l)
+		grid = &plot.IntGrid{Size: *s.Size(), Values: classIndices}
+	}
+	return
+}
+
+func extractBoundariesLayer(s *som.Som, boundaries string) (plotter.GridXYZ, error) {
+	var bounds plotter.GridXYZ
+	if boundaries != "" {
+		_, idx, err := extractIndices(s, []string{boundaries}, true)
+		if err != nil {
+			return nil, err
+		}
+		_, classIndices := conv.LayerToClasses(s.Layers()[idx[0][0]])
+		bounds = &plot.IntGrid{Size: *s.Size(), Values: classIndices}
+	}
+	return bounds, nil
 }
 
 func writeImage(img image.Image, outFile string) error {

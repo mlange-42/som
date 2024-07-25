@@ -20,7 +20,7 @@ Provides a command line tool and a library for training and visualizing SOMs.
 * Training from CSV files without any manual preprocessing.
 * Supports continuous and discrete data.
 * Fully customizable training and SOM parameters.
-* Visualization of SOMs through heatmaps and u-matrix plots, with data point labels.
+* Visualization of SOMs by a wide range of flexible plots.
 * Use as command line tool or as [Go](https://go.dev) library.
 
 > Please note that the **built-in visualizations** are not intended for publication-quality output.
