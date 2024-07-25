@@ -13,9 +13,19 @@ import (
 
 func plotCommand() *cobra.Command {
 	command := &cobra.Command{
-		Use:   "plot [flags] <som-file>",
-		Short: "Plots an SOM in various ways, see sub-commands",
-		Long:  `Plots an SOM in various ways, see sub-commands`,
+		Use:   "plot",
+		Short: "Plots visualizations for an SOM in various ways. See sub-commands.",
+		Long: `Plots visualizations for an SOM in various ways. See sub-commands.
+
+All sub-commands take an SOM YAML file and an output PNG file
+as positional arguments.
+
+Please note that the built-in visualizations are not intended for
+publication-quality output. Instead, they serve as quick tools for
+inspecting training and prediction results. For high-quality visualizations,
+we recommend exporting the SOM and other results to CSV files.
+You can then use dedicated visualization libraries in languages such as
+Python or R to create more refined and customized graphics.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			_ = cmd.Help()
 		},
@@ -27,6 +37,8 @@ func plotCommand() *cobra.Command {
 	command.AddCommand(plotXyCommand())
 	command.AddCommand(plotDensityCommand())
 	command.AddCommand(plotErrorCommand())
+
+	addTreeToHelp(command, false)
 
 	return command
 }

@@ -20,9 +20,27 @@ func bmuCommand() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "bmu [flags] <som-file> <data-file>",
-		Short: "Finds the best-matching unit (BMU) for each table row in a dataset",
-		Long:  `Finds the best-matching unit (BMU) for each table row in a dataset`,
-		Args:  cobra.ExactArgs(2),
+		Short: "Finds the best-matching unit (BMU) for each table row in a dataset.",
+		Long: `Finds the best-matching unit (BMU) for each table row in a dataset.
+
+A table with the same row order as the input table is created. Columns are:
+
+ - node_id: the index of the BMU node
+ - node_x: the x-coordinate of the BMU node
+ - node_y: the y-coordinate of the BMU node
+ - node_dist: the distance between the input data and the BMU node
+
+The result table is written to STDOUT in CSV format.
+Redirect output to a file like this:
+ 
+  som bmu som.yml data.csv > bmu.csv
+
+Columns from the input table can be transferred to the output table by use of
+the --preserve flag. Here is how to transfer 'ID' and 'Name' columns:
+
+  sum bmu som.yml data.csv --preserve ID,Name > bmu.csv
+`,
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]
 			dataFile := args[1]
@@ -84,8 +102,8 @@ func bmuCommand() *cobra.Command {
 	command.Flags().StringSliceVarP(&preserve, "preserve", "p", nil, "Preserve columns and prepend them to the output table")
 	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
 
-	command.Flags().StringVarP(&delim, "delimiter", "D", ",", "CSV delimiter")
-	command.Flags().StringVarP(&noData, "no-data", "N", "", "No-data string")
+	command.Flags().StringVarP(&delim, "delimiter", "D", ",", "CSV delimiter for CSV input and output")
+	command.Flags().StringVarP(&noData, "no-data", "N", "", "No-data string for CSV input and output")
 
 	command.Flags().SortFlags = false
 

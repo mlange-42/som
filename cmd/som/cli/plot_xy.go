@@ -21,16 +21,28 @@ func plotXyCommand() *cobra.Command {
 	var dataColor string
 	var noGrid bool
 	var dataFile string
-	var labelsColumn string
 	var delim string
 	var noData string
 	var ignore []string
 
 	command := &cobra.Command{
 		Use:   "xy [flags] <som-file> <out-file>",
-		Short: "Scatter plots for pairs of SOM variables",
-		Long:  `Scatter plots for pairs of SOM variables`,
-		Args:  cobra.ExactArgs(2),
+		Short: "Plots for pairs of SOM variables as scatter plots.",
+		Long: `Plots for pairs of SOM variables as scatter plots.
+
+Nodes are plotted according to their values in two SOM variables.
+An optional --color column can be used to color-code the nodes:
+
+  som plot xy som.yml xy.png -x X -y Y -c Class
+
+By default, the 2-dimensional lattice/grid of nodes is shown as lines
+between neighboring nodes. This grid can be disabled via --no-grid.
+
+Data points provided via an optional --data-file are plotted underneath the
+SOM nodes. They can be colored independent of the nodes using --data-color.
+
+  som plot xy ... --data-file data.csv --data-color Class2`,
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]
 			outFile := args[1]
@@ -127,8 +139,7 @@ func plotXyCommand() *cobra.Command {
 	command.Flags().StringVarP(&dataColor, "data-color", "C", "", "Column for data color")
 
 	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of the plot in pixels")
-	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required for --labels")
-	command.Flags().StringVarP(&labelsColumn, "labels", "l", "", "Labels column in the data file")
+	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required for --label")
 	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
 
 	command.Flags().StringVarP(&delim, "delimiter", "D", ",", "CSV delimiter")

@@ -21,10 +21,25 @@ func predictCommand() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "predict [flags] <som-file> <data-file>",
-		Short: "predict entire layers or table columns using a trained SOM",
-		Long:  `predict entire layers or table columns using a trained SOM`,
-		Args:  cobra.ExactArgs(2),
+		Short: "Predict entire layers or table columns using a trained SOM.",
+		Long: `Predict entire layers or table columns using a trained SOM.
+	
+A table with the same row order as the input table is created.
+Per default, only the predicted layers/variables are added as columns.
+Using the --all flag, all columns from the input table that are also
+SOM variables are added to the output table. Further columns that are
+not SOM variables can be transferred from the input table using --preserve.
+	
+The result table is written to STDOUT in CSV format.
+Redirect output to a file like this:
+
+  som predict som.yml data.csv --layers class > predicted.csv`,
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(layers) == 0 {
+				return fmt.Errorf("at least one layer must be specified")
+			}
+
 			somFile := args[0]
 			dataFile := args[1]
 
@@ -98,6 +113,7 @@ func predictCommand() *cobra.Command {
 	command.Flags().StringVarP(&delim, "delimiter", "D", ",", "CSV delimiter")
 	command.Flags().StringVarP(&noData, "no-data", "N", "", "No-data string")
 
+	command.MarkFlagRequired("layers")
 	command.Flags().SortFlags = false
 
 	return command

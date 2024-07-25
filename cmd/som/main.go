@@ -1,13 +1,19 @@
 package main
 
 import (
-	"log"
+	"os"
 
 	"github.com/mlange-42/som/cmd/som/cli"
 )
 
 func main() {
-	if err := cli.RootCommand().Execute(); err != nil {
-		log.Fatal(err)
+	command, err := cli.RootCommand()
+	if err != nil {
+		//fmt.Fprintln(os.Stderr, "Error:", err.Error())
+		os.Exit(1)
+	}
+	if err := command.Execute(); err != nil {
+		//fmt.Fprintln(os.Stderr, "Error:", err.Error())
+		os.Exit(1)
 	}
 }
