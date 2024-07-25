@@ -5,6 +5,7 @@ import (
 	"math"
 
 	"github.com/mlange-42/som"
+	"github.com/mlange-42/som/conv"
 	"github.com/mlange-42/som/norm"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/font"
@@ -18,6 +19,7 @@ type CodePlot interface {
 }
 
 func Codes(s *som.Som, columns [][2]int,
+	boundariesLayer int,
 	normalized bool, zeroAxis bool,
 	plotType CodePlot, size image.Point) (image.Image, error) {
 	legendFontSize := 16
@@ -59,8 +61,6 @@ func Codes(s *som.Som, columns [][2]int,
 		}
 		l.AdjustColumns(font.Length(size.X - 12))
 		l.XOffs = (font.Length(size.X) - l.Rectangle(dc).Max.X) / 2
-
-		l.Draw(dc)
 	}
 
 	legendHeight := (legendFontSize + 2) * int(math.Ceil(float64(len(thumbs))/float64(l.Columns)))
@@ -80,6 +80,24 @@ func Codes(s *som.Som, columns [][2]int,
 
 	if len(thumbs) > 0 {
 		l.Draw(dc)
+	}
+
+	if boundariesLayer >= 0 {
+		p := plot.New()
+		p.BackgroundColor = image.Transparent
+		p.HideAxes()
+
+		c := draw.Crop(dc, 0, 0, font.Length(legendHeight), 0)
+
+		_, classIndices := conv.LayerToClasses(s.Layers()[boundariesLayer])
+		bounds := &IntGrid{Size: *s.Size(), Values: classIndices}
+		bound, err := NewGridBoundaries(bounds)
+		if err != nil {
+			return nil, err
+		}
+		p.Add(bound)
+
+		p.Draw(c)
 	}
 
 	return img.Image(), nil

@@ -21,6 +21,18 @@ var stepStyles = map[string]plotter.StepKind{
 	"post": plotter.PostStep,
 }
 
+type codePlotArgs struct {
+	Som        *som.Som
+	OutFile    string
+	Columns    []string
+	Boundaries string
+	Normalized bool
+	ZeroAxis   bool
+	Size       []int
+}
+
+type codePlotKey struct{}
+
 func plotCodesCommand() *cobra.Command {
 	cliArgs := codePlotArgs{}
 
@@ -68,6 +80,7 @@ By default, all non-categorical variables are used.`,
 	}
 
 	command.PersistentFlags().StringSliceVarP(&cliArgs.Columns, "columns", "c", nil, "Columns to use for the codes plot (default all)")
+	command.PersistentFlags().StringVarP(&cliArgs.Boundaries, "boundaries", "b", "", "Optional categorical variable to show boundaries for")
 	command.PersistentFlags().BoolVarP(&cliArgs.Normalized, "normalized", "n", false, "Use raw, normalized node weights")
 	command.PersistentFlags().BoolVarP(&cliArgs.ZeroAxis, "zero", "z", false, "Zero the y-axis lower limit")
 
@@ -83,17 +96,6 @@ By default, all non-categorical variables are used.`,
 
 	return command
 }
-
-type codePlotArgs struct {
-	Som        *som.Som
-	OutFile    string
-	Columns    []string
-	Normalized bool
-	ZeroAxis   bool
-	Size       []int
-}
-
-type codePlotKey struct{}
 
 func plotCodesLinesCommand() *cobra.Command {
 	var stepStyle string
@@ -131,6 +133,16 @@ By default, all non-categorical variables are used.`,
 				return err
 			}
 
+			boundIndex := -1
+			if cliArgs.Boundaries != "" {
+				var err error
+				_, boundIndices, err := extractIndices(cliArgs.Som, []string{cliArgs.Boundaries}, true)
+				if err != nil {
+					return err
+				}
+				boundIndex = boundIndices[0][0]
+			}
+
 			step, ok := stepStyles[strings.ToLower(stepStyle)]
 			if !ok {
 				return fmt.Errorf("invalid step style: %s", stepStyle)
@@ -141,7 +153,9 @@ By default, all non-categorical variables are used.`,
 				Vertical:   vertical,
 				AdjustAxis: !autoAxis,
 			}
-			img, err := plot.Codes(cliArgs.Som, indices, cliArgs.Normalized, cliArgs.ZeroAxis, &plotType, image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
+			img, err := plot.Codes(cliArgs.Som, indices, boundIndex,
+				cliArgs.Normalized, cliArgs.ZeroAxis, &plotType,
+				image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
 			if err != nil {
 				return err
 			}
@@ -184,6 +198,16 @@ By default, all non-categorical variables are used.`,
 				return err
 			}
 
+			boundIndex := -1
+			if cliArgs.Boundaries != "" {
+				var err error
+				_, boundIndices, err := extractIndices(cliArgs.Som, []string{cliArgs.Boundaries}, true)
+				if err != nil {
+					return err
+				}
+				boundIndex = boundIndices[0][0]
+			}
+
 			cols := make([]color.Color, len(colors))
 			for i, c := range colors {
 				cols[i], ok = colornames.Map[c]
@@ -195,7 +219,9 @@ By default, all non-categorical variables are used.`,
 			plotType := plot.CodePie{
 				Colors: cols,
 			}
-			img, err := plot.Codes(cliArgs.Som, indices, cliArgs.Normalized, cliArgs.ZeroAxis, &plotType, image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
+			img, err := plot.Codes(cliArgs.Som, indices, boundIndex,
+				cliArgs.Normalized, cliArgs.ZeroAxis, &plotType,
+				image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
 			if err != nil {
 				return err
 			}
@@ -235,6 +261,15 @@ By default, all non-categorical variables are used.`,
 			if err != nil {
 				return err
 			}
+			boundIndex := -1
+			if cliArgs.Boundaries != "" {
+				var err error
+				_, boundIndices, err := extractIndices(cliArgs.Som, []string{cliArgs.Boundaries}, true)
+				if err != nil {
+					return err
+				}
+				boundIndex = boundIndices[0][0]
+			}
 
 			cols := make([]color.Color, len(colors))
 			for i, c := range colors {
@@ -247,7 +282,9 @@ By default, all non-categorical variables are used.`,
 			plotType := plot.CodeRose{
 				Colors: cols,
 			}
-			img, err := plot.Codes(cliArgs.Som, indices, cliArgs.Normalized, cliArgs.ZeroAxis, &plotType, image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
+			img, err := plot.Codes(cliArgs.Som, indices, boundIndex,
+				cliArgs.Normalized, cliArgs.ZeroAxis, &plotType,
+				image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
 			if err != nil {
 				return err
 			}
@@ -289,10 +326,22 @@ By default, all non-categorical variables are used.`,
 				return err
 			}
 
+			boundIndex := -1
+			if cliArgs.Boundaries != "" {
+				var err error
+				_, boundIndices, err := extractIndices(cliArgs.Som, []string{cliArgs.Boundaries}, true)
+				if err != nil {
+					return err
+				}
+				boundIndex = boundIndices[0][0]
+			}
+
 			plotType := plot.CodeImage{
 				Rows: rows,
 			}
-			img, err := plot.Codes(cliArgs.Som, indices, cliArgs.Normalized, cliArgs.ZeroAxis, &plotType, image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
+			img, err := plot.Codes(cliArgs.Som, indices, boundIndex,
+				cliArgs.Normalized, cliArgs.ZeroAxis, &plotType,
+				image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
 			if err != nil {
 				return err
 			}

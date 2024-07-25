@@ -12,6 +12,7 @@
 * Adds CLI command `predict` for predicting complete layers (#50)
 * Adds `codes` plots showing a 2D array of small line, pie, rose or image plot, one for each node (#52, #53, #53, #54, #55, #57)
 * Adds CLI flag `--sample` to plot only a sub-sample of the input data (#56)
+* Draw optional class boundaries on all applicable plots (#60)
 
 ### Documentation
 

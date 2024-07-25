@@ -23,6 +23,7 @@ import (
 func plotHeatmapCommand() *cobra.Command {
 	var size []int
 	var columns []string
+	var boundaries string
 	var plotColumns int
 	var dataFile string
 	var labelsColumn string
@@ -108,6 +109,16 @@ For large datasets, --sample can be used to show only a sub-set of the data.`,
 				}
 			}
 
+			var bounds plotter.GridXYZ
+			if boundaries != "" {
+				_, idx, err := extractIndices(s, []string{boundaries}, true)
+				if err != nil {
+					return err
+				}
+				_, classIndices := conv.LayerToClasses(s.Layers()[idx[0][0]])
+				bounds = &plot.IntGrid{Size: *s.Size(), Values: classIndices}
+			}
+
 			for i := range indices {
 				layer, col := indices[i][0], indices[i][1]
 				c, r := i%plotColumns, i/plotColumns
@@ -127,7 +138,7 @@ For large datasets, --sample can be used to show only a sub-set of the data.`,
 					grid = &plot.IntGrid{Size: *s.Size(), Values: classIndices}
 				}
 
-				subImg, err := plot.Heatmap(title, grid, size[0], size[1], classes, labels, positions)
+				subImg, err := plot.Heatmap(title, grid, bounds, size[0], size[1], classes, labels, positions)
 				if err != nil {
 					return err
 				}
@@ -140,6 +151,7 @@ For large datasets, --sample can be used to show only a sub-set of the data.`,
 	}
 
 	command.Flags().StringSliceVarP(&columns, "columns", "c", nil, "Columns to use for the heatmap (default all)")
+	command.Flags().StringVarP(&boundaries, "boundaries", "b", "", "Optional categorical variable to show boundaries for")
 	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of individual heatmap panels")
 	command.Flags().IntVarP(&plotColumns, "plot-columns", "p", 0, "Number of plot columns on the image (default sqrt(#cols))")
 	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required for --label")

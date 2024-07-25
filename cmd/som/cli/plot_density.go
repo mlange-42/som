@@ -12,6 +12,7 @@ func plotDensityCommand() *cobra.Command {
 	var size []int
 	var dataFile string
 	var labelsColumn string
+	var boundaries string
 	var delim string
 	var noData string
 	var ignore []string
@@ -38,7 +39,8 @@ For large datasets, --sample can be used to show only a sub-set of the data.`,
 
 			return plotHeatmap(size,
 				somFile, outFile, dataFile,
-				labelsColumn, delim, noData, "Density of data", ignore, sample,
+				labelsColumn, delim, noData, "Density of data",
+				ignore, boundaries, sample,
 				func(s *som.Som, p *som.Predictor, r table.Reader) (plotter.GridXYZ, []string, error) {
 					density := p.GetDensity()
 					return &plot.IntGrid{Size: *s.Size(), Values: density}, nil, nil
@@ -47,6 +49,7 @@ For large datasets, --sample can be used to show only a sub-set of the data.`,
 		},
 	}
 
+	command.Flags().StringVarP(&boundaries, "boundaries", "b", "", "Optional categorical variable to show boundaries for")
 	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of the plot in pixels")
 	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required")
 	command.Flags().StringVarP(&labelsColumn, "label", "l", "", "Label column in the data file")

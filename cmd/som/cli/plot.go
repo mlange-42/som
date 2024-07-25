@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/mlange-42/som"
+	"github.com/mlange-42/som/conv"
 	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/plot"
 	"github.com/mlange-42/som/table"
@@ -47,7 +48,7 @@ func plotHeatmap(size []int,
 	somFile, outFile, dataFile,
 	labelsColumn, delim, noData string,
 	title string,
-	ignoreLayers []string, sampleData int,
+	ignoreLayers []string, boundaries string, sampleData int,
 	getData func(s *som.Som, p *som.Predictor, r table.Reader) (plotter.GridXYZ, []string, error)) error {
 
 	del := []rune(delim)
@@ -91,12 +92,22 @@ func plotHeatmap(size []int,
 		}
 	}
 
+	var bounds plotter.GridXYZ
+	if boundaries != "" {
+		_, idx, err := extractIndices(s, []string{boundaries}, true)
+		if err != nil {
+			return err
+		}
+		_, classIndices := conv.LayerToClasses(s.Layers()[idx[0][0]])
+		bounds = &plot.IntGrid{Size: *s.Size(), Values: classIndices}
+	}
+
 	grid, cats, err := getData(s, predictor, reader)
 	if err != nil {
 		return err
 	}
 
-	img, err := plot.Heatmap(title, grid, size[0], size[1], cats, labels, positions)
+	img, err := plot.Heatmap(title, grid, bounds, size[0], size[1], cats, labels, positions)
 	if err != nil {
 		return err
 	}

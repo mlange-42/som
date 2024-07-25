@@ -14,7 +14,7 @@ import (
 	"gonum.org/v1/plot/vg/vgimg"
 )
 
-func Heatmap(title string, g plotter.GridXYZ, width, height int, categories []string, labels []string, positions []plotter.XY) (image.Image, error) {
+func Heatmap(title string, g plotter.GridXYZ, boundaries plotter.GridXYZ, width, height int, categories []string, labels []string, positions []plotter.XY) (image.Image, error) {
 	p := plot.New()
 	l := plot.NewLegend()
 	p.Title.TextStyle.Font.Size = 16
@@ -36,6 +36,14 @@ func Heatmap(title string, g plotter.GridXYZ, width, height int, categories []st
 	p.Title.Text = title
 	p.HideAxes()
 	p.Add(h)
+
+	if boundaries != nil {
+		bound, err := NewGridBoundaries(boundaries)
+		if err != nil {
+			return nil, err
+		}
+		p.Add(bound)
+	}
 
 	labelsPlot := createLabels(labels, positions, l.TextStyle)
 	p.Add(labelsPlot)

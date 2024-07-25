@@ -18,8 +18,8 @@ som plot xy out/trained-vi.yml out/xy-vi.png -x x -y y --data-file data.csv -C c
 
 # Perform label propagation on ViSOM, with very few labelled samples
 som label out/trained-vi.yml data-labels.csv -c class > out/labelled.yml
-som plot heatmap out/labelled.yml out/heatmap-labelled.png --data-file data-labels.csv --label class --ignore class
-som plot heatmap out/labelled.yml out/heatmap-labelled-all.png --data-file data.csv --label class --ignore class
+som plot heatmap out/labelled.yml out/heatmap-labelled.png --data-file data-labels.csv --label class --ignore class -b class
+som plot heatmap out/labelled.yml out/heatmap-labelled-all.png --data-file data.csv --label class --ignore class -b class
 som plot xy out/labelled.yml out/xy-labelled.png -x x -y y -c class --data-file data.csv -C class --ignore class
 
 # Predict labels on trained SOM
