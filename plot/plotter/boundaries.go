@@ -1,4 +1,4 @@
-package plot
+package plotter
 
 import (
 	"gonum.org/v1/plot"
@@ -117,25 +117,25 @@ func (h *GridBoundaries) getUpDown(row, rows int) (up, down float64) {
 
 // DataRange implements the DataRange method
 // of the plot.DataRanger interface.
-func (h *GridBoundaries) DataRange() (xmin, xmax, ymin, ymax float64) {
+func (h *GridBoundaries) DataRange() (xMin, xMax, yMin, yMax float64) {
 	c, r := h.GridXYZ.Dims()
 	switch c {
 	case 1: // Make a unit length when there is no neighbor.
-		xmax = h.GridXYZ.X(0) + 0.5
-		xmin = h.GridXYZ.X(0) - 0.5
+		xMax = h.GridXYZ.X(0) + 0.5
+		xMin = h.GridXYZ.X(0) - 0.5
 	default:
-		xmax = h.GridXYZ.X(c-1) + (h.GridXYZ.X(c-1)-h.GridXYZ.X(c-2))/2
-		xmin = h.GridXYZ.X(0) - (h.GridXYZ.X(1)-h.GridXYZ.X(0))/2
+		xMax = h.GridXYZ.X(c-1) + (h.GridXYZ.X(c-1)-h.GridXYZ.X(c-2))/2
+		xMin = h.GridXYZ.X(0) - (h.GridXYZ.X(1)-h.GridXYZ.X(0))/2
 	}
 	switch r {
 	case 1: // Make a unit length when there is no neighbor.
-		ymax = h.GridXYZ.Y(0) + 0.5
-		ymin = h.GridXYZ.Y(0) - 0.5
+		yMax = h.GridXYZ.Y(0) + 0.5
+		yMin = h.GridXYZ.Y(0) - 0.5
 	default:
-		ymax = h.GridXYZ.Y(r-1) + (h.GridXYZ.Y(r-1)-h.GridXYZ.Y(r-2))/2
-		ymin = h.GridXYZ.Y(0) - (h.GridXYZ.Y(1)-h.GridXYZ.Y(0))/2
+		yMax = h.GridXYZ.Y(r-1) + (h.GridXYZ.Y(r-1)-h.GridXYZ.Y(r-2))/2
+		yMin = h.GridXYZ.Y(0) - (h.GridXYZ.Y(1)-h.GridXYZ.Y(0))/2
 	}
-	return xmin, xmax, ymin, ymax
+	return xMin, xMax, yMin, yMax
 }
 
 // GlyphBoxes implements the GlyphBoxes method

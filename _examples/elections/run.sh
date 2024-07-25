@@ -18,10 +18,17 @@ som plot u-matrix out/trained-vi.yml out/u-matrix-vi.png --data-file data.csv --
 som plot xy out/trained-vi.yml out/xy-cdu-spd-vi.png -x CDU -y SPD --data-file data.csv -C land
 som plot xy out/trained-vi.yml out/xy-afd-gruene-vi.png -x AfD -y GRUENE --data-file data.csv -C land
 
-# Plot codes as pie charts
+# Plot codes as pie and bar charts
 som plot codes pie out/trained.yml out/codes.png -s 1200,800 \
-        -c CDU,SPD,GRUENE,FDP,AfD,LINKE,PIRATEN,Other \
-        -C black,red,green,yellow,blue,purple,orange,silver
+        -c CDU,SPD,GRUENE,FDP,AfD,LINKE,Other \
+        -C black,red,green,yellow,blue,purple,silver
 som plot codes pie out/trained-vi.yml out/codes-vi.png -s 1200,800 \
-        -c CDU,SPD,GRUENE,FDP,AfD,LINKE,PIRATEN,Other \
-        -C black,red,green,yellow,blue,purple,orange,silver
+        -c CDU,SPD,GRUENE,FDP,AfD,LINKE,Other \
+        -C black,red,green,yellow,blue,purple,silver
+
+som plot codes bar out/trained.yml out/codes-bar.png -s 1200,800 \
+        -c CDU,SPD,GRUENE,FDP,AfD,LINKE,Other \
+        -C black,red,green,yellow,blue,purple,silver
+som plot codes bar out/trained-vi.yml out/codes-bar-vi.png -s 1200,800 \
+        -c CDU,SPD,GRUENE,FDP,AfD,LINKE,Other \
+        -C black,red,green,yellow,blue,purple,silver

@@ -4,13 +4,11 @@ import (
 	"context"
 	"fmt"
 	"image"
-	"image/color"
 	"strings"
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/plot"
 	"github.com/spf13/cobra"
-	"golang.org/x/image/colornames"
 	"gonum.org/v1/plot/plotter"
 )
 
@@ -91,6 +89,7 @@ boundaries between categories.`,
 	command.PersistentFlags().SortFlags = false
 
 	command.AddCommand(plotCodesLinesCommand())
+	command.AddCommand(plotCodesBarsCommand())
 	command.AddCommand(plotCodesPiesCommand())
 	command.AddCommand(plotCodesRoseCommand())
 	command.AddCommand(plotCodesImageCommand())
@@ -174,6 +173,90 @@ boundaries between categories.`,
 	command.Flags().BoolVarP(&vertical, "vertical", "v", false, "Plot lines vertically")
 	command.PersistentFlags().BoolVarP(&autoAxis, "auto", "a", false, "Automatically scale sub-plot axes, individually")
 
+	command.Flags().SortFlags = false
+
+	return command
+}
+
+func plotCodesBarsCommand() *cobra.Command {
+	var colors []string
+	var vertical bool
+	var autoAxis bool
+
+	command := &cobra.Command{
+		Use:   "bar [flags] <som-file> <out-file>",
+		Short: "Plots SOM node codes as bar charts.",
+		Long: `Plots SOM node codes as bar charts.
+
+Create an image that shows all SOM nodes, with a small bar chart
+representing each node. Useful for visualizing data that is usually
+shown as bar charts, like proportional or time series data.
+
+Colors of the bars can be customized using --colors.
+
+Vertical bar charts can be created by setting --vertical.
+The step style (none, mid, pre, post) of the line charts can be set with --step.
+
+By default, the y-axis is automatically adjusted to fit the data range
+of all nodes. This behavior can be disabled with --auto,
+so that each plot uses its individual axis range.
+(Applies to the x-axis for vertical plots)
+
+SOM variables to show in each plot can be restricted using --columns
+By default, all non-categorical variables are used.
+
+For SOMs with categorical variables, --boundaries can be used to show
+boundaries between categories.`,
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliArgs, ok := cmd.Context().Value(codePlotKey{}).(codePlotArgs)
+			if !ok {
+				return fmt.Errorf("args not found in context")
+			}
+
+			_, indices, err := extractIndices(cliArgs.Som, cliArgs.Columns, true, false)
+			if err != nil {
+				return err
+			}
+
+			boundIndex := -1
+			if cliArgs.Boundaries != "" {
+				var err error
+				_, boundIndices, err := extractIndices(cliArgs.Som, []string{cliArgs.Boundaries}, false, true)
+				if err != nil {
+					return err
+				}
+				boundIndex = boundIndices[0][0]
+			}
+
+			cols, err := stringsToColors(colors)
+			if err != nil {
+				return err
+			}
+
+			plotType := plot.CodeBar{
+				Colors:     cols,
+				Horizontal: vertical,
+				AdjustAxis: !autoAxis,
+			}
+
+			img, err := plot.Codes(cliArgs.Som, indices, boundIndex,
+				cliArgs.Normalized, cliArgs.ZeroAxis, &plotType,
+				image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
+			if err != nil {
+				return err
+			}
+
+			return writeImage(img, cliArgs.OutFile)
+		},
+	}
+
+	command.Flags().StringSliceVarP(&colors, "colors", "C", nil, "Colors for pie slices")
+	command.Flags().BoolVarP(&vertical, "vertical", "v", false, "Plot bars arranged vertically (i.e. horizontal bars)")
+	command.PersistentFlags().BoolVarP(&autoAxis, "auto", "a", false, "Automatically scale sub-plot axes, individually")
+
+	command.Flags().SortFlags = false
+
 	return command
 }
 
@@ -217,12 +300,9 @@ boundaries between categories.`,
 				boundIndex = boundIndices[0][0]
 			}
 
-			cols := make([]color.Color, len(colors))
-			for i, c := range colors {
-				cols[i], ok = colornames.Map[c]
-				if !ok {
-					return fmt.Errorf("color name %s unknown", c)
-				}
+			cols, err := stringsToColors(colors)
+			if err != nil {
+				return err
 			}
 
 			plotType := plot.CodePie{
@@ -240,6 +320,8 @@ boundaries between categories.`,
 	}
 
 	command.Flags().StringSliceVarP(&colors, "colors", "C", nil, "Colors for pie slices")
+
+	command.Flags().SortFlags = false
 
 	return command
 }
@@ -283,12 +365,9 @@ boundaries between categories.`,
 				boundIndex = boundIndices[0][0]
 			}
 
-			cols := make([]color.Color, len(colors))
-			for i, c := range colors {
-				cols[i], ok = colornames.Map[c]
-				if !ok {
-					return fmt.Errorf("color name %s unknown", c)
-				}
+			cols, err := stringsToColors(colors)
+			if err != nil {
+				return err
 			}
 
 			plotType := plot.CodeRose{
@@ -306,6 +385,8 @@ boundaries between categories.`,
 	}
 
 	command.Flags().StringSliceVarP(&colors, "colors", "C", nil, "Colors for pie slices")
+
+	command.Flags().SortFlags = false
 
 	return command
 }
@@ -368,6 +449,7 @@ boundaries between categories.`,
 	command.Flags().IntVarP(&rows, "rows", "r", 1, "Number of rows for image plot")
 
 	command.MarkFlagRequired("rows")
+	command.Flags().SortFlags = false
 
 	return command
 }

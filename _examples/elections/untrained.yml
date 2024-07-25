@@ -12,7 +12,6 @@ som:
         - FDP
         - AfD
         - LINKE
-        - PIRATEN
         - Other
       norm: [gaussian]
       metric: euclidean

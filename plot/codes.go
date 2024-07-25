@@ -7,6 +7,7 @@ import (
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/conv"
 	"github.com/mlange-42/som/norm"
+	"github.com/mlange-42/som/plot/plotter"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/font"
 	"gonum.org/v1/plot/vg"
@@ -48,9 +49,9 @@ func Codes(s *som.Som, columns [][2]int,
 		}
 	}
 
-	var l Legend
+	var l plotter.Legend
 	if len(thumbs) > 0 {
-		l = NewLegend()
+		l = plotter.NewLegend()
 		l.Left = true
 		l.YOffs = vg.Millimeter * 2
 		l.TextStyle.Font.Size = font.Length(legendFontSize)
@@ -91,7 +92,7 @@ func Codes(s *som.Som, columns [][2]int,
 
 		_, classIndices := conv.LayerToClasses(s.Layers()[boundariesLayer])
 		bounds := &IntGrid{Size: *s.Size(), Values: classIndices}
-		bound, err := NewGridBoundaries(bounds)
+		bound, err := plotter.NewGridBoundaries(bounds)
 		if err != nil {
 			return nil, err
 		}
@@ -103,13 +104,19 @@ func Codes(s *som.Som, columns [][2]int,
 	return img.Image(), nil
 }
 
-func cleanupAxes(p *plot.Plot) {
-	p.X.Tick.Marker = plot.TickerFunc(func(min float64, max float64) []plot.Tick { return nil })
-	p.Y.Tick.Label.Font.Size = 0
-	p.Y.Tick.Length = 2
+func cleanupAxes(p *plot.Plot, vertical bool) {
+	x := &p.X
+	y := &p.Y
+	if vertical {
+		x, y = y, x
+	}
 
-	p.X.Padding = 0
-	p.Y.Padding = 0
+	x.Tick.Marker = plot.TickerFunc(func(min float64, max float64) []plot.Tick { return nil })
+	y.Tick.Label.Font.Size = 0
+	y.Tick.Length = 2
+
+	x.Padding = 0
+	y.Padding = 0
 }
 
 func dataRange(s *som.Som, columns [][2]int, normalized bool, zeroAxis bool) Range {

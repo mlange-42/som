@@ -1,4 +1,4 @@
-package plot
+package plotter
 
 import (
 	"math"
@@ -30,14 +30,14 @@ func NewLegend() Legend {
 	return newLegend(plot.DefaultTextHandler)
 }
 
-func newLegend(hdlr text.Handler) Legend {
+func newLegend(handler text.Handler) Legend {
 	return Legend{
 		Columns:        1,
 		YPosition:      draw.PosBottom,
 		ThumbnailWidth: vg.Points(20),
 		TextStyle: text.Style{
 			Font:    font.From(plot.DefaultFont, 12),
-			Handler: hdlr,
+			Handler: handler,
 		},
 	}
 }
@@ -73,8 +73,8 @@ func (l *Legend) Draw(c draw.Canvas) {
 	if l.YPosition < draw.PosBottom || draw.PosTop < l.YPosition {
 		panic("plot: invalid vertical offset for the legend's entries")
 	}
-	yoff := vg.Length(l.YPosition-draw.PosBottom) / 2
-	yoff += descent
+	yOff := vg.Length(l.YPosition-draw.PosBottom) / 2
+	yOff += descent
 
 	w := textWidth + l.ThumbnailWidth
 	for i, e := range l.entries {
@@ -91,10 +91,10 @@ func (l *Legend) Draw(c draw.Canvas) {
 		for _, t := range e.thumbs {
 			t.Thumbnail(icon)
 		}
-		yoffs := (entryHeight - descent - sty.Rectangle(e.text).Max.Y) / 2
-		yoffs += yoff
+		yOffs := (entryHeight - descent - sty.Rectangle(e.text).Max.Y) / 2
+		yOffs += yOff
 
-		c.FillText(sty, vg.Point{X: x + textOffset, Y: icon.Min.Y + yoffs}, e.text)
+		c.FillText(sty, vg.Point{X: x + textOffset, Y: icon.Min.Y + yOffs}, e.text)
 	}
 }
 
