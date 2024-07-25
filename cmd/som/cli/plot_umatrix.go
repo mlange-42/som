@@ -28,7 +28,10 @@ showing the values in the column given by the --label flag:
 
   som plot u-matrix som.yml u-matrix.png --data-file data.csv --label name
 
-For large datasets, --sample can be used to show only a sub-set of the data.`,
+For large datasets, --sample can be used to show only a sub-set of the data.
+
+For SOMs with categorical variables, --boundaries can be used to show
+boundaries between categories.`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]

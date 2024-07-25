@@ -44,6 +44,9 @@ color for each category.
 
 To select individual variables or a sub-set of variables, use --columns.
 
+For SOMs with categorical variables, --boundaries can be used to show
+boundaries between categories.
+
 Data provided via --data-file can be displayed on top of the heatmaps,
 showing the values in the column given by the --label flag:
 

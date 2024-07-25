@@ -46,7 +46,10 @@ with a small plot representing each node. Each sub-command uses
 a different type of plot for the nodes.
 
 SOM variables to show in each plot can be restricted using --columns
-By default, all non-categorical variables are used.`,
+By default, all non-categorical variables are used.
+
+For SOMs with categorical variables, --boundaries can be used to show
+boundaries between categories.`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
 				_ = cmd.Help()
@@ -120,7 +123,10 @@ so that each plot uses its individual axis range.
 (Applies to the x-axis for vertical plots)
 
 SOM variables to show in each plot can be restricted using --columns
-By default, all non-categorical variables are used.`,
+By default, all non-categorical variables are used.
+
+For SOMs with categorical variables, --boundaries can be used to show
+boundaries between categories.`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliArgs, ok := cmd.Context().Value(codePlotKey{}).(codePlotArgs)
@@ -185,7 +191,10 @@ representing each node. Useful for proportional data like percentages.
 Colors of the pie slices can be customized using --colors.
 
 SOM variables to show in each plot can be restricted using --columns
-By default, all non-categorical variables are used.`,
+By default, all non-categorical variables are used.
+
+For SOMs with categorical variables, --boundaries can be used to show
+boundaries between categories.`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliArgs, ok := cmd.Context().Value(codePlotKey{}).(codePlotArgs)
@@ -249,7 +258,10 @@ representing each node. Useful for many different kinds of data.
 Colors of the rose slices can be customized using --colors.
 
 SOM variables to show in each plot can be restricted using --columns
-By default, all non-categorical variables are used.`,
+By default, all non-categorical variables are used.
+
+For SOMs with categorical variables, --boundaries can be used to show
+boundaries between categories.`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliArgs, ok := cmd.Context().Value(codePlotKey{}).(codePlotArgs)
@@ -313,7 +325,10 @@ The size of the image id controlled using --rows. The number of image columns
 is determined automatically based on the number of variables and rows.
 
 SOM variables to show in each plot can be restricted using --columns
-By default, all non-categorical variables are used.`,
+By default, all non-categorical variables are used.
+
+For SOMs with categorical variables, --boundaries can be used to show
+boundaries between categories.`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliArgs, ok := cmd.Context().Value(codePlotKey{}).(codePlotArgs)
