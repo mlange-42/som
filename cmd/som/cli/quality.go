@@ -19,8 +19,15 @@ func qualityCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "quality [flags] <som-file> <data-file>",
 		Short: "Calculates various quality metrics for a trained SOM.",
-		Long:  `Finds the best-matching unit (BMU) for each table row in a dataset.`,
-		Args:  cobra.ExactArgs(2),
+		Long: `Calculates various quality metrics for a trained SOM.
+
+Calculates the following SOM quality metrics and prints them to STDOUT:
+
+ - Quantization error
+ - Mean square error
+ - Root mean square error
+ - Topographic error`,
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]
 			dataFile := args[1]

@@ -80,6 +80,7 @@ Taken from the CLI help, here is a tree representation of all currently availabl
 ```
 som          Self-organizing maps command line tool.
 ├─train      Trains an SOM on the given dataset.
+├─quality    Calculates various quality metrics for a trained SOM.
 ├─label      Classifies SOM nodes using label propagation.
 ├─export     Exports an SOM to a CSV table of node vectors.
 ├─predict    Predicts entire layers or table columns using a trained SOM.

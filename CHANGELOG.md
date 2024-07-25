@@ -13,6 +13,7 @@
 * Adds `codes` plots showing a 2D array of small line, bar, pie, rose or image plot, one for each node (#52, #53, #53, #54, #55, #57, #61)
 * Adds CLI flag `--sample` to plot only a sub-sample of the input data (#56)
 * Draw optional class boundaries on all applicable plots (#60)
+* Adds command `quality` to calculate and print diverse SOM quality metrics (#62)
 
 ### Documentation
 
