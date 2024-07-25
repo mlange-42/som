@@ -14,30 +14,35 @@ type Named interface {
 // MapNode is a node in the tree data structure
 type MapNode[T Named] struct {
 	Parent   *MapNode[T]
-	Children map[string]*MapNode[T]
+	Children orderedMap[*MapNode[T]]
 	Value    T
+	Depth    int
 }
 
 // NewNode creates a new tree node
-func NewNode[T Named](value T) *MapNode[T] {
+func NewNode[T Named](value T, depth int) *MapNode[T] {
 	return &MapNode[T]{
-		Children: make(map[string]*MapNode[T]),
+		Children: newOrderedMap[*MapNode[T]](),
 		Value:    value,
+		Depth:    depth,
 	}
 }
 
 // MapTree is a tree data structure
 type MapTree[T Named] struct {
 	Root  *MapNode[T]
-	Nodes map[string]*MapNode[T]
+	Nodes orderedMap[*MapNode[T]]
 }
 
 // NewTree creates a new tree node
 func NewTree[T Named](value T) *MapTree[T] {
-	root := NewNode(value)
+	root := NewNode(value, 0)
+	nodes := newOrderedMap[*MapNode[T]]()
+	nodes.Set(value.GetName(), root)
+
 	return &MapTree[T]{
 		Root:  root,
-		Nodes: map[string]*MapNode[T]{value.GetName(): root},
+		Nodes: nodes,
 	}
 }
 
@@ -47,7 +52,7 @@ func NewTree[T Named](value T) *MapTree[T] {
 // The first ancestor is the direct parent, while the last ancestor is the root node.
 func (t *MapTree[T]) Ancestors(name string) ([]*MapNode[T], bool) {
 	res := []*MapNode[T]{}
-	curr, ok := t.Nodes[name]
+	curr, ok := t.Nodes.Get(name)
 	if !ok {
 		return res, false
 	}
@@ -64,7 +69,7 @@ func (t *MapTree[T]) Ancestors(name string) ([]*MapNode[T], bool) {
 // Descendants in the returned slice have undefined order.
 func (t *MapTree[T]) Descendants(name string) ([]*MapNode[T], bool) {
 	res := []*MapNode[T]{}
-	curr, ok := t.Nodes[name]
+	curr, ok := t.Nodes.Get(name)
 	if !ok {
 		return res, false
 	}
@@ -73,7 +78,8 @@ func (t *MapTree[T]) Descendants(name string) ([]*MapNode[T], bool) {
 }
 
 func (t *MapTree[T]) descendants(n *MapNode[T], res []*MapNode[T]) []*MapNode[T] {
-	for _, child := range n.Children {
+	for _, name := range n.Children.Keys() {
+		child, _ := n.Children.Get(name)
 		res = append(res, child)
 		res = t.descendants(child, res)
 	}
@@ -83,14 +89,14 @@ func (t *MapTree[T]) descendants(n *MapNode[T], res []*MapNode[T]) []*MapNode[T]
 // AddTree adds a sub-tree without children
 func (t *MapTree[T]) Add(parent *MapNode[T], child T) (*MapNode[T], error) {
 	name := child.GetName()
-	if _, ok := t.Nodes[name]; ok {
+	if _, ok := t.Nodes.Get(name); ok {
 		return nil, fmt.Errorf("duplicate key '%s'", name)
 	}
 
-	node := NewNode(child)
+	node := NewNode(child, parent.Depth+1)
 	node.Parent = parent
-	parent.Children[name] = node
-	t.Nodes[name] = node
+	parent.Children.Set(name, node)
+	t.Nodes.Set(name, node)
 
 	return node, nil
 }
@@ -98,13 +104,13 @@ func (t *MapTree[T]) Add(parent *MapNode[T], child T) (*MapNode[T], error) {
 // AddNode adds a sub-tree
 func (t *MapTree[T]) AddNode(parent *MapNode[T], child *MapNode[T]) error {
 	name := child.Value.GetName()
-	if _, ok := t.Nodes[name]; ok {
+	if _, ok := t.Nodes.Get(name); ok {
 		return fmt.Errorf("duplicate key '%s'", name)
 	}
 
 	child.Parent = parent
-	parent.Children[name] = child
-	t.Nodes[name] = child
+	parent.Children.Set(name, child)
+	t.Nodes.Set(name, child)
 
 	return nil
 }
@@ -119,7 +125,8 @@ func aggregate[T Named, V any](nd *MapNode[T], values map[string]V, zero V, fn f
 	if !ok {
 		agg = zero
 	}
-	for _, child := range nd.Children {
+	for _, name := range nd.Children.Keys() {
+		child, _ := nd.Children.Get(name)
 		v := aggregate(child, values, zero, fn)
 		agg = fn(agg, v)
 	}
@@ -172,14 +179,12 @@ func (f *TreeFormatter[T]) formatTree(sb *strings.Builder, t *MapNode[T], depth 
 		pref = prefix + f.createPrefixEmpty(last)
 	}
 
-	names := make([]string, 0, len(t.Children))
-	for name := range t.Children {
-		names = append(names, name)
-	}
+	names := append([]string{}, t.Children.Keys()...)
 	//sort.Strings(names)
 	for i, name := range names {
 		last := i == len(names)-1
-		f.formatTree(sb, t.Children[name], depth+1, last, pref)
+		child, _ := t.Children.Get(name)
+		f.formatTree(sb, child, depth+1, last, pref)
 	}
 }
 

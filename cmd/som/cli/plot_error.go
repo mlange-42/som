@@ -20,8 +20,8 @@ func plotErrorCommand() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "error [flags] <som-file> <out-file>",
-		Short: "Plots mean-squared node error as a heatmap",
-		Long:  `Plots mean-squared node error as a heatmap`,
+		Short: "Plots mean-squared node error as a heatmap.",
+		Long:  `Plots mean-squared node error as a heatmap.`,
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]

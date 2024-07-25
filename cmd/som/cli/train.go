@@ -40,8 +40,8 @@ func trainCommand() *cobra.Command {
 	var command *cobra.Command
 	command = &cobra.Command{
 		Use:   "train [flags] <som-file> <data-file>",
-		Short: "Trains an SOM on the given dataset",
-		Long:  `Trains an SOM on the given dataset`,
+		Short: "Trains an SOM on the given dataset.",
+		Long:  `Trains an SOM on the given dataset.`,
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if cpuProfile {

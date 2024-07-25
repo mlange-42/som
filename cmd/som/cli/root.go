@@ -11,8 +11,8 @@ func RootCommand() (*cobra.Command, error) {
 
 	root := &cobra.Command{
 		Use:           "som",
-		Short:         "Self-organizing maps in Go",
-		Long:          `Self-organizing maps in Go`,
+		Short:         "Self-organizing maps in Go.",
+		Long:          `Self-organizing maps in Go.`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
@@ -31,11 +31,11 @@ func RootCommand() (*cobra.Command, error) {
 	root.AddCommand(fillCommand())
 	root.AddCommand(plotCommand())
 
-	t, err := tree.FormatCmdTree(root)
+	t, err := tree.FormatCmdTree(root, 2)
 	if err != nil {
 		return nil, err
 	}
-	root.Long += "\n\n" + t
+	root.Long += "\n\nCommand tree:\n\n" + t
 
 	return root, nil
 }

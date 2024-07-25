@@ -5,9 +5,18 @@ type orderedMap[T any] struct {
 	keys  []string
 }
 
-func (m *orderedMap[T]) Add(key string, value T) {
+func newOrderedMap[T any]() orderedMap[T] {
+	return orderedMap[T]{
+		items: make(map[string]T),
+		keys:  make([]string, 0),
+	}
+}
+
+func (m *orderedMap[T]) Set(key string, value T) {
+	if _, ok := m.items[key]; !ok {
+		m.keys = append(m.keys, key)
+	}
 	m.items[key] = value
-	m.keys = append(m.keys, key)
 }
 
 func (m *orderedMap[T]) Get(key string) (T, bool) {
@@ -17,4 +26,8 @@ func (m *orderedMap[T]) Get(key string) (T, bool) {
 
 func (m *orderedMap[T]) Keys() []string {
 	return m.keys
+}
+
+func (m *orderedMap[T]) Len() int {
+	return len(m.keys)
 }

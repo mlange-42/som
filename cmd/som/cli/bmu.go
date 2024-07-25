@@ -20,8 +20,8 @@ func bmuCommand() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "bmu [flags] <som-file> <data-file>",
-		Short: "Finds the best-matching unit (BMU) for each table row in a dataset",
-		Long:  `Finds the best-matching unit (BMU) for each table row in a dataset`,
+		Short: "Finds the best-matching unit (BMU) for each table row in a dataset.",
+		Long:  `Finds the best-matching unit (BMU) for each table row in a dataset.`,
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/mlange-42/som"
+	"github.com/mlange-42/som/cmd/som/tree"
 	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/plot"
 	"github.com/mlange-42/som/table"
@@ -14,8 +15,8 @@ import (
 func plotCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "plot",
-		Short: "Plots an SOM in various ways, see sub-commands",
-		Long:  `Plots an SOM in various ways, see sub-commands`,
+		Short: "Plots an SOM in various ways, see sub-commands.",
+		Long:  `Plots an SOM in various ways, see sub-commands.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			_ = cmd.Help()
 		},
@@ -27,6 +28,12 @@ func plotCommand() *cobra.Command {
 	command.AddCommand(plotXyCommand())
 	command.AddCommand(plotDensityCommand())
 	command.AddCommand(plotErrorCommand())
+
+	t, err := tree.FormatCmdTree(command, 2)
+	if err != nil {
+		panic(err)
+	}
+	command.Long += "\n\nCommand tree:\n\n" + t
 
 	return command
 }

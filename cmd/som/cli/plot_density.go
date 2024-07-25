@@ -19,8 +19,8 @@ func plotDensityCommand() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "density [flags] <som-file> <out-file>",
-		Short: "Plots the data density of an SOM as a heatmap",
-		Long:  `Plots the data density of an SOM as a heatmap`,
+		Short: "Plots the data density of an SOM as a heatmap.",
+		Long:  `Plots the data density of an SOM as a heatmap.`,
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]

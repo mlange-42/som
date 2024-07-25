@@ -28,8 +28,8 @@ func plotXyCommand() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "xy [flags] <som-file> <out-file>",
-		Short: "Scatter plots for pairs of SOM variables",
-		Long:  `Scatter plots for pairs of SOM variables`,
+		Short: "Plots for pairs of SOM variables as scatter plots.",
+		Long:  `Plots for pairs of SOM variables as scatter plots.`,
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]

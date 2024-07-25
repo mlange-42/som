@@ -2,22 +2,32 @@ package tree
 
 import (
 	"fmt"
+	"unicode/utf8"
 
 	"github.com/spf13/cobra"
 )
 
 // FormatCmdTree creates a tree-like representation of a command and its sub-commands
-func FormatCmdTree(command *cobra.Command) (string, error) {
+func FormatCmdTree(command *cobra.Command, indent int) (string, error) {
 	cmdTree, err := newCmdTree(command)
 	if err != nil {
 		return "", err
 	}
 
+	wMax := 0
+	for _, n := range cmdTree.Nodes.Keys() {
+		node, _ := cmdTree.Nodes.Get(n)
+		ln := utf8.RuneCountInString(node.Value.Command.Name()) + indent*node.Depth
+		if ln > wMax {
+			wMax = ln
+		}
+	}
+
 	formatter := NewTreeFormatter(
 		func(t *CmdNode, indent int) string {
-			return t.Value.Use
+			return fmt.Sprintf("%-*s %s", wMax-indent, t.Value.Command.Name(), t.Value.Short)
 		},
-		2,
+		indent,
 	)
 	return formatter.FormatTree(cmdTree), nil
 }
