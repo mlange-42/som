@@ -10,11 +10,11 @@ func RootCommand() (*cobra.Command, error) {
 	cobra.EnableCommandSorting = false
 
 	root := &cobra.Command{
-		Use:           "som",
-		Short:         "Self-organizing maps in Go.",
-		Long:          `Self-organizing maps in Go.`,
-		SilenceUsage:  true,
-		SilenceErrors: true,
+		Use:   "som",
+		Short: "Self-organizing maps in Go.",
+		Long:  `Self-organizing maps in Go.`,
+		//SilenceUsage: true,
+		//SilenceErrors: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			return nil
 		},

@@ -1,7 +1,8 @@
 package main
 
 import (
-	"log"
+	"fmt"
+	"os"
 
 	"github.com/mlange-42/som/cmd/som/cli"
 )
@@ -9,9 +10,11 @@ import (
 func main() {
 	command, err := cli.RootCommand()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(os.Stderr, "Error:", err.Error())
+		os.Exit(1)
 	}
 	if err := command.Execute(); err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(os.Stderr, "Error:", err.Error())
+		os.Exit(1)
 	}
 }

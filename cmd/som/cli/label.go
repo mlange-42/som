@@ -23,7 +23,7 @@ func labelCommand() *cobra.Command {
 		Use:   "label [flags] <som-file> <data-file>",
 		Short: "Classifies SOM nodes using label propagation.",
 		Long:  `Classifies SOM nodes using label propagation.`,
-		Args:  cobra.ExactArgs(2),
+		Args:  ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]
 			dataFile := args[1]
