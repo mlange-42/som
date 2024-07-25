@@ -18,6 +18,7 @@
 * Examples are included in release downloads (#51)
 * Adds hand-written digits example (#55)
 * Adds world countries population pyramids example (#57)
+* CLI help for commands with sub-commands shows a command tree (#58)
 
 ### Bugfixes
 
@@ -26,6 +27,7 @@
 ### Other
 
 * All plots draw the legend on top of / after the actual plot (#48)
+* Improved CLI error messages, showing the affected command (#58)
 
 ## [[v0.1.0]](https://github.com/mlange-42/som/commits/v0.1.0/)
 
