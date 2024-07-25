@@ -200,6 +200,7 @@ func runTraining(config *som.SomConfig, trainingConfig *som.TrainingConfig,
 		tracker.Update(epoch, &p)
 		epoch++
 	}
+	tracker.Finish()
 
 	return s, nil
 }

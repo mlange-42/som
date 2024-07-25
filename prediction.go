@@ -5,6 +5,7 @@ import (
 	"math"
 	"slices"
 
+	"github.com/mlange-42/som/neighborhood"
 	"github.com/mlange-42/som/table"
 )
 
@@ -31,6 +32,11 @@ func NewPredictor(som *Som, tables []*table.Table) (*Predictor, error) {
 // Som returns the SOM associated with this Predictor.
 func (p *Predictor) Som() *Som {
 	return p.som
+}
+
+// Tables returns the tables associated with this Predictor.
+func (p *Predictor) Tables() []*table.Table {
+	return p.tables
 }
 
 // GetBMUTable returns a table with the best matching units (BMUs) for each row in the
@@ -225,6 +231,22 @@ func (p *Predictor) GetBMU() []int {
 	return bmu
 }
 
+func (p *Predictor) getBMU2() []bmu2 {
+	data := make([][]float64, len(p.tables))
+	rows := p.tables[0].Rows()
+
+	bmu := make([]bmu2, rows)
+
+	for i := 0; i < rows; i++ {
+		p.collectData(i, data)
+
+		idx, d, idx2, d2 := p.som.GetBMU2(data)
+		bmu[i] = bmu2{idx, d, idx2, d2}
+	}
+
+	return bmu
+}
+
 // GetBMUWithDistance returns the best matching unit (BMU) indices and the distances
 // between the input data and the BMU for each row in the associated tables.
 func (p *Predictor) GetBMUWithDistance() ([]int, []float64) {
@@ -284,4 +306,52 @@ func (p *Predictor) GetError(rmse bool) []float64 {
 		}
 	}
 	return errors
+}
+
+type bmu2 struct {
+	Idx1  int
+	Dist1 float64
+	Idx2  int
+	Dist2 float64
+}
+
+type Evaluator struct {
+	predictor *Predictor
+	bmu       []bmu2
+}
+
+func NewEvaluator(predictor *Predictor) *Evaluator {
+	return &Evaluator{
+		predictor: predictor,
+		bmu:       predictor.getBMU2(),
+	}
+}
+
+func (e *Evaluator) Error() (qe, mse, rmse float64) {
+	sumDist := 0.0
+	errorSum := 0.0
+
+	for _, b := range e.bmu {
+		sumDist += b.Dist1
+		errorSum += b.Dist1 * b.Dist1
+	}
+
+	return sumDist / float64(len(e.bmu)),
+		errorSum / float64(len(e.bmu)),
+		math.Sqrt(errorSum / float64(len(e.bmu)))
+}
+
+func (e *Evaluator) TopographicError(dist neighborhood.Metric) float64 {
+	failed := len(e.bmu)
+	for _, b := range e.bmu {
+		x1, y1 := e.predictor.som.Size().Coords(b.Idx1)
+		x2, y2 := e.predictor.som.Size().Coords(b.Idx2)
+
+		if dist.Distance(x1, y1, x2, y2) > 1 {
+			continue
+		}
+		failed--
+	}
+
+	return float64(failed) / float64(len(e.bmu))
 }

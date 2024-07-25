@@ -44,6 +44,7 @@ Use 'som [command] --help' for more information about a command.`,
 	}
 
 	root.AddCommand(trainCommand())
+	root.AddCommand(qualityCommand())
 	root.AddCommand(labelCommand())
 	root.AddCommand(exportCommand())
 	root.AddCommand(predictCommand())
