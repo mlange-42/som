@@ -31,7 +31,6 @@ Provides a command line tool and a library for training and visualizing SOMs.
 
 ## Installation
 
-
 Pre-compiled binaries for Linux, Windows and MacOS are available in the
 [Releases](https://github.com/mlange-42/som/releases).
 
@@ -48,7 +47,7 @@ Get **help** for the command line tool:
 som --help
 ```
 
-Here are some examples how to use the command line tool, using the well-known World Countries dataset.
+Here are some examples how to use the command line tool, using the World Countries dataset.
 
 **Train** an SOM with the dataset:
 
@@ -56,7 +55,7 @@ Here are some examples how to use the command line tool, using the well-known Wo
 som train _examples/countries/untrained.yml _examples/countries/data.csv > trained.yml
 ```
 
-**Visualize** the trained SOM, showing labels of data points (i.e. countries):
+**Visualize** the trained SOM as heatmaps of components, showing labels of data points (i.e. countries):
 
 ```shell
 som plot heatmap trained.yml heatmap.png --data-file _examples/countries/data.csv --label Country
@@ -72,6 +71,31 @@ Determine the **best-matching unit** (BMU) for a each row in the dataset:
 
 ```shell
 som bmu trained.yml _examples/countries/data.csv --preserve Country,code,continent > bmu.csv
+```
+
+### Available commands
+
+Taken from the CLI help, here is a tree representation of all currently available (sub)-commands:
+
+```
+som          Self-organizing maps command line tool.
+├─train      Trains an SOM on the given dataset.
+├─label      Classifies SOM nodes using label propagation.
+├─export     Exports an SOM to a CSV table of node vectors.
+├─predict    Predict entire layers or table columns using a trained SOM.
+├─bmu        Finds the best-matching unit (BMU) for each table row in a dataset.
+├─fill       Fills missing data in the data file based on a trained SOM.
+└─plot       Plots visualizations for an SOM in various ways. See sub-commands.
+  ├─heatmap  Plots heat maps of multiple SOM variables, a.k.a. components plot.
+  ├─codes    Plots SOM node codes in different ways. See sub-commands.
+  │ ├─line   Plots SOM node codes as line charts.
+  │ ├─pie    Plots SOM node codes as pie charts.
+  │ ├─rose   Plots SOM node codes as rose alias Nightingale charts.
+  │ └─image  Plots SOM node codes as images.
+  ├─u-matrix Plots the u-matrix of an SOM, showing inter-node distances.
+  ├─xy       Plots for pairs of SOM variables as scatter plots.
+  ├─density  Plots the data density of an SOM as a heatmap.
+  └─error    Plots (root) mean-squared node error as a heatmap.
 ```
 
 ### YAML configuration
