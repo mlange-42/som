@@ -230,17 +230,17 @@ func (p *Predictor) GetBMU() []int {
 	return bmu
 }
 
-func (p *Predictor) getBMU2() [][2]int {
+func (p *Predictor) getBMU2() []bmu2 {
 	data := make([][]float64, len(p.tables))
 	rows := p.tables[0].Rows()
 
-	bmu := make([][2]int, rows)
+	bmu := make([]bmu2, rows)
 
 	for i := 0; i < rows; i++ {
 		p.collectData(i, data)
 
-		idx, _, idx2, _ := p.som.GetBMU2(data)
-		bmu[i] = [2]int{idx, idx2}
+		idx, d, idx2, d2 := p.som.GetBMU2(data)
+		bmu[i] = bmu2{idx, d, idx2, d2}
 	}
 
 	return bmu
@@ -307,40 +307,44 @@ func (p *Predictor) GetError(rmse bool) []float64 {
 	return errors
 }
 
+type bmu2 struct {
+	Idx1  int
+	Dist1 float64
+	Idx2  int
+	Dist2 float64
+}
+
 type Evaluator struct {
 	predictor *Predictor
+	bmu       []bmu2
 }
 
 func NewEvaluator(predictor *Predictor) *Evaluator {
 	return &Evaluator{
 		predictor: predictor,
+		bmu:       predictor.getBMU2(),
 	}
 }
 
 func (e *Evaluator) Error() (qe, mse, rmse float64) {
-	p := e.predictor
-	_, dist := p.GetBMUWithDistance()
-
 	sumDist := 0.0
 	errorSum := 0.0
 
-	for _, d := range dist {
-		sumDist += d
-		errorSum += d * d
+	for _, b := range e.bmu {
+		sumDist += b.Dist1
+		errorSum += b.Dist1 * b.Dist1
 	}
 
-	return sumDist / float64(len(dist)),
-		errorSum / float64(len(dist)),
-		math.Sqrt(errorSum / float64(len(dist)))
+	return sumDist / float64(len(e.bmu)),
+		errorSum / float64(len(e.bmu)),
+		math.Sqrt(errorSum / float64(len(e.bmu)))
 }
 
 func (e *Evaluator) TopographicError() float64 {
-	bmu := e.predictor.getBMU2()
-
-	failed := len(bmu)
-	for _, row := range bmu {
-		x1, y1 := e.predictor.som.Size().Coords(row[0])
-		x2, y2 := e.predictor.som.Size().Coords(row[1])
+	failed := len(e.bmu)
+	for _, b := range e.bmu {
+		x1, y1 := e.predictor.som.Size().Coords(b.Idx1)
+		x2, y2 := e.predictor.som.Size().Coords(b.Idx2)
 
 		if x1 != x2 && y1 != y2 {
 			continue // no diagonals allowed (?)
@@ -353,5 +357,5 @@ func (e *Evaluator) TopographicError() float64 {
 		failed--
 	}
 
-	return float64(failed) / float64(len(bmu))
+	return float64(failed) / float64(len(e.bmu))
 }
