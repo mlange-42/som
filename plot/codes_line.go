@@ -6,8 +6,9 @@ import (
 )
 
 type CodeLines struct {
-	StepStyle plotter.StepKind
-	Vertical  bool
+	StepStyle  plotter.StepKind
+	Vertical   bool
+	AdjustAxis bool
 }
 
 func (c *CodeLines) Plot(data []float64, dataRange Range) (*plot.Plot, []plot.Thumbnailer, error) {
@@ -25,12 +26,14 @@ func (c *CodeLines) Plot(data []float64, dataRange Range) (*plot.Plot, []plot.Th
 
 	cleanupAxes(p)
 
-	ax := &p.Y
-	if c.Vertical {
-		ax = &p.X
+	if c.AdjustAxis {
+		ax := &p.Y
+		if c.Vertical {
+			ax = &p.X
+		}
+		ax.AutoRescale = false
+		ax.Min, ax.Max = dataRange.Min, dataRange.Max
 	}
-	ax.AutoRescale = false
-	ax.Min, ax.Max = dataRange.Min, dataRange.Max
 
 	p.Add(lines)
 
