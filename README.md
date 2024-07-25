@@ -59,7 +59,7 @@ som train _examples/countries/untrained.yml _examples/countries/data.csv > train
 **Visualize** the trained SOM, showing labels of data points (i.e. countries):
 
 ```shell
-som plot heatmap trained.yml heatmap.png --data-file _examples/countries/data.csv --labels Country
+som plot heatmap trained.yml heatmap.png --data-file _examples/countries/data.csv --label Country
 ```
 
 **Export** the trained SOM to a CSV file:

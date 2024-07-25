@@ -139,7 +139,7 @@ SOM nodes. They can be colored independent of the nodes using --data-color.
 	command.Flags().StringVarP(&dataColor, "data-color", "C", "", "Column for data color")
 
 	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of the plot in pixels")
-	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required for --labels")
+	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required for --label")
 	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
 
 	command.Flags().StringVarP(&delim, "delimiter", "D", ",", "CSV delimiter")

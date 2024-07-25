@@ -46,7 +46,7 @@ For large datasets, --sample can be used to show only a sub-set of the data.`,
 	}
 
 	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of the plot in pixels")
-	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required for --labels")
+	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required for --label")
 	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
 	command.Flags().StringVarP(&labelsColumn, "label", "l", "", "Label column in the data file")
 	command.Flags().IntVarP(&sample, "sample", "S", 0, "Sample this many rows from the data file (default all)")
