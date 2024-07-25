@@ -17,7 +17,9 @@ type CodePlot interface {
 	Plot(data []float64, dRange Range) (*plot.Plot, []plot.Thumbnailer, error)
 }
 
-func Codes(s *som.Som, columns [][2]int, normalized bool, zeroAxis bool, plotType CodePlot, size image.Point) (image.Image, error) {
+func Codes(s *som.Som, columns [][2]int,
+	normalized bool, zeroAxis bool,
+	plotType CodePlot, size image.Point) (image.Image, error) {
 	legendFontSize := 16
 
 	img := vgimg.NewWith(vgimg.UseWH(font.Length(size.X), font.Length(size.Y)), vgimg.UseDPI(72))
@@ -55,7 +57,7 @@ func Codes(s *som.Som, columns [][2]int, normalized bool, zeroAxis bool, plotTyp
 			label := s.Layers()[c[0]].ColumnNames()[c[1]]
 			l.Add(label, thumbs[i])
 		}
-		l.AdjustColumns(font.Length(size.X))
+		l.AdjustColumns(font.Length(size.X - 12))
 		l.XOffs = (font.Length(size.X) - l.Rectangle(dc).Max.X) / 2
 
 		l.Draw(dc)

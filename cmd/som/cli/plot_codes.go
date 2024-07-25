@@ -5,12 +5,21 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"strings"
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/plot"
 	"github.com/spf13/cobra"
 	"golang.org/x/image/colornames"
+	"gonum.org/v1/plot/plotter"
 )
+
+var stepStyles = map[string]plotter.StepKind{
+	"none": plotter.NoStep,
+	"mid":  plotter.MidStep,
+	"pre":  plotter.PreStep,
+	"post": plotter.PostStep,
+}
 
 func plotCodesCommand() *cobra.Command {
 	cliArgs := codePlotArgs{}
@@ -47,6 +56,7 @@ func plotCodesCommand() *cobra.Command {
 	command.PersistentFlags().StringSliceVarP(&cliArgs.Columns, "columns", "c", nil, "Columns to use for the codes plot (default all)")
 	command.PersistentFlags().BoolVarP(&cliArgs.Normalized, "normalized", "n", false, "Use raw, normalized node weights")
 	command.PersistentFlags().BoolVarP(&cliArgs.ZeroAxis, "zero", "z", false, "Zero the y-axis lower limit")
+
 	command.PersistentFlags().IntSliceVarP(&cliArgs.Size, "size", "s", []int{600, 400}, "Size of the plot in pixels")
 	command.PersistentFlags().SortFlags = false
 
@@ -70,6 +80,10 @@ type codePlotArgs struct {
 type codePlotKey struct{}
 
 func plotCodesLinesCommand() *cobra.Command {
+	var stepStyle string
+	var vertical bool
+	var autoAxis bool
+
 	command := &cobra.Command{
 		Use:   "line [flags] <som-file> <out-file>",
 		Short: "Plots SOM nodes codes as line charts",
@@ -86,7 +100,16 @@ func plotCodesLinesCommand() *cobra.Command {
 				return err
 			}
 
-			plotType := plot.CodeLines{}
+			step, ok := stepStyles[strings.ToLower(stepStyle)]
+			if !ok {
+				return fmt.Errorf("invalid step style: %s", stepStyle)
+			}
+
+			plotType := plot.CodeLines{
+				StepStyle:  step,
+				Vertical:   vertical,
+				AdjustAxis: !autoAxis,
+			}
 			img, err := plot.Codes(cliArgs.Som, indices, cliArgs.Normalized, cliArgs.ZeroAxis, &plotType, image.Pt(cliArgs.Size[0], cliArgs.Size[1]))
 			if err != nil {
 				return err
@@ -95,6 +118,11 @@ func plotCodesLinesCommand() *cobra.Command {
 			return writeImage(img, cliArgs.OutFile)
 		},
 	}
+
+	command.Flags().StringVarP(&stepStyle, "step", "S", "none", "Line step style (none, mid, pre, post)")
+	command.Flags().BoolVarP(&vertical, "vertical", "v", false, "Plot lines vertically")
+	command.PersistentFlags().BoolVarP(&autoAxis, "auto", "a", false, "Automatically scale sub-plot axes, individually")
+
 	return command
 }
 

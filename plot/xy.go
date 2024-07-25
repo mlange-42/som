@@ -217,12 +217,18 @@ func (t *TableXY) Len() int {
 	return t.XTable.Rows()
 }
 
-type SimpleXY []float64
-
-func (s SimpleXY) XY(i int) (x, y float64) {
-	return float64(i), s[i]
+type SimpleXY struct {
+	Values   []float64
+	Vertical bool
 }
 
-func (s SimpleXY) Len() int {
-	return len(s)
+func (s *SimpleXY) XY(i int) (x, y float64) {
+	if s.Vertical {
+		return s.Values[i], float64(i)
+	}
+	return float64(i), s.Values[i]
+}
+
+func (s *SimpleXY) Len() int {
+	return len(s.Values)
 }

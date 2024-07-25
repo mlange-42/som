@@ -5,19 +5,35 @@ import (
 	"gonum.org/v1/plot/plotter"
 )
 
-type CodeLines struct{}
+type CodeLines struct {
+	StepStyle  plotter.StepKind
+	Vertical   bool
+	AdjustAxis bool
+}
 
 func (c *CodeLines) Plot(data []float64, dataRange Range) (*plot.Plot, []plot.Thumbnailer, error) {
 	p := plot.New()
 
-	lines, err := plotter.NewLine(SimpleXY(data))
+	xy := SimpleXY{
+		Values:   data,
+		Vertical: c.Vertical,
+	}
+	lines, err := plotter.NewLine(&xy)
 	if err != nil {
 		return nil, nil, err
 	}
+	lines.StepStyle = c.StepStyle
 
 	cleanupAxes(p)
-	p.Y.AutoRescale = false
-	p.Y.Min, p.Y.Max = dataRange.Min, dataRange.Max
+
+	if c.AdjustAxis {
+		ax := &p.Y
+		if c.Vertical {
+			ax = &p.X
+		}
+		ax.AutoRescale = false
+		ax.Min, ax.Max = dataRange.Min, dataRange.Max
+	}
 
 	p.Add(lines)
 
