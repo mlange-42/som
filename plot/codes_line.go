@@ -24,7 +24,7 @@ func (c *CodeLines) Plot(data []float64, dataRange Range) (*plot.Plot, []plot.Th
 	}
 	lines.StepStyle = c.StepStyle
 
-	cleanupAxes(p)
+	cleanupAxes(p, c.Vertical)
 
 	if c.AdjustAxis {
 		ax := &p.Y

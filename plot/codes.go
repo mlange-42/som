@@ -103,13 +103,19 @@ func Codes(s *som.Som, columns [][2]int,
 	return img.Image(), nil
 }
 
-func cleanupAxes(p *plot.Plot) {
-	p.X.Tick.Marker = plot.TickerFunc(func(min float64, max float64) []plot.Tick { return nil })
-	p.Y.Tick.Label.Font.Size = 0
-	p.Y.Tick.Length = 2
+func cleanupAxes(p *plot.Plot, vertical bool) {
+	x := &p.X
+	y := &p.Y
+	if vertical {
+		x, y = y, x
+	}
 
-	p.X.Padding = 0
-	p.Y.Padding = 0
+	x.Tick.Marker = plot.TickerFunc(func(min float64, max float64) []plot.Tick { return nil })
+	y.Tick.Label.Font.Size = 0
+	y.Tick.Length = 2
+
+	x.Padding = 0
+	y.Padding = 0
 }
 
 func dataRange(s *som.Som, columns [][2]int, normalized bool, zeroAxis bool) Range {

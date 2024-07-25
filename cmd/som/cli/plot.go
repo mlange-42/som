@@ -2,12 +2,14 @@ package cli
 
 import (
 	"fmt"
+	"image/color"
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/plot"
 	"github.com/mlange-42/som/table"
 	"github.com/spf13/cobra"
+	"golang.org/x/image/colornames"
 	"gonum.org/v1/plot/plotter"
 )
 
@@ -107,4 +109,16 @@ func plotHeatmap(size []int,
 	}
 
 	return writeImage(img, outFile)
+}
+
+func stringsToColors(colors []string) ([]color.Color, error) {
+	cols := make([]color.Color, len(colors))
+	var ok bool
+	for i, c := range colors {
+		cols[i], ok = colornames.Map[c]
+		if !ok {
+			return nil, fmt.Errorf("color name %s unknown", c)
+		}
+	}
+	return cols, nil
 }
