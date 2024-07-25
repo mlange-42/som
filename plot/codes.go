@@ -7,6 +7,7 @@ import (
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/conv"
 	"github.com/mlange-42/som/norm"
+	"github.com/mlange-42/som/plot/plotter"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/font"
 	"gonum.org/v1/plot/vg"
@@ -48,9 +49,9 @@ func Codes(s *som.Som, columns [][2]int,
 		}
 	}
 
-	var l Legend
+	var l plotter.Legend
 	if len(thumbs) > 0 {
-		l = NewLegend()
+		l = plotter.NewLegend()
 		l.Left = true
 		l.YOffs = vg.Millimeter * 2
 		l.TextStyle.Font.Size = font.Length(legendFontSize)
@@ -91,7 +92,7 @@ func Codes(s *som.Som, columns [][2]int,
 
 		_, classIndices := conv.LayerToClasses(s.Layers()[boundariesLayer])
 		bounds := &IntGrid{Size: *s.Size(), Values: classIndices}
-		bound, err := NewGridBoundaries(bounds)
+		bound, err := plotter.NewGridBoundaries(bounds)
 		if err != nil {
 			return nil, err
 		}
