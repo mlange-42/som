@@ -3,7 +3,7 @@ package plot
 import (
 	"image/color"
 
-	somplotter "github.com/mlange-42/som/plot/plotter"
+	som_plotter "github.com/mlange-42/som/plot/plotter"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
 )
@@ -39,7 +39,7 @@ func (c *CodeBar) Plot(data []float64, dataRange Range) (*plot.Plot, []plot.Thum
 
 	thumbs := make([]plot.Thumbnailer, len(data))
 	for i, v := range data {
-		bar, err := somplotter.NewBarChart(plotter.Values([]float64{v}), 1)
+		bar, err := som_plotter.NewBarChart(plotter.Values([]float64{v}), 1)
 		if err != nil {
 			return nil, nil, err
 		}

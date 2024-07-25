@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"image"
 
-	somplotter "github.com/mlange-42/som/plot/plotter"
+	som_plotter "github.com/mlange-42/som/plot/plotter"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/font"
 	"gonum.org/v1/plot/palette"
@@ -39,7 +39,7 @@ func Heatmap(title string, g plotter.GridXYZ, boundaries plotter.GridXYZ, width,
 	p.Add(h)
 
 	if boundaries != nil {
-		bound, err := somplotter.NewGridBoundaries(boundaries)
+		bound, err := som_plotter.NewGridBoundaries(boundaries)
 		if err != nil {
 			return nil, err
 		}
