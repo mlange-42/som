@@ -99,8 +99,7 @@ func (l *Legend) Draw(c draw.Canvas) {
 }
 
 func (l *Legend) AdjustColumns(maxWidth font.Length) {
-	textWidth := l.textWidth()
-	w := textWidth + l.ThumbnailWidth
+	w := l.ThumbnailWidth + l.textWidth() + font.Millimeter
 	l.Columns = min(len(l.entries), int(maxWidth/w))
 }
 
