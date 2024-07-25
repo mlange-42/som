@@ -13,7 +13,7 @@ import (
 
 func plotCommand() *cobra.Command {
 	command := &cobra.Command{
-		Use:   "plot [flags] <som-file>",
+		Use:   "plot",
 		Short: "Plots an SOM in various ways, see sub-commands",
 		Long:  `Plots an SOM in various ways, see sub-commands`,
 		Run: func(cmd *cobra.Command, args []string) {

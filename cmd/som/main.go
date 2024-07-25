@@ -7,7 +7,11 @@ import (
 )
 
 func main() {
-	if err := cli.RootCommand().Execute(); err != nil {
+	command, err := cli.RootCommand()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := command.Execute(); err != nil {
 		log.Fatal(err)
 	}
 }

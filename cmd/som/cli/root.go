@@ -1,11 +1,14 @@
 package cli
 
 import (
+	"github.com/mlange-42/som/cmd/som/tree"
 	"github.com/spf13/cobra"
 )
 
 // RootCommand sets up the CLI
-func RootCommand() *cobra.Command {
+func RootCommand() (*cobra.Command, error) {
+	cobra.EnableCommandSorting = false
+
 	root := &cobra.Command{
 		Use:           "som",
 		Short:         "Self-organizing maps in Go",
@@ -28,5 +31,11 @@ func RootCommand() *cobra.Command {
 	root.AddCommand(fillCommand())
 	root.AddCommand(plotCommand())
 
-	return root
+	t, err := tree.FormatCmdTree(root)
+	if err != nil {
+		return nil, err
+	}
+	root.Long += "\n\n" + t
+
+	return root, nil
 }
