@@ -61,11 +61,7 @@ SOM nodes. They can be colored independent of the nodes using --data-color.
 			}
 
 			columns := []string{xColumn, yColumn}
-			if color != "" {
-				columns = append(columns, color)
-			}
-
-			_, indices, err := extractIndices(s, columns, true)
+			_, indices, err := extractIndices(s, columns, true, false)
 			if err != nil {
 				return err
 			}
@@ -111,11 +107,12 @@ SOM nodes. They can be colored independent of the nodes using --data-color.
 
 			var classes []string
 			var classIndices []int
-			if len(indices) > 2 {
-				classLayer := s.Layers()[indices[2][0]]
-				if !classLayer.IsCategorical() {
-					return fmt.Errorf("class layer %s is not categorical, can't use it for color", classLayer.Name())
+			if color != "" {
+				_, colIdx, err := extractIndices(s, []string{color}, false, true)
+				if err != nil {
+					return err
 				}
+				classLayer := s.Layers()[colIdx[0][0]]
 				classes, classIndices = conv.LayerToClasses(classLayer)
 			}
 

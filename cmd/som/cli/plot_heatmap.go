@@ -71,7 +71,7 @@ For large datasets, --sample can be used to show only a sub-set of the data.`,
 				return err
 			}
 
-			columns, indices, err := extractIndices(s, columns, true)
+			columns, indices, err := extractIndices(s, columns, true, true)
 			if err != nil {
 				return err
 			}
@@ -170,7 +170,7 @@ func createTitleAndGrid(s *som.Som, layer, col int) (title string, classes []str
 func extractBoundariesLayer(s *som.Som, boundaries string) (plotter.GridXYZ, error) {
 	var bounds plotter.GridXYZ
 	if boundaries != "" {
-		_, idx, err := extractIndices(s, []string{boundaries}, true)
+		_, idx, err := extractIndices(s, []string{boundaries}, false, true)
 		if err != nil {
 			return nil, err
 		}
@@ -212,7 +212,7 @@ func readSom(somFile string) (*som.SomConfig, *som.Som, error) {
 	return config, s, nil
 }
 
-func extractIndices(s *som.Som, columns []string, inclCategorical bool) ([]string, [][2]int, error) {
+func extractIndices(s *som.Som, columns []string, inclContinuous, inclCategorical bool) ([]string, [][2]int, error) {
 	var indices [][2]int
 
 	if len(columns) == 0 {
@@ -224,9 +224,11 @@ func extractIndices(s *som.Som, columns []string, inclCategorical bool) ([]strin
 				}
 				continue
 			}
-			for j, c := range l.ColumnNames() {
-				indices = append(indices, [2]int{i, j})
-				columns = append(columns, c)
+			if inclContinuous {
+				for j, c := range l.ColumnNames() {
+					indices = append(indices, [2]int{i, j})
+					columns = append(columns, c)
+				}
 			}
 		}
 	} else {
@@ -235,10 +237,10 @@ func extractIndices(s *som.Som, columns []string, inclCategorical bool) ([]strin
 			found := false
 			for j, l := range s.Layers() {
 				if l.IsCategorical() {
-					if !inclCategorical {
-						return nil, nil, fmt.Errorf("column %s is in categorical layer %s but inclCategorical is false", col, l.Name())
-					}
 					if col == l.Name() {
+						if !inclCategorical {
+							return nil, nil, fmt.Errorf("column %s is in categorical layer %s but categorical layers are excluded", col, l.Name())
+						}
 						indices[i] = [2]int{j, -1}
 						found = true
 						break
@@ -247,6 +249,9 @@ func extractIndices(s *som.Som, columns []string, inclCategorical bool) ([]strin
 				}
 				for k, c := range l.ColumnNames() {
 					if c == col {
+						if !inclContinuous {
+							return nil, nil, fmt.Errorf("column %s is in continuous layer %s but continuous layers are excluded", col, l.Name())
+						}
 						indices[i] = [2]int{j, k}
 						found = true
 						break

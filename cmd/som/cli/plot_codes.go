@@ -134,7 +134,7 @@ boundaries between categories.`,
 				return fmt.Errorf("args not found in context")
 			}
 
-			_, indices, err := extractIndices(cliArgs.Som, cliArgs.Columns, false)
+			_, indices, err := extractIndices(cliArgs.Som, cliArgs.Columns, true, false)
 			if err != nil {
 				return err
 			}
@@ -142,7 +142,7 @@ boundaries between categories.`,
 			boundIndex := -1
 			if cliArgs.Boundaries != "" {
 				var err error
-				_, boundIndices, err := extractIndices(cliArgs.Som, []string{cliArgs.Boundaries}, true)
+				_, boundIndices, err := extractIndices(cliArgs.Som, []string{cliArgs.Boundaries}, false, true)
 				if err != nil {
 					return err
 				}
@@ -202,7 +202,7 @@ boundaries between categories.`,
 				return fmt.Errorf("args not found in context")
 			}
 
-			_, indices, err := extractIndices(cliArgs.Som, cliArgs.Columns, false)
+			_, indices, err := extractIndices(cliArgs.Som, cliArgs.Columns, true, false)
 			if err != nil {
 				return err
 			}
@@ -210,7 +210,7 @@ boundaries between categories.`,
 			boundIndex := -1
 			if cliArgs.Boundaries != "" {
 				var err error
-				_, boundIndices, err := extractIndices(cliArgs.Som, []string{cliArgs.Boundaries}, true)
+				_, boundIndices, err := extractIndices(cliArgs.Som, []string{cliArgs.Boundaries}, false, true)
 				if err != nil {
 					return err
 				}
@@ -269,14 +269,14 @@ boundaries between categories.`,
 				return fmt.Errorf("args not found in context")
 			}
 
-			_, indices, err := extractIndices(cliArgs.Som, cliArgs.Columns, false)
+			_, indices, err := extractIndices(cliArgs.Som, cliArgs.Columns, true, false)
 			if err != nil {
 				return err
 			}
 			boundIndex := -1
 			if cliArgs.Boundaries != "" {
 				var err error
-				_, boundIndices, err := extractIndices(cliArgs.Som, []string{cliArgs.Boundaries}, true)
+				_, boundIndices, err := extractIndices(cliArgs.Som, []string{cliArgs.Boundaries}, false, true)
 				if err != nil {
 					return err
 				}
@@ -336,7 +336,7 @@ boundaries between categories.`,
 				return fmt.Errorf("args not found in context")
 			}
 
-			_, indices, err := extractIndices(cliArgs.Som, cliArgs.Columns, false)
+			_, indices, err := extractIndices(cliArgs.Som, cliArgs.Columns, true, false)
 			if err != nil {
 				return err
 			}
@@ -344,7 +344,7 @@ boundaries between categories.`,
 			boundIndex := -1
 			if cliArgs.Boundaries != "" {
 				var err error
-				_, boundIndices, err := extractIndices(cliArgs.Som, []string{cliArgs.Boundaries}, true)
+				_, boundIndices, err := extractIndices(cliArgs.Som, []string{cliArgs.Boundaries}, false, true)
 				if err != nil {
 					return err
 				}

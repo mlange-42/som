@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/mlange-42/som"
-	"github.com/mlange-42/som/conv"
 	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/plot"
 	"github.com/mlange-42/som/table"
@@ -92,14 +91,9 @@ func plotHeatmap(size []int,
 		}
 	}
 
-	var bounds plotter.GridXYZ
-	if boundaries != "" {
-		_, idx, err := extractIndices(s, []string{boundaries}, true)
-		if err != nil {
-			return err
-		}
-		_, classIndices := conv.LayerToClasses(s.Layers()[idx[0][0]])
-		bounds = &plot.IntGrid{Size: *s.Size(), Values: classIndices}
+	bounds, err := extractBoundariesLayer(s, boundaries)
+	if err != nil {
+		return err
 	}
 
 	grid, cats, err := getData(s, predictor, reader)
