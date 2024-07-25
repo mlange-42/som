@@ -41,8 +41,16 @@ func trainCommand() *cobra.Command {
 	command = &cobra.Command{
 		Use:   "train [flags] <som-file> <data-file>",
 		Short: "Trains an SOM on the given dataset.",
-		Long:  `Trains an SOM on the given dataset.`,
-		Args:  cobra.ExactArgs(2),
+		Long: `Trains an SOM on the given dataset.
+
+The trained SOM is written to STDOUT in YAML format.
+Redirect output to a file like this:
+
+  som train som.yml data.csv > trained.yml
+
+Learning parameters are usually specified in the SOM's YAML file,
+but can also be set or overwritten using the provided CLI flags.`,
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if cpuProfile {
 				stop := profile.Start(profile.CPUProfile, profile.ProfilePath("."))

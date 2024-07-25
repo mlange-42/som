@@ -18,8 +18,24 @@ func exportCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "export [flags] <som-file>",
 		Short: "Exports an SOM to a CSV table of node vectors.",
-		Long:  `Exports an SOM to a CSV table of node vectors.`,
-		Args:  cobra.ExactArgs(1),
+		Long: `Exports an SOM to a CSV table of node vectors.
+
+Creates a table with one row for each node.
+Per row, there is one column for each SOM variable.
+Additionally, the following columns are added to the table:
+
+ - node_id: the index of the node
+ - node_x: the x-coordinate of the node
+ - node_y: the y-coordinate of the node
+
+Categorical variables are exported in their original string
+representation instead of numeric vectors.
+
+The result table is written to STDOUT in CSV format.
+Redirect output to a file like this:
+
+  som bmu som.yml > export.csv`,
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]
 

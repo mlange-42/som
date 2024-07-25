@@ -22,8 +22,21 @@ func labelCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "label [flags] <som-file> <data-file>",
 		Short: "Classifies SOM nodes using label propagation.",
-		Long:  `Classifies SOM nodes using label propagation.`,
-		Args:  cobra.ExactArgs(2),
+		Long: `Classifies SOM nodes using label propagation.
+
+Adds a new layer to the SOM with class labels inferred from the data.
+Uses label propagation to fill nodes that so not match any data.
+
+The labelled SOM is written to STDOUT in YAML format.
+Redirect output to a file like this:
+
+  som label som.yml data.csv --column class > labelled.yml
+
+The resulting SOM can subsequently used with other commands,
+e.g. for prediction of the just added label variable:
+
+  som predict labelled.yml data.csv --layers class > predicted.csv`,
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]
 			dataFile := args[1]

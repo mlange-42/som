@@ -14,8 +14,8 @@ import (
 func plotCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "plot",
-		Short: "Plots an SOM in various ways, see sub-commands.",
-		Long:  `Plots an SOM in various ways, see sub-commands.`,
+		Short: "Plots visualizations for an SOM in various ways. See sub-commands.",
+		Long:  `Plots visualizations for an SOM in various ways. See sub-commands.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			_ = cmd.Help()
 		},

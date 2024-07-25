@@ -12,9 +12,27 @@ func RootCommand() (*cobra.Command, error) {
 	cobra.EnableCommandSorting = false
 
 	root := &cobra.Command{
-		Use:          "som",
-		Short:        "Self-organizing maps in Go.",
-		Long:         `Self-organizing maps in Go.`,
+		Use:   "som",
+		Short: "Self-organizing maps command line tool.",
+		Long: `Self-organizing maps command line tool.
+
+SOM is a tool for training, applying and analyzing self-organizing maps.
+
+| Self-organizing maps are a type of artificial neural network that can be used
+| for dimensionality reduction, classification, prediction and visualization of
+| high-dimensional data.
+
+Formats
+=======
+
+SOM definitions as well as trained SOMs are stored in YAML format (.yml).
+
+CSV files are used as data input and output format (.csv).
+Column delimiter and no-data strings can be configured using CLI flags.
+
+
+For details, see the sub-commands.
+Use 'som [command] --help' for more information about a command.`,
 		SilenceUsage: true,
 		//SilenceErrors: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {

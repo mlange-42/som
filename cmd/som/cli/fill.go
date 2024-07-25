@@ -22,8 +22,23 @@ func fillCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "fill [flags] <som-file> <data-file>",
 		Short: "Fills missing data in the data file based on a trained SOM.",
-		Long:  `Fills missing data in the data file based on a trained SOM.`,
-		Args:  cobra.ExactArgs(2),
+		Long: `Fills missing data in the data file based on a trained SOM.
+
+A table with the same row order as the input table is created.
+Values matching the string provided via --no-data are filled based on the SOM.
+Columns in the output table are the those of the input table
+that also appear as a variable in the SOM.
+
+Further columns from the input table can be transferred to the output table by use
+of the --preserve flag. Here is how to transfer 'ID' and 'Name' columns:
+
+  sum fill som.yml data.csv --preserve ID,Name
+
+The result table is written to STDOUT in CSV format.
+Redirect output to a file like this:
+ 
+  som fill som.yml data.csv > filled.csv`,
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]
 			dataFile := args[1]
