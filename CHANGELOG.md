@@ -18,7 +18,8 @@
 * Examples are included in release downloads (#51)
 * Adds hand-written digits example (#55)
 * Adds world countries population pyramids example (#57)
-* CLI help for commands with sub-commands shows a command tree (#58)
+* Adds comprehensive halp text for each CLI command (#58)
+* CLI help shows a command tree for commands with sub-commands (#58)
 
 ### Bugfixes
 

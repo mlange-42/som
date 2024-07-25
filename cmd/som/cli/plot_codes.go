@@ -27,7 +27,14 @@ func plotCodesCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "codes [command]",
 		Short: "Plots SOM node codes in different ways. See sub-commands.",
-		Long:  `Plots SOM node codes in different ways. See sub-commands.`,
+		Long: `Plots SOM node codes in different ways. See sub-commands.
+
+All sub-commands create an image that shows all SOM nodes,
+with a small plot representing each node. Each sub-command uses
+a different type of plot for the nodes.
+
+SOM variables to show in each plot can be restricted using --columns
+By default, all non-categorical variables are used.`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
 				_ = cmd.Help()
@@ -96,8 +103,23 @@ func plotCodesLinesCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "line [flags] <som-file> <out-file>",
 		Short: "Plots SOM node codes as line charts.",
-		Long:  `Plots SOM node codes as line charts.`,
-		Args:  cobra.ExactArgs(2),
+		Long: `Plots SOM node codes as line charts.
+
+Create an image that shows all SOM nodes, with a small line chart
+representing each node. Useful for visualizing data that is usually
+shown as line charts, like time series or similarly ordered data.
+
+Vertical line charts can be created by setting --vertical.
+The step style (none, mid, pre, post) of the line charts can be set with --step.
+
+By default, the y-axis is automatically adjusted to fit the data range
+of all nodes. This behavior can be disabled with --auto,
+so that each plot uses its individual axis range.
+(Applies to the x-axis for vertical plots)
+
+SOM variables to show in each plot can be restricted using --columns
+By default, all non-categorical variables are used.`,
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliArgs, ok := cmd.Context().Value(codePlotKey{}).(codePlotArgs)
 			if !ok {
@@ -141,8 +163,16 @@ func plotCodesPiesCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "pie [flags] <som-file> <out-file>",
 		Short: "Plots SOM node codes as pie charts.",
-		Long:  `Plots SOM node codes as pie charts.`,
-		Args:  cobra.ExactArgs(2),
+		Long: `Plots SOM node codes as pie charts.
+
+Create an image that shows all SOM nodes, with a small pie chart
+representing each node. Useful for proportional data like percentages.
+
+Colors of the pie slices can be customized using --colors.
+
+SOM variables to show in each plot can be restricted using --columns
+By default, all non-categorical variables are used.`,
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliArgs, ok := cmd.Context().Value(codePlotKey{}).(codePlotArgs)
 			if !ok {
@@ -185,8 +215,16 @@ func plotCodesRoseCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "rose [flags] <som-file> <out-file>",
 		Short: "Plots SOM node codes as rose alias Nightingale charts.",
-		Long:  `Plots SOM node codes as rose alias Nightingale charts.`,
-		Args:  cobra.ExactArgs(2),
+		Long: `Plots SOM node codes as rose alias Nightingale charts.
+
+Create an image that shows all SOM nodes, with a small rose or Nightingale chart
+representing each node. Useful for many different kinds of data.
+
+Colors of the rose slices can be customized using --colors.
+
+SOM variables to show in each plot can be restricted using --columns
+By default, all non-categorical variables are used.`,
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliArgs, ok := cmd.Context().Value(codePlotKey{}).(codePlotArgs)
 			if !ok {
@@ -229,8 +267,17 @@ func plotCodesImageCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "image [flags] <som-file> <out-file>",
 		Short: "Plots SOM node codes as images.",
-		Long:  `Plots SOM node codes as images.`,
-		Args:  cobra.ExactArgs(2),
+		Long: `Plots SOM node codes as images.
+
+Create an image that shows all SOM nodes, with a small image or heatmap
+representing each node. Useful for image-like data and other gridded data.
+
+The size of the image id controlled using --rows. The number of image columns
+is determined automatically based on the number of variables and rows.
+
+SOM variables to show in each plot can be restricted using --columns
+By default, all non-categorical variables are used.`,
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliArgs, ok := cmd.Context().Value(codePlotKey{}).(codePlotArgs)
 			if !ok {

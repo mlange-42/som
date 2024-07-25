@@ -34,8 +34,22 @@ func plotHeatmapCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "heatmap [flags] <som-file> <out-file>",
 		Short: "Plots heat maps of multiple SOM variables, a.k.a. components plot.",
-		Long:  `Plots heat maps of multiple SOM variables, a.k.a. components plot.`,
-		Args:  cobra.ExactArgs(2),
+		Long: `Plots heat maps of multiple SOM variables, a.k.a. components plot.
+
+By default, the command creates an image with multiple panels.
+Each panel shows a heatmap for one of the SOM's variables.
+Categorical variables are converted to "class maps" with a unique
+color for each category.
+
+To select individual variables or a sub-set of variables, use --columns.
+
+Data provided via --data-file can be displayed on top of the heatmaps,
+showing the values in the column given by the --label flag:
+
+  som plot heatmap som.yml heatmap.png --data-file data.csv --label name
+
+For large datasets, --sample can be used to show only a sub-set of the data.`,
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]
 			outFile := args[1]
@@ -129,7 +143,7 @@ func plotHeatmapCommand() *cobra.Command {
 	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of individual heatmap panels")
 	command.Flags().IntVarP(&plotColumns, "plot-columns", "p", 0, "Number of plot columns on the image (default sqrt(#cols))")
 	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required for --labels")
-	command.Flags().StringVarP(&labelsColumn, "labels", "l", "", "Labels column in the data file")
+	command.Flags().StringVarP(&labelsColumn, "label", "l", "", "Label column in the data file")
 	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
 	command.Flags().IntVarP(&sample, "sample", "S", 0, "Sample this many rows from the data file (default all)")
 

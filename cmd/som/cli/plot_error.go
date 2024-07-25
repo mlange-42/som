@@ -20,9 +20,19 @@ func plotErrorCommand() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "error [flags] <som-file> <out-file>",
-		Short: "Plots mean-squared node error as a heatmap.",
-		Long:  `Plots mean-squared node error as a heatmap.`,
-		Args:  cobra.ExactArgs(2),
+		Short: "Plots (root) mean-squared node error as a heatmap.",
+		Long: `Plots (root) mean-squared node error as a heatmap.
+
+By default, the mean-squared error is plotted.
+With --rmse, the root mean squared error is shown instead.
+
+Data provided via --data-file can be displayed on top of the error plot,
+showing the values in the column given by the --label flag:
+
+  som plot error som.yml error.png --data-file data.csv --label name
+
+For large datasets, --sample can be used to show only a sub-set of the data.`,
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]
 			outFile := args[1]
@@ -49,7 +59,7 @@ func plotErrorCommand() *cobra.Command {
 
 	command.Flags().IntSliceVarP(&size, "size", "s", []int{600, 400}, "Size of the plot in pixels")
 	command.Flags().StringVarP(&dataFile, "data-file", "f", "", "Data file. Required")
-	command.Flags().StringVarP(&labelsColumn, "labels", "l", "", "Labels column in the data file")
+	command.Flags().StringVarP(&labelsColumn, "label", "l", "", "Label column in the data file")
 	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
 	command.Flags().IntVarP(&sample, "sample", "S", 0, "Sample this many rows from the data file (default all)")
 
