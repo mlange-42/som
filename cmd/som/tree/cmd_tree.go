@@ -8,12 +8,7 @@ import (
 )
 
 // FormatCmdTree creates a tree-like representation of a command and its sub-commands
-func FormatCmdTree(command *cobra.Command, indent int) (string, error) {
-	cmdTree, err := newCmdTree(command)
-	if err != nil {
-		return "", err
-	}
-
+func FormatCmdTree(cmdTree *CmdTree, indent int) (string, error) {
 	wMax := 0
 	for _, n := range cmdTree.Nodes.Keys() {
 		node, _ := cmdTree.Nodes.Get(n)
@@ -49,7 +44,7 @@ func (cmd CmdWrapper) GetName() string {
 }
 
 // NewCmdTree creates a new project tree
-func newCmdTree(command *cobra.Command) (*CmdTree, error) {
+func NewCmdTree(command *cobra.Command) (*CmdTree, error) {
 
 	t := NewTree(
 		CmdWrapper{command},

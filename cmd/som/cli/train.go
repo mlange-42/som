@@ -42,7 +42,7 @@ func trainCommand() *cobra.Command {
 		Use:   "train [flags] <som-file> <data-file>",
 		Short: "Trains an SOM on the given dataset.",
 		Long:  `Trains an SOM on the given dataset.`,
-		Args:  ExactArgs(2),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if cpuProfile {
 				stop := profile.Start(profile.CPUProfile, profile.ProfilePath("."))
@@ -112,7 +112,6 @@ Options:
 	command.Flags().BoolVar(&cpuProfile, "profile", false, "Enable CPU profiling")
 
 	command.Flags().SortFlags = false
-
 	command.MarkFlagFilename("progress-file", "csv")
 
 	return command

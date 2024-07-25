@@ -23,7 +23,7 @@ func fillCommand() *cobra.Command {
 		Use:   "fill [flags] <som-file> <data-file>",
 		Short: "Fills missing data in the data file based on a trained SOM.",
 		Long:  `Fills missing data in the data file based on a trained SOM.`,
-		Args:  ExactArgs(2),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]
 			dataFile := args[1]

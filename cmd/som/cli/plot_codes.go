@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/mlange-42/som"
-	"github.com/mlange-42/som/cmd/som/tree"
 	"github.com/mlange-42/som/plot"
 	"github.com/spf13/cobra"
 	"golang.org/x/image/colornames"
@@ -30,6 +29,13 @@ func plotCodesCommand() *cobra.Command {
 		Short: "Plots SOM node codes in different ways. See sub-commands.",
 		Long:  `Plots SOM node codes in different ways. See sub-commands.`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) < 1 {
+				_ = cmd.Help()
+				return nil
+			}
+			if len(args) < 2 {
+				return fmt.Errorf("requires sub-command")
+			}
 			somFile := args[0]
 			cliArgs.OutFile = args[1]
 
@@ -66,11 +72,7 @@ func plotCodesCommand() *cobra.Command {
 	command.AddCommand(plotCodesRoseCommand())
 	command.AddCommand(plotCodesImageCommand())
 
-	t, err := tree.FormatCmdTree(command, 2)
-	if err != nil {
-		panic(err)
-	}
-	command.Long += "\n\nCommand tree:\n\n" + t
+	addTreeToHelp(command, false)
 
 	return command
 }
@@ -93,9 +95,9 @@ func plotCodesLinesCommand() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "line [flags] <som-file> <out-file>",
-		Short: "Plots SOM nodes codes as line charts.",
-		Long:  `Plots SOM nodes codes as line charts.`,
-		Args:  ExactArgs(2),
+		Short: "Plots SOM node codes as line charts.",
+		Long:  `Plots SOM node codes as line charts.`,
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliArgs, ok := cmd.Context().Value(codePlotKey{}).(codePlotArgs)
 			if !ok {
@@ -138,9 +140,9 @@ func plotCodesPiesCommand() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "pie [flags] <som-file> <out-file>",
-		Short: "Plots SOM nodes codes as pie charts.",
-		Long:  `Plots SOM nodes codes as pie charts.`,
-		Args:  ExactArgs(2),
+		Short: "Plots SOM node codes as pie charts.",
+		Long:  `Plots SOM node codes as pie charts.`,
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliArgs, ok := cmd.Context().Value(codePlotKey{}).(codePlotArgs)
 			if !ok {
@@ -182,9 +184,9 @@ func plotCodesRoseCommand() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "rose [flags] <som-file> <out-file>",
-		Short: "Plots SOM nodes codes as rose alias Nightingale charts.",
-		Long:  `Plots SOM nodes codes as rose alias Nightingale charts.`,
-		Args:  ExactArgs(2),
+		Short: "Plots SOM node codes as rose alias Nightingale charts.",
+		Long:  `Plots SOM node codes as rose alias Nightingale charts.`,
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliArgs, ok := cmd.Context().Value(codePlotKey{}).(codePlotArgs)
 			if !ok {
@@ -226,9 +228,9 @@ func plotCodesImageCommand() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "image [flags] <som-file> <out-file>",
-		Short: "Plots SOM nodes codes as images.",
-		Long:  `Plots SOM nodes codes as images.`,
-		Args:  ExactArgs(2),
+		Short: "Plots SOM node codes as images.",
+		Long:  `Plots SOM node codes as images.`,
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliArgs, ok := cmd.Context().Value(codePlotKey{}).(codePlotArgs)
 			if !ok {

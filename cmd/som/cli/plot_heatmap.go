@@ -35,7 +35,7 @@ func plotHeatmapCommand() *cobra.Command {
 		Use:   "heatmap [flags] <som-file> <out-file>",
 		Short: "Plots heat maps of multiple SOM variables, a.k.a. components plot.",
 		Long:  `Plots heat maps of multiple SOM variables, a.k.a. components plot.`,
-		Args:  ExactArgs(2),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]
 			outFile := args[1]

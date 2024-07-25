@@ -19,7 +19,7 @@ func exportCommand() *cobra.Command {
 		Use:   "export [flags] <som-file>",
 		Short: "Exports an SOM to a CSV table of node vectors.",
 		Long:  `Exports an SOM to a CSV table of node vectors.`,
-		Args:  ExactArgs(1),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]
 
@@ -56,6 +56,8 @@ func exportCommand() *cobra.Command {
 
 	command.Flags().StringVarP(&delim, "delimiter", "D", ",", "CSV delimiter")
 	command.Flags().StringVarP(&noData, "no-data", "N", "", "No data string")
+
+	command.Flags().SortFlags = false
 
 	return command
 }
