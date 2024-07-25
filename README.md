@@ -82,13 +82,14 @@ som          Self-organizing maps command line tool.
 ├─train      Trains an SOM on the given dataset.
 ├─label      Classifies SOM nodes using label propagation.
 ├─export     Exports an SOM to a CSV table of node vectors.
-├─predict    Predict entire layers or table columns using a trained SOM.
+├─predict    Predicts entire layers or table columns using a trained SOM.
 ├─bmu        Finds the best-matching unit (BMU) for each table row in a dataset.
 ├─fill       Fills missing data in the data file based on a trained SOM.
 └─plot       Plots visualizations for an SOM in various ways. See sub-commands.
   ├─heatmap  Plots heat maps of multiple SOM variables, a.k.a. components plot.
   ├─codes    Plots SOM node codes in different ways. See sub-commands.
   │ ├─line   Plots SOM node codes as line charts.
+  │ ├─bar    Plots SOM node codes as bar charts.
   │ ├─pie    Plots SOM node codes as pie charts.
   │ ├─rose   Plots SOM node codes as rose alias Nightingale charts.
   │ └─image  Plots SOM node codes as images.
