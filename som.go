@@ -2,7 +2,6 @@ package som
 
 import (
 	"fmt"
-	"log"
 	"math"
 	"math/rand"
 	"slices"
@@ -326,11 +325,13 @@ func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius, lambda 
 			}
 			// ViSOM
 			nodeIdx := s.size.Index(x, y)
-			dataDist := s.nodeDistance(bmuIdx, nodeIdx)
-			mapDist := s.metric.Distance(xBmu, yBmu, x, y)
-			scale := dataDist/(lambda*mapDist) - 1
-			if math.IsInf(scale, 1) {
-				log.Fatal("Numeric instability in ViSOM algorithm. Decrease alpha (learning rate) or use a less extreme lambda value (ViSOM resolution parameter).")
+			d := s.nodeDistance(bmuIdx, nodeIdx)              // distance in data space
+			D := lambda * s.metric.Distance(xBmu, yBmu, x, y) // scaled distance in map space
+
+			// scale = (d - D) / D = d/D - 1 (original formulation Yin 2002)
+			scale := 0.0
+			if d > 0 {
+				scale = 1 - D/d // corrected formulation
 			}
 
 			for l, lay := range s.layers {

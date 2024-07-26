@@ -10,6 +10,7 @@ som:
       weight: 1
 training:
   epochs: 1000
-  alpha: polynomial 0.25 0.01 2
+  alpha: polynomial 0.8 0.01 2
   radius: polynomial 10 1 2
+  weight-decay: polynomial 0.25 0.0 3
   lambda: 0.2

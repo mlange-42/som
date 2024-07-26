@@ -20,12 +20,13 @@
 * Examples are included in release downloads (#51)
 * Adds hand-written digits example (#55)
 * Adds world countries population pyramids example (#57)
-* Adds comprehensive halp text for each CLI command (#58)
+* Adds comprehensive help text for each CLI command (#58)
 * CLI help shows a command tree for commands with sub-commands (#58)
 
 ### Bugfixes
 
 * Update BMU weights before the weights of neighboring nodes (#42)
+* Fix ViSOM weight update formula, with error in publication Yin 2002 (#65)
 
 ### Other
 
