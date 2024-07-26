@@ -4,7 +4,7 @@ cd "$(dirname "$0")"
 mkdir out
 set -e
 
-echo Train SOM on a dataset pf population pyramids of countries, and plot results
+echo Train SOM on a dataset of population pyramids of countries, and plot results
 som train untrained.yml data.csv > out/trained.yml
 som quality out/trained.yml data.csv
 
