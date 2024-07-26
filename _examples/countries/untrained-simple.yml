@@ -2,6 +2,7 @@ som:
   size: [14, 10]
   neighborhood: gaussian
   metric: manhattan
+  visom-metric: euclidean
   layers:
     - name: Scalars
       columns:

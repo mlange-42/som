@@ -615,6 +615,7 @@ func createBenchSom(width, height int, dims int, neigh neighborhood.Neighborhood
 		},
 		Neighborhood: neigh,
 		MapMetric:    &neighborhood.ManhattanMetric{},
+		ViSomMetric:  &neighborhood.ChebyshevMetric{},
 	}
 
 	som, err := New(&params)

@@ -73,6 +73,7 @@ jobs:
     - name: Run examples
       run: |
         ./_examples/cluster2d/run.sh
+        ./_examples/cluster2d/run-visom-metrics.sh
         ./_examples/countries/run.sh
         ./_examples/digits/run.sh
         ./_examples/elections/run.sh

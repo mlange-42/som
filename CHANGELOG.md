@@ -14,18 +14,20 @@
 * Adds CLI flag `--sample` to plot only a sub-sample of the input data (#56)
 * Draw optional class boundaries on all applicable plots (#60)
 * Adds command `quality` to calculate and print diverse SOM quality metrics (#62)
+* SOM parameters can be overwritten during training from CLI (#65)
 
 ### Documentation
 
 * Examples are included in release downloads (#51)
 * Adds hand-written digits example (#55)
 * Adds world countries population pyramids example (#57)
-* Adds comprehensive halp text for each CLI command (#58)
+* Adds comprehensive help text for each CLI command (#58)
 * CLI help shows a command tree for commands with sub-commands (#58)
 
 ### Bugfixes
 
 * Update BMU weights before the weights of neighboring nodes (#42)
+* Fix ViSOM weight update formula, with error in publication Yin 2002 (#65)
 
 ### Other
 

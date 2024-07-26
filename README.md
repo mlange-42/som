@@ -106,28 +106,29 @@ Here is an example of a configuration file for the Iris dataset.
 The dataset has these columns: `species`, `sepal_length`, `sepal_width`, `petal_length`, and `petal_width`.
 
 ```yaml
-som:                     # SOM definitions
-  size: [8, 6]           # Size of the SOM
-  neighborhood: gaussian # Neighborhood function
-  metric: manhattan      # Distance metric in map space
+som:                      # SOM definitions
+  size: [8, 6]            # Size of the SOM
+  neighborhood: gaussian  # Neighborhood function
+  metric: manhattan       # Distance metric in map space
+  visom-metric: euclidean # Distance metric for ViSOM update
 
-  layers:                # Layers of the SOM
-    - name: Scalars      # Name of the layer. Has no meaning for continuous layers
-      columns:           # Columns of the layer
-        - sepal_length   # Column names as in the dataset
+  layers:                 # Layers of the SOM
+    - name: Scalars       # Name of the layer. Has no meaning for continuous layers
+      columns:            # Columns of the layer
+        - sepal_length    # Column names as in the dataset
         - sepal_width
         - petal_length
         - petal_width
-      norm: [gaussian]   # Normalization function(s) for columns
-      metric: euclidean  # Distance metric
-      weight: 1          # Weight of the layer
+      norm: [gaussian]    # Normalization function(s) for columns
+      metric: euclidean   # Distance metric
+      weight: 1           # Weight of the layer
 
-    - name: species      # Name of the layer. Use column name for categorical layers
-      metric: hamming    # Distance metric
-      categorical: true  # Layer is categorical. Omit columns
-      weight: 0.5        # Weight of the layer
+    - name: species       # Name of the layer. Use column name for categorical layers
+      metric: hamming     # Distance metric
+      categorical: true   # Layer is categorical. Omit columns
+      weight: 0.5         # Weight of the layer
 
-training:                # Training parameters. Optional. Can be overwritten by CLI arguments
+training:                 # Training parameters. Optional. Can be overwritten by CLI arguments
   epochs: 2500                        # Number of training epochs
   alpha: polynomial 0.25 0.01 2       # Learning rate decay function
   radius: polynomial 6 1 2            # Neighborhood radius decay function
