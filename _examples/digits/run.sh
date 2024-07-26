@@ -9,6 +9,6 @@ som train untrained.yml data.csv > out/trained.yml
 som quality out/trained.yml data.csv
 
 som plot heatmap out/trained.yml out/classes.png -c class -b class
-som plot codes image out/trained.yml out/image.png -r 8 -s 1200,800 -b class
+som plot codes image out/trained.yml out/image.png -r 8 -s 900,600
 
 echo See sub-folder 'out/' for result tables and images.

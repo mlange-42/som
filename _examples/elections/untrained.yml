@@ -1,5 +1,5 @@
 som:
-  size: [20, 12]
+  size: [12, 8]
   neighborhood: gaussian
   metric: manhattan
   visom-metric: euclidean
@@ -20,6 +20,6 @@ som:
 training:
   epochs: 2500
   alpha: polynomial 0.8 0.01 2
-  radius: polynomial 16 1.2 2
+  radius: polynomial 10 1.2 2
   weight-decay: polynomial 0.5 0.0 3
-  lambda: 0.3
+  lambda: 0.5

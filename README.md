@@ -8,8 +8,7 @@
 [Go](https://go.dev) implementation of Self-Organizing Maps (SOM) alias Kohonen maps.
 Provides a command line tool and a library for training and visualizing SOMs.
 
-![Heatmaps world countries dataset](https://github.com/user-attachments/assets/e01d4947-183c-4441-8a17-15f09d9f9e7e)  
-*SOM heatmap visualization of the World Countries dataset.*
+![SOM visualizations created with this tool](https://github.com/user-attachments/assets/88fd1f70-fa1e-4b43-a5ea-3697177d32c8)  
 
 ## Features
 

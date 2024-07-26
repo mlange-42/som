@@ -75,6 +75,7 @@ jobs:
         ./_examples/cluster2d/run.sh
         ./_examples/cluster2d/run-visom-metrics.sh
         ./_examples/countries/run.sh
+        ./_examples/countries/run-simple.sh
         ./_examples/digits/run.sh
         ./_examples/elections/run.sh
         ./_examples/iris/run.sh
