@@ -28,4 +28,3 @@ training:
   alpha: polynomial 0.8 0.01 2
   radius: polynomial 8 0.7 2
   weight-decay: polynomial 0.5 0.0 3
-  lambda: 0.0

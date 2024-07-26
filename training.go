@@ -42,6 +42,10 @@ func NewTrainer(som *Som, tables []*table.Table, params *TrainingConfig, rng *ra
 		return nil, err
 	}
 
+	if som.ViSomMetric() == nil && params.ViSomLambda != 0 {
+		return nil, fmt.Errorf("ViSOM update requires a ViSOM metric to be set")
+	}
+
 	return &Trainer{
 		som:    som,
 		tables: tables,

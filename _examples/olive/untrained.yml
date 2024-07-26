@@ -2,6 +2,7 @@ som:
   size: [20, 12]
   neighborhood: gaussian
   metric: manhattan
+  visom-metric: euclidean
   layers:
     - name: Acids
       columns:

@@ -27,15 +27,16 @@ type ymlSom struct {
 	Size         [2]int `yaml:",flow"`
 	Neighborhood string
 	Metric       string
+	ViSomMetric  string `yaml:"visom-metric,omitempty"`
 	Layers       []*ymlLayer
 }
 
 type ymlTraining struct {
 	Epochs      int
-	Alpha       string `yaml:",omitempty"`
-	Radius      string `yaml:",omitempty"`
-	WeightDecay string `yaml:"weight-decay,omitempty"`
-	Lambda      float64
+	Alpha       string  `yaml:",omitempty"`
+	Radius      string  `yaml:",omitempty"`
+	WeightDecay string  `yaml:"weight-decay,omitempty"`
+	Lambda      float64 `yaml:",omitempty"`
 }
 
 type ymlConfig struct {
@@ -62,12 +63,20 @@ func ToSomConfig(ymlData []byte) (*som.SomConfig, *som.TrainingConfig, error) {
 	if !ok {
 		return nil, nil, fmt.Errorf("unknown neighborhood metric: %s", yml.Som.Metric)
 	}
+	var viSomMetric neighborhood.Metric
+	if yml.Som.ViSomMetric != "" {
+		viSomMetric, ok = neighborhood.GetMetric(yml.Som.ViSomMetric)
+		if !ok {
+			return nil, nil, fmt.Errorf("unknown ViSOM neighborhood metric: %s", yml.Som.ViSomMetric)
+		}
+	}
 
 	conf := som.SomConfig{
 		Size:         layer.Size{Width: yml.Som.Size[0], Height: yml.Som.Size[1]},
 		Layers:       []*som.LayerDef{},
 		Neighborhood: neigh,
 		MapMetric:    metric,
+		ViSomMetric:  viSomMetric,
 	}
 	for _, l := range yml.Som.Layers {
 		lay, err := createLayer(&yml.Som, l)
@@ -80,6 +89,10 @@ func ToSomConfig(ymlData []byte) (*som.SomConfig, *som.TrainingConfig, error) {
 	var training *som.TrainingConfig
 
 	if yml.Training != nil {
+		if yml.Training.Lambda != 0 && viSomMetric == nil {
+			return nil, nil, fmt.Errorf("ViSOM lambda provided, but no ViSOM metric")
+		}
+
 		alpha, err := decay.FromString(yml.Training.Alpha)
 		if err != nil {
 			return nil, nil, err
@@ -154,11 +167,16 @@ func createLayer(s *ymlSom, l *ymlLayer) (*som.LayerDef, error) {
 }
 
 func ToYAML(som *som.Som) ([]byte, error) {
+	viSomMetric := ""
+	if som.ViSomMetric() != nil {
+		viSomMetric = som.ViSomMetric().Name()
+	}
 	yml := ymlSom{
 		Size:         [2]int{som.Size().Width, som.Size().Height},
 		Layers:       []*ymlLayer{},
 		Neighborhood: som.Neighborhood().Name(),
 		Metric:       som.MapMetric().Name(),
+		ViSomMetric:  viSomMetric,
 	}
 	for _, l := range som.Layers() {
 		norms := make([]string, len(l.Normalizers()))

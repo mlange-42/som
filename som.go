@@ -22,6 +22,7 @@ type SomConfig struct {
 	Layers       []*LayerDef               // Layer definitions
 	Neighborhood neighborhood.Neighborhood // Neighborhood function of the SOM
 	MapMetric    neighborhood.Metric       // Metric used to calculate distances on the map
+	ViSomMetric  neighborhood.Metric       // Metric used to calculate distances on the map for ViSOM update
 }
 
 // PrepareTables reads the CSV data and creates a table for each layer defined in the SomConfig.
@@ -147,6 +148,7 @@ type Som struct {
 	layers       []*layer.Layer
 	neighborhood neighborhood.Neighborhood
 	metric       neighborhood.Metric
+	viSomMetric  neighborhood.Metric
 }
 
 // New creates a new Self-Organizing Map (SOM) instance based on the provided SomConfig.
@@ -194,6 +196,7 @@ func New(params *SomConfig) (*Som, error) {
 		layers:       lay,
 		neighborhood: params.Neighborhood,
 		metric:       params.MapMetric,
+		viSomMetric:  params.ViSomMetric,
 	}, nil
 }
 
@@ -235,6 +238,11 @@ func (s *Som) Neighborhood() neighborhood.Neighborhood {
 // MapMetric returns the metric used to calculate distances between nodes in the Self-Organizing Map (SOM).
 func (s *Som) MapMetric() neighborhood.Metric {
 	return s.metric
+}
+
+// ViSomMetric returns the metric used to calculate distances between nodes in the ViSOM (Visualization Induced Self-Organizing Map).
+func (s *Som) ViSomMetric() neighborhood.Metric {
+	return s.viSomMetric
 }
 
 // Learn updates the weights of the Self-Organizing Map (SOM) based on the given input data.
@@ -325,8 +333,8 @@ func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius, lambda 
 			}
 			// ViSOM
 			nodeIdx := s.size.Index(x, y)
-			d := s.nodeDistance(bmuIdx, nodeIdx)              // distance in data space
-			D := lambda * s.metric.Distance(xBmu, yBmu, x, y) // scaled distance in map space
+			d := s.nodeDistance(bmuIdx, nodeIdx)                   // distance in data space
+			D := lambda * s.viSomMetric.Distance(xBmu, yBmu, x, y) // scaled distance in map space
 
 			// scale = (d - D) / D = d/D - 1 (original formulation Yin 2002)
 			scale := 0.0
