@@ -14,6 +14,7 @@
 * Adds CLI flag `--sample` to plot only a sub-sample of the input data (#56)
 * Draw optional class boundaries on all applicable plots (#60)
 * Adds command `quality` to calculate and print diverse SOM quality metrics (#62)
+* SOM parameters can be overwritten during training from CLI (#65)
 
 ### Documentation
 

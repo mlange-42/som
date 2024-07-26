@@ -110,6 +110,9 @@ but can also be set or overwritten using the provided CLI flags.`,
 		},
 	}
 
+	command.Flags().IntVarP(&epochs, "epochs", "e", 1000, "Overwrites the number of epochs of the SOM file")
+	command.Flags().Int64VarP(&seed, "seed", "s", 42, "Random seed")
+
 	command.Flags().StringVarP(&alpha, "alpha", "a", "polynomial 0.25 0.01 2",
 		`Overwrites the learning rate function of the SOM file.
 Options:
@@ -119,8 +122,6 @@ Options:
    `)
 	command.Flags().StringVarP(&radius, "radius", "r", "polynomial 10 0.7 2", "Overwrites the radius function of the SOM file.\nSame options as alpha")
 	command.Flags().StringVarP(&decayFunc, "decay", "d", "", "Overwrites the weight decay function of the SOM file.\nSame options as alpha (default no decay)")
-	command.Flags().IntVarP(&epochs, "epochs", "e", 1000, "Overwrites the number of epochs of the SOM file")
-	command.Flags().Int64VarP(&seed, "seed", "s", 42, "Random seed")
 	command.Flags().Float64VarP(&visomLambda, "vi-lambda", "v", 0.0, "Overwrites ViSOM resolution. 0 = no ViSOM")
 
 	command.Flags().IntSliceVarP(&size, "size", "z", []int{}, "Overwrites SOM size (columns,rows)")
