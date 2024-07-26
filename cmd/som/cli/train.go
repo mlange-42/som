@@ -10,6 +10,7 @@ import (
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/decay"
+	"github.com/mlange-42/som/neighborhood"
 	"github.com/mlange-42/som/table"
 	"github.com/mlange-42/som/yml"
 	"github.com/pkg/profile"
@@ -25,17 +26,25 @@ const full = '█'
 // go tool pprof -http=":8000" -nodefraction="0.0001" som cpu.pprof
 
 func trainCommand() *cobra.Command {
-	var delim string
-	var noData string
+	var seed int64
 	var alpha string
 	var radius string
 	var decayFunc string
 	var epochs int
-	var seed int64
-	var cpuProfile bool
 	var visomLambda float64
+
+	var size []int
+	var neighborhood string
+	var metric string
+	var viSomMetric string
+
+	var delim string
+	var noData string
+
 	var progressFile string
 	var progressInterval int
+
+	var cpuProfile bool
 
 	var command *cobra.Command
 	command = &cobra.Command{
@@ -75,7 +84,12 @@ but can also be set or overwritten using the provided CLI flags.`,
 				return err
 			}
 
-			err = overwriteParameters(command, trainingConfig,
+			err = overwriteSomParameters(command, config,
+				size, neighborhood, metric, viSomMetric)
+			if err != nil {
+				return err
+			}
+			err = overwriteTrainingParameters(command, trainingConfig,
 				epochs, visomLambda, alpha, radius, decayFunc)
 			if err != nil {
 				return err
@@ -105,11 +119,17 @@ Options:
    `)
 	command.Flags().StringVarP(&radius, "radius", "r", "polynomial 10 0.7 2", "Overwrites the radius function of the SOM file.\nSame options as alpha")
 	command.Flags().StringVarP(&decayFunc, "decay", "d", "", "Overwrites the weight decay function of the SOM file.\nSame options as alpha (default no decay)")
-
 	command.Flags().IntVarP(&epochs, "epochs", "e", 1000, "Overwrites the number of epochs of the SOM file")
 	command.Flags().Int64VarP(&seed, "seed", "s", 42, "Random seed")
+	command.Flags().Float64VarP(&visomLambda, "vi-lambda", "v", 0.0, "Overwrites ViSOM resolution. 0 = no ViSOM")
 
-	command.Flags().Float64VarP(&visomLambda, "visom-lambda", "v", 0.0, "Overwrites ViSOM resolution. 0 = no ViSOM")
+	command.Flags().IntSliceVarP(&size, "size", "z", []int{}, "Overwrites SOM size (columns,rows)")
+	command.Flags().StringVarP(&neighborhood, "neighborhood", "n", "", `Overwrites SOM neighborhood function.
+Options: gaussian, cutgaussian, linear, box`)
+	command.Flags().StringVarP(&metric, "metric", "m", "", `Overwrites SOM map distance metric.
+Options: euclidean, manhattan, chebyshev`)
+	command.Flags().StringVarP(&viSomMetric, "vi-metric", "V", "", `Overwrites ViSOM map distance metric.
+Options: euclidean, manhattan, chebyshev`)
 
 	command.Flags().StringVarP(&delim, "delimiter", "D", ",", "CSV delimiter")
 	command.Flags().StringVarP(&noData, "no-data", "N", "", "No data string")
@@ -125,7 +145,7 @@ Options:
 	return command
 }
 
-func overwriteParameters(command *cobra.Command, conf *som.TrainingConfig,
+func overwriteTrainingParameters(command *cobra.Command, conf *som.TrainingConfig,
 	epochs int, visomLambda float64, alpha, radius, decayFunc string) error {
 	flagUsed := map[string]bool{}
 	command.Flags().Visit(func(f *pflag.Flag) {
@@ -135,7 +155,7 @@ func overwriteParameters(command *cobra.Command, conf *som.TrainingConfig,
 	if _, ok := flagUsed["epochs"]; ok {
 		conf.Epochs = epochs
 	}
-	if _, ok := flagUsed["visom-lambda"]; ok {
+	if _, ok := flagUsed["vi-lambda"]; ok {
 		conf.ViSomLambda = visomLambda
 	}
 
@@ -162,6 +182,41 @@ func overwriteParameters(command *cobra.Command, conf *som.TrainingConfig,
 			}
 		}
 	}
+	return nil
+}
+
+func overwriteSomParameters(command *cobra.Command, conf *som.SomConfig,
+	size []int, neigh, metric, viSomMetric string) error {
+	flagUsed := map[string]bool{}
+	command.Flags().Visit(func(f *pflag.Flag) {
+		flagUsed[f.Name] = true
+	})
+
+	if _, ok := flagUsed["size"]; ok {
+		if len(size) != 2 {
+			return fmt.Errorf("size must have 2 integer values for columns and rows")
+		}
+		conf.Size.Width, conf.Size.Height = size[0], size[1]
+	}
+	if _, ok := flagUsed["neighborhood"]; ok {
+		conf.Neighborhood, ok = neighborhood.GetNeighborhood(neigh)
+		if !ok {
+			return fmt.Errorf("unknown neighborhood function: %s", neigh)
+		}
+	}
+	if _, ok := flagUsed["metric"]; ok {
+		conf.MapMetric, ok = neighborhood.GetMetric(metric)
+		if !ok {
+			return fmt.Errorf("unknown metric: %s", metric)
+		}
+	}
+	if _, ok := flagUsed["vi-metric"]; ok {
+		conf.ViSomMetric, ok = neighborhood.GetMetric(viSomMetric)
+		if !ok {
+			return fmt.Errorf("unknown ViSOM metric: %s", viSomMetric)
+		}
+	}
+
 	return nil
 }
 

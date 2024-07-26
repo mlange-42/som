@@ -78,6 +78,7 @@ jobs:
         ./_examples/elections/run.sh
         ./_examples/iris/run.sh
         ./_examples/olive/run.sh
+        ./_examples/olive/run-visom-metrics.sh
         ./_examples/population/run.sh
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
