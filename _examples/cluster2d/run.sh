@@ -5,7 +5,7 @@ mkdir out
 set -e
 
 echo Train and plot using simple SOM
-#som train untrained.yml data.csv -v 0.0 > out/trained.yml
+som train untrained.yml data.csv -v 0.0 > out/trained.yml
 som quality out/trained.yml data.csv
 som plot heatmap out/trained.yml out/heatmap.png --data-file data.csv --label class
 som plot u-matrix out/trained.yml out/u-matrix.png --data-file data.csv --label class
