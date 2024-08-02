@@ -1,19 +1,17 @@
 package som
 
 import (
-	"container/heap"
-
 	"gonum.org/v1/gonum/spatial/kdtree"
 )
 
 type nodeLocation struct {
-	data      [][]float64
+	som       *Som
 	nodeIndex int
 }
 
-func NewNodeLocation(index int, data [][]float64) *nodeLocation {
+func NewNodeLocation(som *Som, index int) *nodeLocation {
 	return &nodeLocation{
-		data:      data,
+		som:       som,
 		nodeIndex: index,
 	}
 }
@@ -21,9 +19,9 @@ func NewNodeLocation(index int, data [][]float64) *nodeLocation {
 func (p *nodeLocation) GetIndex(d kdtree.Dim) (int, int) {
 	dim := int(d)
 	cum := 0
-	for i, l := range p.data {
+	for i, l := range p.som.layers {
 		c := cum
-		cum += len(l)
+		cum += l.Columns()
 		if cum > dim {
 			idx := dim - c
 			return i, idx
@@ -37,14 +35,15 @@ func (p *nodeLocation) GetIndex(d kdtree.Dim) (int, int) {
 func (p nodeLocation) Compare(c kdtree.Comparable, d kdtree.Dim) float64 {
 	q := c.(nodeLocation)
 	lay, col := p.GetIndex(d)
-	return p.data[lay][col] - q.data[lay][col]
+	l := p.som.layers[lay]
+	return l.GetAt(p.nodeIndex, col) - l.GetAt(q.nodeIndex, col)
 }
 
 // Dims returns the number of dimensions described by the receiver.
 func (p nodeLocation) Dims() int {
 	dims := 0
-	for _, v := range p.data {
-		dims += len(v)
+	for _, l := range p.som.layers {
+		dims += l.Columns()
 	}
 	return dims
 }
@@ -82,7 +81,8 @@ const randoms = 100
 func (p plane) Less(i, j int) bool {
 	loc := p.NodeLocations[i]
 	lay, col := loc.GetIndex(p.Dim)
-	return loc.data[lay][col] < p.NodeLocations[j].data[lay][col]
+	l := loc.som.layers[lay]
+	return l.GetAt(loc.nodeIndex, col) < l.GetAt(p.NodeLocations[j].nodeIndex, col)
 }
 
 // Pivot TreePlane
@@ -97,26 +97,4 @@ func (p plane) Slice(start, end int) kdtree.SortSlicer {
 // Swap TreePlane
 func (p plane) Swap(i, j int) {
 	p.NodeLocations[i], p.NodeLocations[j] = p.NodeLocations[j], p.NodeLocations[i]
-}
-
-// NDistKeeper keeps man number and distance
-type NDistKeeper struct {
-	kdtree.Heap
-}
-
-// NewNDistKeeper returns an NDistKeeper with the maximum value of the heap set to d.
-func NewNDistKeeper(n int, d float64) *NDistKeeper {
-	k := NDistKeeper{make(kdtree.Heap, 1, n)}
-	k.Heap[0].Dist = d * d
-	return &k
-}
-
-// Keep adds c to the heap if its distance is less than or equal to the max value of the heap.
-func (k *NDistKeeper) Keep(c kdtree.ComparableDist) {
-	if c.Dist <= k.Heap[0].Dist { // Favour later finds to displace sentinel.
-		if len(k.Heap) == cap(k.Heap) {
-			heap.Pop(k)
-		}
-		heap.Push(k, c)
-	}
 }
