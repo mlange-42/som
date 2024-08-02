@@ -310,20 +310,23 @@ func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius, lambda 
 	xMin, yMin := max(xBmu-lim, 0), max(yBmu-lim, 0)
 	xMax, yMax := min(xBmu+lim, s.size.Width-1), min(yBmu+lim, s.size.Height-1)
 
-	s.updateNode(xBmu, yBmu, data, alpha) // update BMU directly
+	// update BMU, to use its new position in neighborhood updates
+	s.updateNode(xBmu, yBmu, data, alpha)
 
 	for x := xMin; x <= xMax; x++ {
 		for y := yMin; y <= yMax; y++ {
 			if x == xBmu && y == yBmu {
-				// Skip BMU
+				// Skip BMU, already updated above
 				continue
 			}
 
 			dist := s.metric.Distance(xBmu, yBmu, x, y)
 			r := s.neighborhood.Weight(dist, radius)
 			if r <= 0 {
+				// Outside neighborhood, don't update
 				continue
 			}
+			// Update rate, composed of neighborhood and learning components
 			rate := r * alpha
 
 			if lambda <= 0 {
@@ -332,29 +335,7 @@ func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius, lambda 
 				continue
 			}
 			// ViSOM
-			nodeIdx := s.size.Index(x, y)
-			d := s.nodeDistance(bmuIdx, nodeIdx)                   // distance in data space
-			D := lambda * s.viSomMetric.Distance(xBmu, yBmu, x, y) // scaled distance in map space
-
-			// scale = (d - D) / D = d/D - 1 (original formulation Yin 2002)
-			scale := 0.0
-			if d > 0 {
-				scale = 1 - D/d // corrected formulation
-			}
-
-			for l, lay := range s.layers {
-				bmu := lay.GetNodeAt(bmuIdx)
-				node := lay.GetNodeAt(nodeIdx)
-				for i := 0; i < lay.Columns(); i++ {
-					d := data[l][i]
-					if math.IsNaN(d) {
-						continue
-					}
-					delta := (d - bmu[i]) + (bmu[i]-node[i])*scale
-
-					node[i] += rate * delta
-				}
-			}
+			s.updateNodeViSom(bmuIdx, x, y, data, rate, lambda)
 		}
 	}
 }
@@ -372,7 +353,38 @@ func (s *Som) updateNode(x, y int, data [][]float64, rate float64) {
 	}
 }
 
+func (s *Som) updateNodeViSom(bmuIdx, x, y int, data [][]float64, rate float64, lambda float64) {
+	xBmu, yBmu := s.size.Coords(bmuIdx)
+	nodeIdx := s.size.Index(x, y)
+	d := s.nodeDistance(bmuIdx, nodeIdx)                   // distance in data space
+	D := lambda * s.viSomMetric.Distance(xBmu, yBmu, x, y) // scaled distance in map space
+
+	// scale = (d - D) / D = d/D - 1 (original formulation Yin 2002)
+	scale := 0.0
+	if d > 0 {
+		scale = 1 - D/d // corrected formulation
+	}
+
+	for l, lay := range s.layers {
+		bmu := lay.GetNodeAt(bmuIdx)
+		node := lay.GetNodeAt(nodeIdx)
+		for i := 0; i < lay.Columns(); i++ {
+			d := data[l][i]
+			if math.IsNaN(d) {
+				continue
+			}
+			delta := (d - bmu[i]) + (bmu[i]-node[i])*scale
+
+			node[i] += rate * delta
+		}
+	}
+}
+
 func (s *Som) decayWeights(center [][]float64, rate float64) {
+	if rate == 0 {
+		return
+	}
+
 	nodes := s.Size().Nodes()
 	fac := 1.0 - rate
 
