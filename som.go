@@ -326,6 +326,7 @@ func (s *Som) updateWeights(bmuIdx int, data [][]float64, alpha, radius, lambda 
 				// Outside neighborhood, don't update
 				continue
 			}
+			// Update rate, composed of neighborhood and learning components
 			rate := r * alpha
 
 			if lambda <= 0 {
@@ -380,6 +381,10 @@ func (s *Som) updateNodeViSom(bmuIdx, x, y int, data [][]float64, rate float64, 
 }
 
 func (s *Som) decayWeights(center [][]float64, rate float64) {
+	if rate == 0 {
+		return
+	}
+
 	nodes := s.Size().Nodes()
 	fac := 1.0 - rate
 
