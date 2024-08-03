@@ -92,6 +92,8 @@ func BenchmarkPredictorGetBMU_10x10x5_100Rows(b *testing.B) {
 }
 
 func BenchmarkPredictorGetBMU_10x10x5_100Rows_Acc(b *testing.B) {
+	// FIXME: Why is this slower than brute force,
+	// while BenchmarkPredictorBMU_10x10x5_Acc is faster?
 	benchmarkPredictorGetBMU(b, 10, 10, 5, 1, true)
 }
 
