@@ -490,8 +490,8 @@ func BenchmarkGetBMU_5x5x3_Acc(b *testing.B) {
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		p := newDataLocation(som, data)
-		nn, _ := tree.Nearest(p)
-		pp := nn.(nodeLocation)
+		nn, _ := tree.Nearest(&p)
+		pp := nn.(*nodeLocation)
 		bmu = pp.NodeIndex
 	}
 	b.StopTimer()
@@ -528,8 +528,8 @@ func BenchmarkGetBMU_10x10x5_Acc(b *testing.B) {
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		p := newDataLocation(som, data)
-		nn, _ := tree.Nearest(p)
-		pp := nn.(nodeLocation)
+		nn, _ := tree.Nearest(&p)
+		pp := nn.(*nodeLocation)
 		bmu = pp.NodeIndex
 	}
 	b.StopTimer()

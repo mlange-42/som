@@ -72,8 +72,8 @@ func TestKDTree(t *testing.T) {
 
 	for _, test := range tests {
 		p := newDataLocation(som, test.data)
-		nearest, dist := tree.Nearest(p)
-		bmu := nearest.(nodeLocation)
+		nearest, dist := tree.Nearest(&p)
+		bmu := nearest.(*nodeLocation)
 
 		assert.Equal(t, test.expectedIdx, bmu.NodeIndex)
 		assert.InDelta(t, test.expectedDist, dist, 1e-10)
@@ -161,8 +161,8 @@ func TestKDTreeTwoLayers(t *testing.T) {
 
 	for _, test := range tests {
 		p := newDataLocation(som, test.data)
-		nearest, dist := tree.Nearest(p)
-		bmu := nearest.(nodeLocation)
+		nearest, dist := tree.Nearest(&p)
+		bmu := nearest.(*nodeLocation)
 
 		assert.Equal(t, test.expectedIdx, bmu.NodeIndex)
 		assert.InDelta(t, test.expectedDist, dist, 1e-10)

@@ -80,22 +80,22 @@ func TestPredictorGetBMU(t *testing.T) {
 }
 
 func BenchmarkPredictorGetBMU_20x30x5_1kRows(b *testing.B) {
-	benchmarkPredictorGetBMU_20x30x5(b, 20, 30, 1000, false)
-}
-
-func BenchmarkPredictorGetBMU_20x30x5_100kRows(b *testing.B) {
-	benchmarkPredictorGetBMU_20x30x5(b, 20, 30, 100000, false)
+	benchmarkPredictorGetBMU(b, 20, 30, 1000, false)
 }
 
 func BenchmarkPredictorGetBMU_20x30x5_1kRows_Acc(b *testing.B) {
-	benchmarkPredictorGetBMU_20x30x5(b, 20, 30, 1000, true)
+	benchmarkPredictorGetBMU(b, 20, 30, 1000, true)
 }
 
-func BenchmarkPredictorGetBMU_20x30x5_100kRows_Acc(b *testing.B) {
-	benchmarkPredictorGetBMU_20x30x5(b, 20, 30, 100000, true)
+func BenchmarkPredictorGetBMU_100x100x5_1kRows(b *testing.B) {
+	benchmarkPredictorGetBMU(b, 100, 100, 1000, false)
 }
 
-func benchmarkPredictorGetBMU_20x30x5(b *testing.B, width, height, rows int, kdTree bool) {
+func BenchmarkPredictorGetBMU_100x100x5_1kRows_Acc(b *testing.B) {
+	benchmarkPredictorGetBMU(b, 100, 100, 1000, true)
+}
+
+func benchmarkPredictorGetBMU(b *testing.B, width, height, rows int, kdTree bool) {
 	b.StopTimer()
 
 	conf := SomConfig{
@@ -126,11 +126,11 @@ func benchmarkPredictorGetBMU_20x30x5(b *testing.B, width, height, rows int, kdT
 		tab.Data()[i] = rng.Float64()*2 - 1
 	}
 	var bmu []int
+	pred, err := NewPredictor(som, []*table.Table{tab}, kdTree)
+	assert.NoError(b, err)
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		pred, err := NewPredictor(som, []*table.Table{tab}, kdTree)
-		assert.NoError(b, err)
 		bmu = pred.GetBMU()
 	}
 	b.StopTimer()

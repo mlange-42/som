@@ -49,14 +49,14 @@ func (p *nodeLocation) GetIndex(d kdtree.Dim) (int, int) {
 
 // Compare returns the signed distance of p from the plane passing through c and
 // perpendicular to the dimension d. The concrete type of c must be EntityLocation.
-func (p nodeLocation) Compare(c kdtree.Comparable, d kdtree.Dim) float64 {
-	q := c.(nodeLocation)
+func (p *nodeLocation) Compare(c kdtree.Comparable, d kdtree.Dim) float64 {
+	q := c.(*nodeLocation)
 	lay, col := p.GetIndex(d)
 	return p.Get(lay, col) - q.Get(lay, col)
 }
 
 // Dims returns the number of dimensions described by the receiver.
-func (p nodeLocation) Dims() int {
+func (p *nodeLocation) Dims() int {
 	dims := 0
 	for _, l := range p.Som.layers {
 		dims += l.Columns()
@@ -66,8 +66,8 @@ func (p nodeLocation) Dims() int {
 
 // Distance returns the squared Euclidean distance between c and the receiver. The
 // concrete type of c must be EntityLocation.
-func (p nodeLocation) Distance(c kdtree.Comparable) float64 {
-	q := c.(nodeLocation)
+func (p *nodeLocation) Distance(c kdtree.Comparable) float64 {
+	q := c.(*nodeLocation)
 	if p.NodeIndex < 0 && q.NodeIndex < 0 {
 		panic("cannot compute distance between data points, at least one SOM node is required")
 	}
@@ -90,7 +90,7 @@ func newNodeLocations(som *Som) nodeLocations {
 	return locs
 }
 
-func (p nodeLocations) Index(i int) kdtree.Comparable { return p[i] }
+func (p nodeLocations) Index(i int) kdtree.Comparable { return &p[i] }
 func (p nodeLocations) Len() int                      { return len(p) }
 func (p nodeLocations) Pivot(d kdtree.Dim) int {
 	return plane{nodeLocations: p, Dim: d}.Pivot()
