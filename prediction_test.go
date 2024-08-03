@@ -79,23 +79,23 @@ func TestPredictorGetBMU(t *testing.T) {
 	}
 }
 
-func BenchmarkPredictorGetBMU_20x30x5_1kRows(b *testing.B) {
-	benchmarkPredictorGetBMU(b, 20, 30, 1000, false)
+func BenchmarkPredictorGetBMU_5x5x3_100Rows(b *testing.B) {
+	benchmarkPredictorGetBMU(b, 5, 5, 3, 100, false)
 }
 
-func BenchmarkPredictorGetBMU_20x30x5_1kRows_Acc(b *testing.B) {
-	benchmarkPredictorGetBMU(b, 20, 30, 1000, true)
+func BenchmarkPredictorGetBMU_5x5x3_100Rows_Acc(b *testing.B) {
+	benchmarkPredictorGetBMU(b, 5, 5, 3, 100, true)
 }
 
-func BenchmarkPredictorGetBMU_100x100x5_1kRows(b *testing.B) {
-	benchmarkPredictorGetBMU(b, 100, 100, 1000, false)
+func BenchmarkPredictorGetBMU_10x10x5_100Rows(b *testing.B) {
+	benchmarkPredictorGetBMU(b, 10, 10, 5, 100, false)
 }
 
-func BenchmarkPredictorGetBMU_100x100x5_1kRows_Acc(b *testing.B) {
-	benchmarkPredictorGetBMU(b, 100, 100, 1000, true)
+func BenchmarkPredictorGetBMU_10x10x5_100Rows_Acc(b *testing.B) {
+	benchmarkPredictorGetBMU(b, 10, 10, 5, 100, true)
 }
 
-func benchmarkPredictorGetBMU(b *testing.B, width, height, rows int, kdTree bool) {
+func benchmarkPredictorGetBMU(b *testing.B, width, height, columns, rows int, kdTree bool) {
 	b.StopTimer()
 
 	conf := SomConfig{
@@ -107,9 +107,11 @@ func benchmarkPredictorGetBMU(b *testing.B, width, height, rows int, kdTree bool
 		Layers: []*LayerDef{
 			{
 				Name:    "L1",
-				Columns: []string{"a", "b", "c", "d", "e"},
+				Columns: []string{"a", "b", "c", "d", "e"}[:columns],
 				Metric:  &distance.Euclidean{},
-				Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}, &norm.Identity{}, &norm.Identity{}, &norm.Identity{}},
+				Norm: []norm.Normalizer{
+					&norm.Identity{}, &norm.Identity{}, &norm.Identity{}, &norm.Identity{}, &norm.Identity{},
+				}[:columns],
 			},
 		},
 	}
@@ -121,9 +123,9 @@ func benchmarkPredictorGetBMU(b *testing.B, width, height, rows int, kdTree bool
 	som.Randomize(rand.New(rand.NewSource(0)))
 
 	rng := rand.New(rand.NewSource(0))
-	tab := table.New([]string{"a", "b", "c", "d", "e"}, rows)
+	tab := table.New([]string{"a", "b", "c", "d", "e"}[:columns], rows)
 	for i := range tab.Data() {
-		tab.Data()[i] = rng.Float64()*2 - 1
+		tab.Data()[i] = rng.Float64()*0.2 - 0.1
 	}
 	var bmu []int
 	pred, err := NewPredictor(som, []*table.Table{tab}, kdTree)
