@@ -6,14 +6,14 @@ set -e
 
 echo Train and plot using simple SOM
 som train untrained.yml data.csv -v 0.0 > out/trained.yml
-som quality out/trained.yml data.csv
+som quality out/trained.yml data.csv --kd-tree
 som plot heatmap out/trained.yml out/heatmap.png --data-file data.csv --label class
 som plot u-matrix out/trained.yml out/u-matrix.png --data-file data.csv --label class
 som plot xy out/trained.yml out/xy.png -x x -y y --data-file data.csv -C class
 
 echo Train and plot using ViSOM
 som train untrained.yml data.csv > out/trained-vi.yml
-som quality out/trained-vi.yml data.csv
+som quality out/trained-vi.yml data.csv --kd-tree
 som plot heatmap out/trained-vi.yml out/heatmap-vi.png --data-file data.csv --label class
 som plot u-matrix out/trained-vi.yml out/u-matrix-vi.png --data-file data.csv --label class
 som plot xy out/trained-vi.yml out/xy-vi.png -x x -y y --data-file data.csv -C class

@@ -7,25 +7,33 @@ import (
 
 	"github.com/mlange-42/som/neighborhood"
 	"github.com/mlange-42/som/table"
+	"gonum.org/v1/gonum/spatial/kdtree"
 )
 
 // Predictor is a struct that holds an SOM and a set of tables for making predictions.
 type Predictor struct {
 	som    *Som
 	tables []*table.Table
+	kdtree *kdtree.Tree
 }
 
 // NewPredictor creates a new Predictor instance with the given SOM and tables.
 // The tables must have the same number of rows as the SOM has nodes.
 // Tables are assumed to be normalized.
 // An error is returned if the tables do not match the SOM.
-func NewPredictor(som *Som, tables []*table.Table) (*Predictor, error) {
+func NewPredictor(som *Som, tables []*table.Table, accelerated bool) (*Predictor, error) {
 	if err := checkTables(som, tables); err != nil {
 		return nil, err
+	}
+	var tree *kdtree.Tree
+	if accelerated {
+		locs := newNodeLocations(som)
+		tree = kdtree.New(locs, false)
 	}
 	return &Predictor{
 		som:    som,
 		tables: tables,
+		kdtree: tree,
 	}, nil
 }
 
@@ -40,7 +48,34 @@ func (p *Predictor) Tables() []*table.Table {
 }
 
 func (p *Predictor) bmu(data [][]float64) (int, float64) {
+	if p.kdtree != nil {
+		// Use k-d tree for accelerated nearest neighbor search
+		query := newDataLocation(p.som, data)
+		nn, dist := p.kdtree.Nearest(query)
+		node := nn.(nodeLocation)
+		return node.NodeIndex, dist
+	}
 	return p.som.GetBMU(data)
+}
+
+func (p *Predictor) bmu2(data [][]float64) (int, float64, int, float64) {
+	if p.kdtree != nil {
+		// Use k-d tree for accelerated nearest neighbor search
+		query := newDataLocation(p.som, data)
+		keeper := kdtree.NewNKeeper(2)
+		p.kdtree.NearestSet(keeper, query)
+		if keeper.Heap.Len() != 2 {
+			panic("kdtree returned incorrect number of nearest neighbors")
+		}
+		indices, distances := make([]int, 2), make([]float64, 2)
+		for i, e := range keeper.Heap {
+			node := e.Comparable.(nodeLocation)
+			indices[i] = node.NodeIndex
+			distances[i] = e.Dist
+		}
+		return indices[0], distances[0], indices[1], distances[1]
+	}
+	return p.som.GetBMU2(data)
 }
 
 // GetBMUTable returns a table with the best matching units (BMUs) for each row in the
@@ -244,7 +279,7 @@ func (p *Predictor) getBMU2() []bmu2 {
 	for i := 0; i < rows; i++ {
 		p.collectData(i, data)
 
-		idx, d, idx2, d2 := p.som.GetBMU2(data)
+		idx, d, idx2, d2 := p.bmu2(data)
 		bmu[i] = bmu2{idx, d, idx2, d2}
 	}
 

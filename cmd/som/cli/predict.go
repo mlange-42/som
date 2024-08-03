@@ -18,6 +18,7 @@ func predictCommand() *cobra.Command {
 	var ignore []string
 	var layers []string
 	var writeAllLayers bool
+	var kdTree bool
 
 	command := &cobra.Command{
 		Use:   "predict [flags] <som-file> <data-file>",
@@ -82,7 +83,7 @@ Redirect output to a file like this:
 			if err != nil {
 				return err
 			}
-			pred, err := som.NewPredictor(s, tables)
+			pred, err := som.NewPredictor(s, tables, kdTree)
 			if err != nil {
 				return err
 			}
@@ -109,6 +110,7 @@ Redirect output to a file like this:
 	command.Flags().StringSliceVarP(&preserve, "preserve", "p", nil, "Preserve columns and prepend them to the output table")
 	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
 	command.Flags().BoolVarP(&writeAllLayers, "all", "a", false, "Write all layers instead of just predicted layers")
+	command.Flags().BoolVarP(&kdTree, "kd-tree", "k", false, "Use kd-tree accelerated BMU search")
 
 	command.Flags().StringVarP(&delim, "delimiter", "D", ",", "CSV delimiter")
 	command.Flags().StringVarP(&noData, "no-data", "N", "", "No-data string")

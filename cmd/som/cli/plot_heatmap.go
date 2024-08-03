@@ -278,7 +278,7 @@ func createPredictor(config *som.SomConfig, s *som.Som, reader table.Reader, ign
 		return nil, nil, err
 	}
 
-	pred, err := som.NewPredictor(s, tables)
+	pred, err := som.NewPredictor(s, tables, false)
 	if err != nil {
 		return nil, nil, err
 	}

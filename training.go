@@ -292,7 +292,7 @@ func calcSquaredURP(sMin, sMax float64, distribution []float64, index int) float
 }
 
 func (t *Trainer) findLabels(classes []string, indices []int) ([]float64, []int, error) {
-	pred, err := NewPredictor(t.som, t.tables)
+	pred, err := NewPredictor(t.som, t.tables, false)
 	if err != nil {
 		return nil, nil, err
 	}

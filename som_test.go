@@ -12,6 +12,7 @@ import (
 	"github.com/mlange-42/som/norm"
 	"github.com/mlange-42/som/table"
 	"github.com/stretchr/testify/assert"
+	"gonum.org/v1/gonum/spatial/kdtree"
 )
 
 type mockReader struct {
@@ -476,6 +477,28 @@ func BenchmarkGetBMU_5x5x3(b *testing.B) {
 	assert.Less(b, bmu, 25)
 }
 
+func BenchmarkGetBMU_5x5x3_Acc(b *testing.B) {
+	b.StopTimer()
+	som := createBenchSom(5, 5, 3, &neighborhood.Gaussian{})
+	data := [][]float64{{1.0, 2.0, 3.0}}
+
+	locs := newNodeLocations(som)
+	tree := kdtree.New(locs, false)
+
+	var bmu int
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		p := newDataLocation(som, data)
+		nn, _ := tree.Nearest(p)
+		pp := nn.(nodeLocation)
+		bmu = pp.NodeIndex
+	}
+	b.StopTimer()
+
+	assert.Less(b, bmu, 25)
+}
+
 func BenchmarkGetBMU_10x10x5(b *testing.B) {
 	b.StopTimer()
 	som := createBenchSom(10, 10, 5, &neighborhood.Gaussian{})
@@ -486,6 +509,28 @@ func BenchmarkGetBMU_10x10x5(b *testing.B) {
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		bmu, _ = som.GetBMU(data)
+	}
+	b.StopTimer()
+
+	assert.Less(b, bmu, 100)
+}
+
+func BenchmarkGetBMU_10x10x5_Acc(b *testing.B) {
+	b.StopTimer()
+	som := createBenchSom(10, 10, 5, &neighborhood.Gaussian{})
+	data := [][]float64{{1.0, 2.0, 3.0, 4.0, 5.0}}
+
+	locs := newNodeLocations(som)
+	tree := kdtree.New(locs, false)
+
+	var bmu int
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		p := newDataLocation(som, data)
+		nn, _ := tree.Nearest(p)
+		pp := nn.(nodeLocation)
+		bmu = pp.NodeIndex
 	}
 	b.StopTimer()
 
