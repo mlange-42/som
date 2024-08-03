@@ -5,21 +5,38 @@ import (
 )
 
 type nodeLocation struct {
-	som       *Som
-	nodeIndex int
+	Som       *Som
+	NodeIndex int
+	Data      [][]float64
 }
 
-func NewNodeLocation(som *Som, index int) *nodeLocation {
-	return &nodeLocation{
-		som:       som,
-		nodeIndex: index,
+func newNodeLocation(som *Som, nodeIndex int) nodeLocation {
+	return nodeLocation{
+		Som:       som,
+		NodeIndex: nodeIndex,
 	}
+}
+
+func newDataLocation(som *Som, data [][]float64) nodeLocation {
+	return nodeLocation{
+		Som:       som,
+		NodeIndex: -1,
+		Data:      data,
+	}
+}
+
+func (p *nodeLocation) Get(lay, col int) float64 {
+	if p.NodeIndex < 0 {
+		return p.Data[lay][col]
+	}
+	l := p.Som.layers[lay]
+	return l.GetAt(p.NodeIndex, col)
 }
 
 func (p *nodeLocation) GetIndex(d kdtree.Dim) (int, int) {
 	dim := int(d)
 	cum := 0
-	for i, l := range p.som.layers {
+	for i, l := range p.Som.layers {
 		c := cum
 		cum += l.Columns()
 		if cum > dim {
@@ -35,14 +52,13 @@ func (p *nodeLocation) GetIndex(d kdtree.Dim) (int, int) {
 func (p nodeLocation) Compare(c kdtree.Comparable, d kdtree.Dim) float64 {
 	q := c.(nodeLocation)
 	lay, col := p.GetIndex(d)
-	l := p.som.layers[lay]
-	return l.GetAt(p.nodeIndex, col) - l.GetAt(q.nodeIndex, col)
+	return p.Get(lay, col) - q.Get(lay, col)
 }
 
 // Dims returns the number of dimensions described by the receiver.
 func (p nodeLocation) Dims() int {
 	dims := 0
-	for _, l := range p.som.layers {
+	for _, l := range p.Som.layers {
 		dims += l.Columns()
 	}
 	return dims
@@ -52,25 +68,41 @@ func (p nodeLocation) Dims() int {
 // concrete type of c must be EntityLocation.
 func (p nodeLocation) Distance(c kdtree.Comparable) float64 {
 	q := c.(nodeLocation)
-	_ = q
-	return 0
+	if p.NodeIndex < 0 && q.NodeIndex < 0 {
+		panic("cannot compute distance between data points, at least one SOM node is required")
+	}
+	if p.NodeIndex >= 0 && q.NodeIndex >= 0 {
+		return p.Som.nodeDistance(p.NodeIndex, q.NodeIndex)
+	}
+	if q.NodeIndex < 0 {
+		p, q = q, p
+	}
+	return p.Som.dataDistance(p.Data, q.NodeIndex)
 }
 
-type NodeLocations []nodeLocation
+type nodeLocations []nodeLocation
 
-func (p NodeLocations) Index(i int) kdtree.Comparable { return p[i] }
-func (p NodeLocations) Len() int                      { return len(p) }
-func (p NodeLocations) Pivot(d kdtree.Dim) int {
-	return plane{NodeLocations: p, Dim: d}.Pivot()
+func newNodeLocations(som *Som) nodeLocations {
+	locs := make([]nodeLocation, som.Size().Nodes())
+	for i := range locs {
+		locs[i] = newNodeLocation(som, i)
+	}
+	return locs
 }
-func (p NodeLocations) Slice(start, end int) kdtree.Interface { return p[start:end] }
+
+func (p nodeLocations) Index(i int) kdtree.Comparable { return p[i] }
+func (p nodeLocations) Len() int                      { return len(p) }
+func (p nodeLocations) Pivot(d kdtree.Dim) int {
+	return plane{nodeLocations: p, Dim: d}.Pivot()
+}
+func (p nodeLocations) Slice(start, end int) kdtree.Interface { return p[start:end] }
 
 // plane is a wrapping type that allows a Points type be pivoted on a dimension.
 // The Pivot method of Plane uses MedianOfRandoms sampling at most 100 elements
 // to find a pivot element.
 type plane struct {
 	kdtree.Dim
-	NodeLocations
+	nodeLocations
 }
 
 // randoms is the maximum number of random values to sample for calculation of
@@ -79,10 +111,9 @@ const randoms = 100
 
 // Less comparison
 func (p plane) Less(i, j int) bool {
-	loc := p.NodeLocations[i]
+	loc := p.nodeLocations[i]
 	lay, col := loc.GetIndex(p.Dim)
-	l := loc.som.layers[lay]
-	return l.GetAt(loc.nodeIndex, col) < l.GetAt(p.NodeLocations[j].nodeIndex, col)
+	return loc.Get(lay, col) < p.nodeLocations[j].Get(lay, col)
 }
 
 // Pivot TreePlane
@@ -90,11 +121,11 @@ func (p plane) Pivot() int { return kdtree.Partition(p, kdtree.MedianOfRandoms(p
 
 // Slice TreePlane
 func (p plane) Slice(start, end int) kdtree.SortSlicer {
-	p.NodeLocations = p.NodeLocations[start:end]
+	p.nodeLocations = p.nodeLocations[start:end]
 	return p
 }
 
 // Swap TreePlane
 func (p plane) Swap(i, j int) {
-	p.NodeLocations[i], p.NodeLocations[j] = p.NodeLocations[j], p.NodeLocations[i]
+	p.nodeLocations[i], p.nodeLocations[j] = p.nodeLocations[j], p.nodeLocations[i]
 }

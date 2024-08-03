@@ -356,7 +356,7 @@ func (s *Som) updateNode(x, y int, data [][]float64, rate float64) {
 func (s *Som) updateNodeViSom(bmuIdx, x, y int, data [][]float64, rate float64, lambda float64) {
 	xBmu, yBmu := s.size.Coords(bmuIdx)
 	nodeIdx := s.size.Index(x, y)
-	d := s.nodeIndexDistance(bmuIdx, nodeIdx)              // distance in data space
+	d := s.nodeDistance(bmuIdx, nodeIdx)                   // distance in data space
 	D := lambda * s.viSomMetric.Distance(xBmu, yBmu, x, y) // scaled distance in map space
 
 	// scale = (d - D) / D = d/D - 1 (original formulation Yin 2002)
@@ -413,7 +413,7 @@ func (s *Som) dataDistance(data [][]float64, unit int) float64 {
 	return totalDist
 }
 
-func (s *Som) nodeIndexDistance(unit1, unit2 int) float64 {
+func (s *Som) nodeDistance(unit1, unit2 int) float64 {
 	totalDist := 0.0
 	for _, layer := range s.layers {
 		if layer.Weight() == 0 {
@@ -422,18 +422,6 @@ func (s *Som) nodeIndexDistance(unit1, unit2 int) float64 {
 		node1 := layer.GetNodeAt(unit1)
 		node2 := layer.GetNodeAt(unit2)
 		dist := layer.Metric().Distance(node1, node2)
-		totalDist += layer.Weight() * dist
-	}
-	return totalDist
-}
-
-func (s *Som) nodeDistance(node1, node2 [][]float64) float64 {
-	totalDist := 0.0
-	for i, layer := range s.layers {
-		if layer.Weight() == 0 {
-			continue
-		}
-		dist := layer.Metric().Distance(node1[i], node2[i])
 		totalDist += layer.Weight() * dist
 	}
 	return totalDist
@@ -478,11 +466,11 @@ func (s *Som) UMatrix(fill bool) [][]float64 {
 			nodeHere := s.size.Index(x, y)
 			if x < s.size.Width-1 {
 				nodeRight := s.size.Index(x+1, y)
-				u[y*2][x*2+1] = s.nodeIndexDistance(nodeHere, nodeRight)
+				u[y*2][x*2+1] = s.nodeDistance(nodeHere, nodeRight)
 			}
 			if y < s.size.Height-1 {
 				nodeDown := s.size.Index(x, y+1)
-				u[y*2+1][x*2] = s.nodeIndexDistance(nodeHere, nodeDown)
+				u[y*2+1][x*2] = s.nodeDistance(nodeHere, nodeDown)
 			}
 		}
 	}

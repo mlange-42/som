@@ -423,12 +423,12 @@ func TestNodeDistance(t *testing.T) {
 		panic(err)
 	}
 
-	assert.InDelta(t, 0, som.nodeIndexDistance(0, 0), 0.001)
-	assert.InDelta(t, 2, som.nodeIndexDistance(0, 1), 0.001)
-	assert.InDelta(t, 2, som.nodeIndexDistance(0, 2), 0.001)
-	assert.InDelta(t, math.Sqrt(8), som.nodeIndexDistance(0, 3), 0.001)
+	assert.InDelta(t, 0, som.nodeDistance(0, 0), 0.001)
+	assert.InDelta(t, 2, som.nodeDistance(0, 1), 0.001)
+	assert.InDelta(t, 2, som.nodeDistance(0, 2), 0.001)
+	assert.InDelta(t, math.Sqrt(8), som.nodeDistance(0, 3), 0.001)
 
-	assert.InDelta(t, math.Sqrt(8), som.nodeIndexDistance(1, 2), 0.001)
+	assert.InDelta(t, math.Sqrt(8), som.nodeDistance(1, 2), 0.001)
 }
 
 func TestNodeMapDistance(t *testing.T) {
