@@ -1,6 +1,7 @@
 package som
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/mlange-42/som/distance"
@@ -12,6 +13,74 @@ import (
 )
 
 func TestKDTree(t *testing.T) {
+	w, h := 6, 5
+	weights := make([]float64, 0, w*h*2)
+
+	for x := 0; x < w; x++ {
+		for y := 0; y < h; y++ {
+			weights = append(weights, float64(x), float64(y))
+		}
+	}
+
+	conf := SomConfig{
+		Size: layer.Size{
+			Width:  w,
+			Height: h,
+		},
+		Neighborhood: &neighborhood.Linear{},
+		Layers: []*LayerDef{
+			{
+				Name:    "L1",
+				Columns: []string{"a", "b"},
+				Metric:  &distance.Manhattan{},
+				Norm:    []norm.Normalizer{&norm.Identity{}, &norm.Identity{}},
+				Weights: weights,
+			},
+		},
+	}
+
+	som, err := New(&conf)
+	assert.NoError(t, err)
+
+	locs := newNodeLocations(som)
+	tree := kdtree.New(locs, false)
+
+	assert.Equal(t, 30, tree.Count)
+
+	tests := []struct {
+		name         string
+		data         [][]float64
+		expectedIdx  int
+		expectedDist float64
+	}{}
+
+	for x := 0; x < w; x++ {
+		for y := 0; y < h; y++ {
+			tests = append(tests, struct {
+				name         string
+				data         [][]float64
+				expectedIdx  int
+				expectedDist float64
+			}{
+				name:         fmt.Sprintf("Point %d,%d", x, y),
+				data:         [][]float64{{float64(x) + 0.1, float64(y) - 0.1}},
+				expectedIdx:  som.Size().Index(x, y),
+				expectedDist: 0.2,
+			})
+		}
+	}
+
+	for _, test := range tests {
+		p := newDataLocation(som, test.data)
+		nearest, dist := tree.Nearest(p)
+		bmu := nearest.(nodeLocation)
+
+		assert.Equal(t, test.expectedIdx, bmu.NodeIndex)
+		assert.InDelta(t, test.expectedDist, dist, 1e-10)
+	}
+}
+
+func TestKDTreeTwoLayers(t *testing.T) {
 	conf := SomConfig{
 		Size: layer.Size{
 			Width:  3,
