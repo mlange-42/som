@@ -48,34 +48,34 @@ func (p *Predictor) Tables() []*table.Table {
 }
 
 func (p *Predictor) bmu(data [][]float64) (int, float64) {
-	if p.kdtree != nil {
-		// Use k-d tree for accelerated nearest neighbor search
-		query := newDataLocation(p.som, data)
-		nn, dist := p.kdtree.Nearest(&query)
-		node := nn.(*nodeLocation)
-		return node.NodeIndex, dist
+	if p.kdtree == nil {
+		return p.som.GetBMU(data)
 	}
-	return p.som.GetBMU(data)
+	// Use k-d tree for accelerated nearest neighbor search
+	query := newDataLocation(p.som, data)
+	nn, dist := p.kdtree.Nearest(&query)
+	node := nn.(*nodeLocation)
+	return node.NodeIndex, dist
 }
 
 func (p *Predictor) bmu2(data [][]float64) (int, float64, int, float64) {
-	if p.kdtree != nil {
-		// Use k-d tree for accelerated nearest neighbor search
-		query := newDataLocation(p.som, data)
-		keeper := kdtree.NewNKeeper(2)
-		p.kdtree.NearestSet(keeper, &query)
-		if keeper.Heap.Len() != 2 {
-			panic("kdtree returned incorrect number of nearest neighbors")
-		}
-		indices, distances := make([]int, 2), make([]float64, 2)
-		for i, e := range keeper.Heap {
-			node := e.Comparable.(*nodeLocation)
-			indices[i] = node.NodeIndex
-			distances[i] = e.Dist
-		}
-		return indices[0], distances[0], indices[1], distances[1]
+	if p.kdtree == nil {
+		return p.som.GetBMU2(data)
 	}
-	return p.som.GetBMU2(data)
+	// Use k-d tree for accelerated nearest neighbor search
+	query := newDataLocation(p.som, data)
+	keeper := kdtree.NewNKeeper(2)
+	p.kdtree.NearestSet(keeper, &query)
+	if keeper.Heap.Len() != 2 {
+		panic("kdtree returned incorrect number of nearest neighbors")
+	}
+	indices, distances := make([]int, 2), make([]float64, 2)
+	for i, e := range keeper.Heap {
+		node := e.Comparable.(*nodeLocation)
+		indices[i] = node.NodeIndex
+		distances[i] = e.Dist
+	}
+	return indices[0], distances[0], indices[1], distances[1]
 }
 
 // GetBMUTable returns a table with the best matching units (BMUs) for each row in the

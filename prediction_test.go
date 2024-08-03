@@ -80,41 +80,25 @@ func TestPredictorGetBMU(t *testing.T) {
 }
 
 func BenchmarkPredictorGetBMU_5x5x3_100Rows(b *testing.B) {
-	benchmarkPredictorGetBMU(b, 5, 5, 3, 100, false)
+	benchmarkPredictorGetBMU(b, 5, 5, 3, 1, false)
 }
 
 func BenchmarkPredictorGetBMU_5x5x3_100Rows_Acc(b *testing.B) {
-	benchmarkPredictorGetBMU(b, 5, 5, 3, 100, true)
+	benchmarkPredictorGetBMU(b, 5, 5, 3, 1, true)
 }
 
 func BenchmarkPredictorGetBMU_10x10x5_100Rows(b *testing.B) {
-	benchmarkPredictorGetBMU(b, 10, 10, 5, 100, false)
+	benchmarkPredictorGetBMU(b, 10, 10, 5, 1, false)
 }
 
 func BenchmarkPredictorGetBMU_10x10x5_100Rows_Acc(b *testing.B) {
-	benchmarkPredictorGetBMU(b, 10, 10, 5, 100, true)
+	benchmarkPredictorGetBMU(b, 10, 10, 5, 1, true)
 }
 
 func benchmarkPredictorGetBMU(b *testing.B, width, height, columns, rows int, kdTree bool) {
 	b.StopTimer()
 
-	conf := SomConfig{
-		Size: layer.Size{
-			Width:  width,
-			Height: height,
-		},
-		Neighborhood: &neighborhood.Linear{},
-		Layers: []*LayerDef{
-			{
-				Name:    "L1",
-				Columns: []string{"a", "b", "c", "d", "e"}[:columns],
-				Metric:  &distance.Euclidean{},
-				Norm: []norm.Normalizer{
-					&norm.Identity{}, &norm.Identity{}, &norm.Identity{}, &norm.Identity{}, &norm.Identity{},
-				}[:columns],
-			},
-		},
-	}
+	conf := createSomConfig(width, height, columns)
 
 	som, err := New(&conf)
 	if err != nil {
@@ -136,5 +120,72 @@ func benchmarkPredictorGetBMU(b *testing.B, width, height, columns, rows int, kd
 		bmu = pred.GetBMU()
 	}
 	b.StopTimer()
-	_ = bmu
+
+	assert.Equal(b, rows, len(bmu))
+}
+
+func BenchmarkPredictorBMU_5x5x3(b *testing.B) {
+	benchmarkPredictorBmu(b, 5, 5, 3, false)
+}
+
+func BenchmarkPredictorBMU_5x5x3_Acc(b *testing.B) {
+	benchmarkPredictorBmu(b, 5, 5, 3, true)
+}
+
+func BenchmarkPredictorBMU_10x10x5(b *testing.B) {
+	benchmarkPredictorBmu(b, 10, 10, 5, false)
+}
+
+func BenchmarkPredictorBMU_10x10x5_Acc(b *testing.B) {
+	benchmarkPredictorBmu(b, 10, 10, 5, true)
+}
+
+func benchmarkPredictorBmu(b *testing.B, width, height, columns int, kdTree bool) {
+	b.StopTimer()
+
+	conf := createSomConfig(width, height, columns)
+
+	som, err := New(&conf)
+	if err != nil {
+		b.Fatal(err)
+	}
+	som.Randomize(rand.New(rand.NewSource(0)))
+
+	tab := table.New([]string{"a", "b", "c", "d", "e"}[:columns], 1)
+
+	pred, err := NewPredictor(som, []*table.Table{tab}, kdTree)
+	assert.NoError(b, err)
+
+	data := [][]float64{[]float64{1, 2, 3, 4, 5}[:columns]}
+	var bmu int
+	var dist float64
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		bmu, dist = pred.bmu(data)
+	}
+	b.StopTimer()
+
+	assert.Less(b, bmu, width*height)
+	assert.Less(b, dist, 25.0)
+}
+
+func createSomConfig(width, height, columns int) SomConfig {
+	return SomConfig{
+		Size: layer.Size{
+			Width:  width,
+			Height: height,
+		},
+		Neighborhood: &neighborhood.Linear{},
+		Layers: []*LayerDef{
+			{
+				Name:    "L1",
+				Columns: []string{"a", "b", "c", "d", "e"}[:columns],
+				Metric:  &distance.Euclidean{},
+				Norm: []norm.Normalizer{
+					&norm.Identity{}, &norm.Identity{}, &norm.Identity{}, &norm.Identity{}, &norm.Identity{},
+				}[:columns],
+			},
+		},
+	}
 }
