@@ -39,6 +39,10 @@ func (p *Predictor) Tables() []*table.Table {
 	return p.tables
 }
 
+func (p *Predictor) bmu(data [][]float64) (int, float64) {
+	return p.som.GetBMU(data)
+}
+
 // GetBMUTable returns a table with the best matching units (BMUs) for each row in the
 // associated tables. The table contains the following columns:
 //
@@ -56,7 +60,7 @@ func (p *Predictor) GetBMUTable() *table.Table {
 	for i := 0; i < rows; i++ {
 		p.collectData(i, data)
 
-		idx, dist := p.som.GetBMU(data)
+		idx, dist := p.bmu(data)
 		x, y := p.som.Size().Coords(idx)
 		bmu[i*cols] = float64(idx)
 		bmu[i*cols+1] = float64(x)
@@ -96,7 +100,7 @@ func (p *Predictor) FillMissing(tables []*table.Table) error {
 		}
 
 		p.collectData(i, data)
-		bmu, _ := p.som.GetBMU(data)
+		bmu, _ := p.bmu(data)
 		for j, t := range tables {
 			if t == nil {
 				continue
@@ -149,7 +153,7 @@ func (p *Predictor) Predict(tables []*table.Table, layers []string) error {
 	data := make([][]float64, len(tables))
 	for i := 0; i < rows; i++ {
 		p.collectData(i, data)
-		bmu, _ := p.som.GetBMU(data)
+		bmu, _ := p.bmu(data)
 
 		for j, lay := range p.som.layers {
 			if !toPredict[j] {
@@ -210,7 +214,7 @@ func (p *Predictor) collectData(row int, data [][]float64) {
 func (p *Predictor) GetRowBMU(row int) (int, float64) {
 	data := make([][]float64, len(p.tables))
 	p.collectData(row, data)
-	return p.som.GetBMU(data)
+	return p.bmu(data)
 }
 
 // GetBMU returns a slice of the best matching unit (BMU) indices for each row in the
@@ -224,7 +228,7 @@ func (p *Predictor) GetBMU() []int {
 	for i := 0; i < rows; i++ {
 		p.collectData(i, data)
 
-		idx, _ := p.som.GetBMU(data)
+		idx, _ := p.bmu(data)
 		bmu[i] = idx
 	}
 
@@ -259,7 +263,7 @@ func (p *Predictor) GetBMUWithDistance() ([]int, []float64) {
 	for i := 0; i < rows; i++ {
 		p.collectData(i, data)
 
-		bmu[i], distance[i] = p.som.GetBMU(data)
+		bmu[i], distance[i] = p.bmu(data)
 	}
 
 	return bmu, distance
