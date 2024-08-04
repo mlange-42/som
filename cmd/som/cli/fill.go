@@ -10,6 +10,7 @@ import (
 	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/table"
 	"github.com/mlange-42/som/yml"
+	"github.com/pkg/profile"
 	"github.com/spf13/cobra"
 )
 
@@ -19,6 +20,8 @@ func fillCommand() *cobra.Command {
 	var preserve []string
 	var ignore []string
 	var kdTree bool
+
+	var cpuProfile bool
 
 	command := &cobra.Command{
 		Use:   "fill [flags] <som-file> <data-file>",
@@ -41,6 +44,11 @@ Redirect output to a file like this:
   som fill som.yml data.csv > filled.csv`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if cpuProfile {
+				stop := profile.Start(profile.CPUProfile, profile.ProfilePath("."))
+				defer stop.Stop()
+			}
+
 			somFile := args[0]
 			dataFile := args[1]
 
@@ -100,6 +108,8 @@ Redirect output to a file like this:
 
 	command.Flags().StringVarP(&delim, "delimiter", "D", ",", "CSV delimiter")
 	command.Flags().StringVarP(&noData, "no-data", "N", "", "No-data string")
+
+	command.Flags().BoolVar(&cpuProfile, "profile", false, "Enable CPU profiling")
 
 	command.Flags().SortFlags = false
 

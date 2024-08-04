@@ -79,19 +79,19 @@ func TestPredictorGetBMU(t *testing.T) {
 	}
 }
 
-func BenchmarkPredictorGetBMU_5x5x3_100Rows(b *testing.B) {
+func BenchmarkPredictorGetBMU_5x5x3_1Row(b *testing.B) {
 	benchmarkPredictorGetBMU(b, 5, 5, 3, 1, false)
 }
 
-func BenchmarkPredictorGetBMU_5x5x3_100Rows_Acc(b *testing.B) {
+func BenchmarkPredictorGetBMU_5x5x3_1Row_Acc(b *testing.B) {
 	benchmarkPredictorGetBMU(b, 5, 5, 3, 1, true)
 }
 
-func BenchmarkPredictorGetBMU_10x10x5_100Rows(b *testing.B) {
+func BenchmarkPredictorGetBMU_10x10x5_1Row(b *testing.B) {
 	benchmarkPredictorGetBMU(b, 10, 10, 5, 1, false)
 }
 
-func BenchmarkPredictorGetBMU_10x10x5_100Rows_Acc(b *testing.B) {
+func BenchmarkPredictorGetBMU_10x10x5_1Row_Acc(b *testing.B) {
 	// FIXME: Why is this slower than brute force,
 	// while BenchmarkPredictorBMU_10x10x5_Acc is faster?
 	benchmarkPredictorGetBMU(b, 10, 10, 5, 1, true)

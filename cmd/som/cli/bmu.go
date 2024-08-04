@@ -9,6 +9,7 @@ import (
 	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/table"
 	"github.com/mlange-42/som/yml"
+	"github.com/pkg/profile"
 	"github.com/spf13/cobra"
 )
 
@@ -18,6 +19,8 @@ func bmuCommand() *cobra.Command {
 	var preserve []string
 	var ignore []string
 	var kdTree bool
+
+	var cpuProfile bool
 
 	command := &cobra.Command{
 		Use:   "bmu [flags] <som-file> <data-file>",
@@ -43,6 +46,11 @@ the --preserve flag. Here is how to transfer 'ID' and 'Name' columns:
 `,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if cpuProfile {
+				stop := profile.Start(profile.CPUProfile, profile.ProfilePath("."))
+				defer stop.Stop()
+			}
+
 			somFile := args[0]
 			dataFile := args[1]
 
@@ -106,6 +114,8 @@ the --preserve flag. Here is how to transfer 'ID' and 'Name' columns:
 
 	command.Flags().StringVarP(&delim, "delimiter", "D", ",", "CSV delimiter for CSV input and output")
 	command.Flags().StringVarP(&noData, "no-data", "N", "", "No-data string for CSV input and output")
+
+	command.Flags().BoolVar(&cpuProfile, "profile", false, "Enable CPU profiling")
 
 	command.Flags().SortFlags = false
 

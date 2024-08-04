@@ -8,6 +8,7 @@ import (
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/yml"
+	"github.com/pkg/profile"
 	"github.com/spf13/cobra"
 )
 
@@ -19,6 +20,8 @@ func predictCommand() *cobra.Command {
 	var layers []string
 	var writeAllLayers bool
 	var kdTree bool
+
+	var cpuProfile bool
 
 	command := &cobra.Command{
 		Use:   "predict [flags] <som-file> <data-file>",
@@ -39,6 +42,10 @@ Redirect output to a file like this:
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(layers) == 0 {
 				return fmt.Errorf("at least one layer must be specified")
+			}
+			if cpuProfile {
+				stop := profile.Start(profile.CPUProfile, profile.ProfilePath("."))
+				defer stop.Stop()
 			}
 
 			somFile := args[0]
@@ -114,6 +121,8 @@ Redirect output to a file like this:
 
 	command.Flags().StringVarP(&delim, "delimiter", "D", ",", "CSV delimiter")
 	command.Flags().StringVarP(&noData, "no-data", "N", "", "No-data string")
+
+	command.Flags().BoolVar(&cpuProfile, "profile", false, "Enable CPU profiling")
 
 	command.MarkFlagRequired("layers")
 	command.Flags().SortFlags = false
