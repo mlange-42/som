@@ -2,14 +2,13 @@ package cli
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/conv"
 	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/table"
-	"github.com/mlange-42/som/yml"
+	"github.com/pkg/profile"
 	"github.com/spf13/cobra"
 )
 
@@ -18,6 +17,9 @@ func fillCommand() *cobra.Command {
 	var noData string
 	var preserve []string
 	var ignore []string
+	var kdTree bool
+
+	var cpuProfile bool
 
 	command := &cobra.Command{
 		Use:   "fill [flags] <som-file> <data-file>",
@@ -40,14 +42,15 @@ Redirect output to a file like this:
   som fill som.yml data.csv > filled.csv`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if cpuProfile {
+				stop := profile.Start(profile.CPUProfile, profile.ProfilePath("."))
+				defer stop.Stop()
+			}
+
 			somFile := args[0]
 			dataFile := args[1]
 
-			somYaml, err := os.ReadFile(somFile)
-			if err != nil {
-				return err
-			}
-			config, _, err := yml.ToSomConfig(somYaml)
+			config, _, err := readConfig(somFile, false)
 			if err != nil {
 				return err
 			}
@@ -80,7 +83,7 @@ Redirect output to a file like this:
 			if err != nil {
 				return err
 			}
-			pred, err := som.NewPredictor(s, tables)
+			pred, err := som.NewPredictor(s, tables, kdTree)
 			if err != nil {
 				return err
 			}
@@ -95,9 +98,12 @@ Redirect output to a file like this:
 	}
 	command.Flags().StringSliceVarP(&preserve, "preserve", "p", nil, "Preserve columns and prepend them to the output table")
 	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
+	command.Flags().BoolVarP(&kdTree, "kd-tree", "k", false, "Use kd-tree accelerated BMU search")
 
 	command.Flags().StringVarP(&delim, "delimiter", "D", ",", "CSV delimiter")
 	command.Flags().StringVarP(&noData, "no-data", "N", "", "No-data string")
+
+	command.Flags().BoolVar(&cpuProfile, "profile", false, "Enable CPU profiling")
 
 	command.Flags().SortFlags = false
 

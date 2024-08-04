@@ -69,7 +69,7 @@ but can also be set or overwritten using the provided CLI flags.`,
 			somFile := args[0]
 			dataFile := args[1]
 
-			config, trainingConfig, err := readConfig(somFile)
+			config, trainingConfig, err := readConfig(somFile, true)
 			if err != nil {
 				return err
 			}
@@ -279,7 +279,7 @@ func prepareTables(config *som.SomConfig, path string, delim rune, noData string
 	return tables, err
 }
 
-func readConfig(path string) (*som.SomConfig, *som.TrainingConfig, error) {
+func readConfig(path string, createTraining bool) (*som.SomConfig, *som.TrainingConfig, error) {
 	somYaml, err := os.ReadFile(path)
 	if err != nil {
 		return nil, nil, err
@@ -289,7 +289,7 @@ func readConfig(path string) (*som.SomConfig, *som.TrainingConfig, error) {
 		return nil, nil, err
 	}
 
-	if trainingConfig == nil {
+	if createTraining && trainingConfig == nil {
 		trainingConfig = defaultTrainingConfig()
 	}
 

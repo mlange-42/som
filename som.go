@@ -266,7 +266,7 @@ func (s *Som) GetBMU(data [][]float64) (int, float64) {
 	minDist := math.MaxFloat64
 	minIndex := -1
 	for i := 0; i < units; i++ {
-		totalDist := s.distance(data, i)
+		totalDist := s.dataDistance(data, i)
 		if totalDist < minDist {
 			minDist = totalDist
 			minIndex = i
@@ -284,7 +284,7 @@ func (s *Som) GetBMU2(data [][]float64) (int, float64, int, float64) {
 	minIndex := -1
 	minIndex2 := -1
 	for i := 0; i < units; i++ {
-		totalDist := s.distance(data, i)
+		totalDist := s.dataDistance(data, i)
 
 		if totalDist < minDist {
 			minDist2 = minDist
@@ -400,7 +400,7 @@ func (s *Som) decayWeights(center [][]float64, rate float64) {
 	}
 }
 
-func (s *Som) distance(data [][]float64, unit int) float64 {
+func (s *Som) dataDistance(data [][]float64, unit int) float64 {
 	totalDist := 0.0
 	for l, layer := range s.layers {
 		if layer.Weight() == 0 || data[l] == nil {

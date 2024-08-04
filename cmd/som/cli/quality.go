@@ -2,12 +2,10 @@ package cli
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/neighborhood"
-	"github.com/mlange-42/som/yml"
 	"github.com/spf13/cobra"
 )
 
@@ -15,6 +13,7 @@ func qualityCommand() *cobra.Command {
 	var delim string
 	var noData string
 	var ignore []string
+	var kdTree bool
 
 	command := &cobra.Command{
 		Use:   "quality [flags] <som-file> <data-file>",
@@ -32,11 +31,7 @@ Calculates the following SOM quality metrics and prints them to STDOUT:
 			somFile := args[0]
 			dataFile := args[1]
 
-			somYaml, err := os.ReadFile(somFile)
-			if err != nil {
-				return err
-			}
-			config, _, err := yml.ToSomConfig(somYaml)
+			config, _, err := readConfig(somFile, false)
 			if err != nil {
 				return err
 			}
@@ -60,7 +55,7 @@ Calculates the following SOM quality metrics and prints them to STDOUT:
 			if err != nil {
 				return err
 			}
-			pred, err := som.NewPredictor(s, tables)
+			pred, err := som.NewPredictor(s, tables, kdTree)
 			if err != nil {
 				return err
 			}
@@ -79,6 +74,7 @@ Topographic error:      %7.3f
 		},
 	}
 	command.Flags().StringSliceVarP(&ignore, "ignore", "i", []string{}, "Ignore these layers for BMU search")
+	command.Flags().BoolVarP(&kdTree, "kd-tree", "k", false, "Use kd-tree accelerated BMU search")
 
 	command.Flags().StringVarP(&delim, "delimiter", "D", ",", "CSV delimiter for CSV input and output")
 	command.Flags().StringVarP(&noData, "no-data", "N", "", "No-data string for CSV input and output")

@@ -3,12 +3,12 @@ package cli
 import (
 	"fmt"
 	"math/rand"
-	"os"
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/conv"
 	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/yml"
+	"github.com/pkg/profile"
 	"github.com/spf13/cobra"
 )
 
@@ -18,6 +18,8 @@ func labelCommand() *cobra.Command {
 	var column string
 	var seed int64
 	var ignore []string
+
+	var cpuProfile bool
 
 	command := &cobra.Command{
 		Use:   "label [flags] <som-file> <data-file>",
@@ -38,14 +40,15 @@ e.g. for prediction of the just added label variable:
   som predict labelled.yml data.csv --layers class > predicted.csv`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if cpuProfile {
+				stop := profile.Start(profile.CPUProfile, profile.ProfilePath("."))
+				defer stop.Stop()
+			}
+
 			somFile := args[0]
 			dataFile := args[1]
 
-			somYaml, err := os.ReadFile(somFile)
-			if err != nil {
-				return err
-			}
-			config, trainingConfig, err := yml.ToSomConfig(somYaml)
+			config, trainingConfig, err := readConfig(somFile, true)
 			if err != nil {
 				return err
 			}
@@ -99,6 +102,8 @@ e.g. for prediction of the just added label variable:
 
 	command.Flags().StringVarP(&delim, "delimiter", "D", ",", "CSV delimiter")
 	command.Flags().StringVarP(&noData, "no-data", "N", "", "No-data string")
+
+	command.Flags().BoolVar(&cpuProfile, "profile", false, "Enable CPU profiling")
 
 	command.Flags().SortFlags = false
 	command.MarkFlagRequired("column")

@@ -7,25 +7,33 @@ import (
 
 	"github.com/mlange-42/som/neighborhood"
 	"github.com/mlange-42/som/table"
+	"gonum.org/v1/gonum/spatial/kdtree"
 )
 
 // Predictor is a struct that holds an SOM and a set of tables for making predictions.
 type Predictor struct {
 	som    *Som
 	tables []*table.Table
+	kdtree *kdtree.Tree
 }
 
 // NewPredictor creates a new Predictor instance with the given SOM and tables.
 // The tables must have the same number of rows as the SOM has nodes.
 // Tables are assumed to be normalized.
 // An error is returned if the tables do not match the SOM.
-func NewPredictor(som *Som, tables []*table.Table) (*Predictor, error) {
+func NewPredictor(som *Som, tables []*table.Table, accelerated bool) (*Predictor, error) {
 	if err := checkTables(som, tables); err != nil {
 		return nil, err
+	}
+	var tree *kdtree.Tree
+	if accelerated {
+		locs := newNodeLocations(som)
+		tree = kdtree.New(locs, false)
 	}
 	return &Predictor{
 		som:    som,
 		tables: tables,
+		kdtree: tree,
 	}, nil
 }
 
@@ -37,6 +45,37 @@ func (p *Predictor) Som() *Som {
 // Tables returns the tables associated with this Predictor.
 func (p *Predictor) Tables() []*table.Table {
 	return p.tables
+}
+
+func (p *Predictor) bmu(data [][]float64) (int, float64) {
+	if p.kdtree == nil {
+		return p.som.GetBMU(data)
+	}
+	// Use k-d tree for accelerated nearest neighbor search
+	query := newDataLocation(p.som, data)
+	nn, dist := p.kdtree.Nearest(&query)
+	node := nn.(*nodeLocation)
+	return node.NodeIndex, dist
+}
+
+func (p *Predictor) bmu2(data [][]float64) (int, float64, int, float64) {
+	if p.kdtree == nil {
+		return p.som.GetBMU2(data)
+	}
+	// Use k-d tree for accelerated nearest neighbor search
+	query := newDataLocation(p.som, data)
+	keeper := kdtree.NewNKeeper(2)
+	p.kdtree.NearestSet(keeper, &query)
+	if keeper.Heap.Len() != 2 {
+		panic("kdtree returned incorrect number of nearest neighbors")
+	}
+	indices, distances := make([]int, 2), make([]float64, 2)
+	for i, e := range keeper.Heap {
+		node := e.Comparable.(*nodeLocation)
+		indices[i] = node.NodeIndex
+		distances[i] = e.Dist
+	}
+	return indices[0], distances[0], indices[1], distances[1]
 }
 
 // GetBMUTable returns a table with the best matching units (BMUs) for each row in the
@@ -56,7 +95,7 @@ func (p *Predictor) GetBMUTable() *table.Table {
 	for i := 0; i < rows; i++ {
 		p.collectData(i, data)
 
-		idx, dist := p.som.GetBMU(data)
+		idx, dist := p.bmu(data)
 		x, y := p.som.Size().Coords(idx)
 		bmu[i*cols] = float64(idx)
 		bmu[i*cols+1] = float64(x)
@@ -96,7 +135,7 @@ func (p *Predictor) FillMissing(tables []*table.Table) error {
 		}
 
 		p.collectData(i, data)
-		bmu, _ := p.som.GetBMU(data)
+		bmu, _ := p.bmu(data)
 		for j, t := range tables {
 			if t == nil {
 				continue
@@ -149,7 +188,7 @@ func (p *Predictor) Predict(tables []*table.Table, layers []string) error {
 	data := make([][]float64, len(tables))
 	for i := 0; i < rows; i++ {
 		p.collectData(i, data)
-		bmu, _ := p.som.GetBMU(data)
+		bmu, _ := p.bmu(data)
 
 		for j, lay := range p.som.layers {
 			if !toPredict[j] {
@@ -210,7 +249,7 @@ func (p *Predictor) collectData(row int, data [][]float64) {
 func (p *Predictor) GetRowBMU(row int) (int, float64) {
 	data := make([][]float64, len(p.tables))
 	p.collectData(row, data)
-	return p.som.GetBMU(data)
+	return p.bmu(data)
 }
 
 // GetBMU returns a slice of the best matching unit (BMU) indices for each row in the
@@ -224,7 +263,7 @@ func (p *Predictor) GetBMU() []int {
 	for i := 0; i < rows; i++ {
 		p.collectData(i, data)
 
-		idx, _ := p.som.GetBMU(data)
+		idx, _ := p.bmu(data)
 		bmu[i] = idx
 	}
 
@@ -240,7 +279,7 @@ func (p *Predictor) getBMU2() []bmu2 {
 	for i := 0; i < rows; i++ {
 		p.collectData(i, data)
 
-		idx, d, idx2, d2 := p.som.GetBMU2(data)
+		idx, d, idx2, d2 := p.bmu2(data)
 		bmu[i] = bmu2{idx, d, idx2, d2}
 	}
 
@@ -259,7 +298,7 @@ func (p *Predictor) GetBMUWithDistance() ([]int, []float64) {
 	for i := 0; i < rows; i++ {
 		p.collectData(i, data)
 
-		bmu[i], distance[i] = p.som.GetBMU(data)
+		bmu[i], distance[i] = p.bmu(data)
 	}
 
 	return bmu, distance
