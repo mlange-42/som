@@ -2,12 +2,10 @@ package cli
 
 import (
 	"fmt"
-	"os"
 	"slices"
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/csv"
-	"github.com/mlange-42/som/yml"
 	"github.com/pkg/profile"
 	"github.com/spf13/cobra"
 )
@@ -51,11 +49,7 @@ Redirect output to a file like this:
 			somFile := args[0]
 			dataFile := args[1]
 
-			somYaml, err := os.ReadFile(somFile)
-			if err != nil {
-				return err
-			}
-			config, _, err := yml.ToSomConfig(somYaml)
+			config, _, err := readConfig(somFile, false)
 			if err != nil {
 				return err
 			}

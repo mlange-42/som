@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 	"math/rand"
-	"os"
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/conv"
@@ -49,11 +48,7 @@ e.g. for prediction of the just added label variable:
 			somFile := args[0]
 			dataFile := args[1]
 
-			somYaml, err := os.ReadFile(somFile)
-			if err != nil {
-				return err
-			}
-			config, trainingConfig, err := yml.ToSomConfig(somYaml)
+			config, trainingConfig, err := readConfig(somFile, true)
 			if err != nil {
 				return err
 			}

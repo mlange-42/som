@@ -2,12 +2,10 @@ package cli
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/csv"
-	"github.com/mlange-42/som/yml"
 	"github.com/spf13/cobra"
 )
 
@@ -39,11 +37,7 @@ Redirect output to a file like this:
 		RunE: func(cmd *cobra.Command, args []string) error {
 			somFile := args[0]
 
-			somYaml, err := os.ReadFile(somFile)
-			if err != nil {
-				return err
-			}
-			config, _, err := yml.ToSomConfig(somYaml)
+			config, _, err := readConfig(somFile, false)
 			if err != nil {
 				return err
 			}

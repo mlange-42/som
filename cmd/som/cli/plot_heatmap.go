@@ -15,7 +15,6 @@ import (
 	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/plot"
 	"github.com/mlange-42/som/table"
-	"github.com/mlange-42/som/yml"
 	"github.com/spf13/cobra"
 	"gonum.org/v1/plot/plotter"
 )
@@ -195,11 +194,7 @@ func writeImage(img image.Image, outFile string) error {
 }
 
 func readSom(somFile string) (*som.SomConfig, *som.Som, error) {
-	somYaml, err := os.ReadFile(somFile)
-	if err != nil {
-		return nil, nil, err
-	}
-	config, _, err := yml.ToSomConfig(somYaml)
+	config, _, err := readConfig(somFile, false)
 	if err != nil {
 		return nil, nil, err
 	}

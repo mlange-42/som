@@ -2,13 +2,11 @@ package cli
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/table"
-	"github.com/mlange-42/som/yml"
 	"github.com/pkg/profile"
 	"github.com/spf13/cobra"
 )
@@ -54,11 +52,7 @@ the --preserve flag. Here is how to transfer 'ID' and 'Name' columns:
 			somFile := args[0]
 			dataFile := args[1]
 
-			somYaml, err := os.ReadFile(somFile)
-			if err != nil {
-				return err
-			}
-			config, _, err := yml.ToSomConfig(somYaml)
+			config, _, err := readConfig(somFile, false)
 			if err != nil {
 				return err
 			}

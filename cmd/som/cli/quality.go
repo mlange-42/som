@@ -2,12 +2,10 @@ package cli
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/mlange-42/som"
 	"github.com/mlange-42/som/csv"
 	"github.com/mlange-42/som/neighborhood"
-	"github.com/mlange-42/som/yml"
 	"github.com/spf13/cobra"
 )
 
@@ -33,11 +31,7 @@ Calculates the following SOM quality metrics and prints them to STDOUT:
 			somFile := args[0]
 			dataFile := args[1]
 
-			somYaml, err := os.ReadFile(somFile)
-			if err != nil {
-				return err
-			}
-			config, _, err := yml.ToSomConfig(somYaml)
+			config, _, err := readConfig(somFile, false)
 			if err != nil {
 				return err
 			}
